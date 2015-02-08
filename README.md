@@ -1,6 +1,6 @@
 **THIS IS CURRENTLY A REQUEST-FOR-COMMENTS WHITE-PAPER**
 
-**THIS PROJECT IS NON-FUNCTIONAL - PLEASE DO NOT INSTALL IT**
+**THIS PROJECT IS CURRENTLY NON-FUNCTIONAL - PLEASE DO NOT INSTALL IT**
 
 
 Mongol
@@ -26,6 +26,23 @@ While libraries like Mongoose provide some chainable methods they don't quite wo
 		.exec(handler);
 
 Will *not* work in Mongo or Mongoose due to the way that populate is a late binding. Mongol however will see that widgets needs popuating THEN the where needs to be executed later on and actually make all this work.
+
+
+Deep population
+---------------
+With Mongo / Mongoose at present you are limited to the first-layer-only of population.
+
+For example assuming you had three collections: `foo`, `bar` and `baz` each having a foreign key linking them all together. The temptation is to do something like this during a retrieval:
+
+	foo
+		.find()
+		.populate('bar')
+		.populate('bar.baz');
+		.exec(handler)
+
+However that will not work. Only the first level of population (in this case `foo.bar`) will be executed. The second level (`foo.bar.baz`) will not be actioned. Worse than that - it will also fail silently.
+
+Mongol supports multi-level population automatically. The final handler (`exec()`) will only be invoked when all requested populations are executed first.
 
 
 JavaScript style casing
