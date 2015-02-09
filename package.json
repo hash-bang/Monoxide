@@ -1,0 +1,21 @@
+{
+  "name": "mongol",
+  "version": "0.0.0",
+  "description": "A nicer way to work with Mongo",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hash-bang/Mongol.git"
+  },
+  "keywords": [
+    "mongo",
+    "database",
+    "nosql"
+  ],
+  "author": "Matt Carter <m@ttcarter.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hash-bang/Mongol/issues"
+  },
+  "homepage": "https://github.com/hash-bang/Mongol"
+}
