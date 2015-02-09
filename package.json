@@ -1,6 +1,6 @@
 {
-  "name": "mongol",
-  "version": "0.0.2",
+  "name": "mongoloid",
+  "version": "0.0.0",
   "description": "A nicer way to work with Mongo",
   "main": "index.js",
   "repository": {
