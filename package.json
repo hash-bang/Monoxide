@@ -1,11 +1,11 @@
 {
   "name": "mongoloid",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A nicer way to work with Mongo",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/hash-bang/Mongol.git"
+    "url": "git://github.com/hash-bang/Mongoloid.git"
   },
   "keywords": [
     "mongo",
@@ -15,7 +15,7 @@
   "author": "Matt Carter <m@ttcarter.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hash-bang/Mongol/issues"
+    "url": "https://github.com/hash-bang/Mongoloid/issues"
   },
-  "homepage": "https://github.com/hash-bang/Mongol"
+  "homepage": "https://github.com/hash-bang/Mongoloid"
 }
