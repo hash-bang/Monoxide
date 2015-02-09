@@ -12,7 +12,6 @@ Mongol attempts to provide nicer, chainable functionality on top of base Mongo w
 
 Features
 ========
-Mongol builds on the [DWIM](https://en.wikipedia.org/wiki/DWIM) philosophy where certain functionality is handled by Mongol to get the expected results.
 
 
 Proper chainability
@@ -25,7 +24,7 @@ While libraries like Mongoose provide some chainable methods they don't quite wo
 		.where('widgets.enabled', true)
 		.exec(handler);
 
-Will *not* work in Mongo or Mongoose due to the way that populate is a late binding. Mongol however will see that widgets needs popuating THEN the where needs to be executed later on and actually make all this work.
+Will *not* work in Mongo or Mongoose due to the way that populate is a late binding. Mongol however will see that widgets needs populating THEN the where needs to be executed later on and actually make all this work.
 
 
 Deep population
@@ -62,7 +61,7 @@ Here are some examples:
 
 Hooks that actually work
 ------------------------
-Mongo / Mongoose provide very rudimentory hooks like `model.pre('save', callback)` which work *some of the time* (in the example this hook **wont** trigger if the document is being saved on an insert for example). Mongrol extends the hook capability by using the [Node EventEmitter](http://nodejs.org/api/events.html#events_class_events_eventemitter) to provide much-needed event support.
+Mongo / Mongoose provide very rudimentary hooks like `model.pre('save', callback)` which work *some of the time* (in the example this hook **wont** trigger if the document is being saved on an insert for example). Mongol extends the hook capability by using the [Node EventEmitter](http://nodejs.org/api/events.html#events_class_events_eventemitter) to provide much-needed event support.
 
 | Hook                     | Supported by Mongo                                    | Description                                                                   |
 |--------------------------|-------------------------------------------------------|-------------------------------------------------------------------------------|
@@ -76,19 +75,21 @@ Mongo / Mongoose provide very rudimentory hooks like `model.pre('save', callback
 | `change-schema`          | No                                                    | Trigger `callback(row, next)` when any field changes in the specified schema  |
 | `change-schema-field`    | No                                                    | Trigger `callback(field, next)` when the specified field changes in the specified schema |
 
+In addition to simple `on()` support Mogol supports all the usual [EventEmitter](http://nodejs.org/api/events.html#events_class_events_eventemitter) functionality such as `once()`, listener support etc.
+
 
 Hooks that fire on field changes
 --------------------------------
 As with the above hooks for general schema manipulation it is now also possible to detect changes to individual changes.
 
-Previously in Mongo / Mongoose this functionality had to be acomplished by wrapping an entire `.pre('save', cb)` handler, now we can listen for specific field changes using `.on('change', cb)`.
+Previously in Mongo / Mongoose this functionality had to be accomplished by wrapping an entire `.pre('save', cb)` handler, now we can listen for specific field changes using `.on('change', cb)`.
 
 See the above section for details on the `change` event.
 
 
-Virtuals that work asyncronously
---------------------------------
-Virtuals are great but the lack of async support in Node makes writing non-blocking scripts difficult.
+Virtuals that work asynchronously
+---------------------------------
+Virtuals are a great feature but the lack of async support in Node makes writing non-blocking scripts difficult.
 
 Mongol patches this functionality by making all Virtuals async - both getters and setters.
 
@@ -162,7 +163,7 @@ Or by using Mongols pluggable type system:
 
 Field transforms
 ----------------
-Assuming you wanted to rewrite a value before it hits the database Mongol can asyncronously rewrite the incomming value on a per field basis without using hooks.
+Assuming you wanted to rewrite a value before it hits the database Mongol can asynchronously rewrite the incoming value on a per field basis without using hooks.
 
 For example:
 
@@ -200,7 +201,7 @@ Late binding of field functions
 -------------------------------
 Hooks and field functions can also be attached after the schema definition stage.
 
-This is acomplished using the same definition syntax. If a schema is already defined with the given name Mongol will attach the new functionality to the existing schema.
+This is accomplished using the same definition syntax. If a schema is already defined with the given name Mongol will attach the new functionality to the existing schema.
 
 For example:
 
@@ -213,7 +214,7 @@ For example:
 			}
 		});
 
-Alternatively the event system can also be used via EventEmitter:
+Alternatively the event system can also be used via [EventEmitter](http://nodejs.org/api/events.html#events_class_events_eventemitter):
 
 	mongol.on('change-users-password', function(next) {
 		// Password has changed
@@ -251,8 +252,11 @@ For example:
 
 Does not work. The reason is that Mongo expects all selectors to be written in dotted notation as follows:
 
+
 	db.users.find({
 		'auth.tokens.token': 'abc124'
 	}, callback);
+
+Mongol builds on the [DWIM](https://en.wikipedia.org/wiki/DWIM) philosophy where certain functionality is handled by Mongol to get the expected results.
 
 Mongol supports *both* of these formats allowing you to be as explicit as you require in your selection functions. Mongol will rewrite complex array selects (see first example) into dotted notation before passing the aggregate query onto the Mongo driver.
