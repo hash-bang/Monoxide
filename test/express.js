@@ -20,16 +20,16 @@ describe('Mongoloid + Express', function() {
 		app.use(expressLogger);
 		app.use(bodyParser.json());
 
-		app.get('/api/users', mongoloid.restGet('users'));
-		app.get('/api/users/:id', mongoloid.restGet('users'));
-		app.post('/api/users', mongoloid.restSave('users'));
-		app.post('/api/users/:id', mongoloid.restSave('users'));
+		app.get('/api/users', mongoloid.express.get('users'));
+		app.get('/api/users/:id', mongoloid.express.get('users'));
+		app.post('/api/users', mongoloid.express.save('users'));
+		app.post('/api/users/:id', mongoloid.express.save('users'));
 
-		app.get('/api/widgets', mongoloid.restGet('widgets'));
-		app.get('/api/widgets/:id', mongoloid.restGet('widgets'));
-		app.post('/api/widgets', mongoloid.restSave('widgets'));
-		app.post('/api/widgets/:id', mongoloid.restSave('widgets'));
-		app.delete('/api/widgets/:id', mongoloid.restDelete('widgets'));
+		app.get('/api/widgets', mongoloid.express.get('widgets'));
+		app.get('/api/widgets/:id', mongoloid.express.get('widgets'));
+		app.post('/api/widgets', mongoloid.express.save('widgets'));
+		app.post('/api/widgets/:id', mongoloid.express.save('widgets'));
+		app.delete('/api/widgets/:id', mongoloid.express.delete('widgets'));
 
 		server = app.listen(port, null, function(err) {
 			if (err) return finish(err);

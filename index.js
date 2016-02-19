@@ -276,8 +276,12 @@ function Mongoloid() {
 	};
 	// }}}
 
-	// .restGet(settings) {{{
-	self.restGet = function MongoloidRestGet(settings) {
+	// Main .express structure {{{
+	self.express = {};
+	// }}}
+
+	// .express.get(settings) {{{
+	self.express.get = function MongoloidRestGet(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
@@ -318,8 +322,8 @@ function Mongoloid() {
 	};
 	// }}}
 
-	// .restSave(settings) {{{
-	self.restSave = function MongoloidRestSave(settings) {
+	// .express.save(settings) {{{
+	self.express.save = function MongoloidRestSave(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
@@ -351,8 +355,8 @@ function Mongoloid() {
 	};
 	// }}}
 
-	// .restDelete(settings) {{{
-	self.restDelete = function MongoloidRestSave(settings) {
+	// .express.delete(settings) {{{
+	self.express.delete = function MongoloidRestSave(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
