@@ -235,6 +235,8 @@ function Mongoloid() {
 
 			q.$collection = settings.collection;
 
+			if (req.params.id) q.$id = req.params.id;
+
 			self.query(q, function(err, rows) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
@@ -277,6 +279,7 @@ function Mongoloid() {
 			});
 		};
 	};
+	// }}}
 
 	return self;
 }

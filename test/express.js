@@ -1,3 +1,4 @@
+var async = require('async-chainable');
 var bodyParser = require('body-parser');
 var expect = require('chai').expect;
 var express = require('express');
@@ -17,10 +18,16 @@ describe('Mongoloid + Express', function() {
 
 	before(function(finish) {
 		app.use(expressLogger);
-		app.use(bodyParser.json({limit: '16mb'}));
-		app.use(bodyParser.urlencoded({limit: '16mb', extended: false}));
+		app.use(bodyParser.json());
+		app.use(bodyParser.urlencoded());
+
 		app.get('/api/users', mongoloid.restGet('users'));
+		app.get('/api/users/:id', mongoloid.restGet('users'));
 		app.post('/api/users', mongoloid.restSave('users'));
+
+		app.get('/api/widgets', mongoloid.restGet('widgets'));
+		app.get('/api/widgets/:id', mongoloid.restGet('widgets'));
+
 		server = app.listen(port, null, function(err) {
 			if (err) return finish(err);
 			mlog.log('Server listening on http://localhost:' + port);
@@ -96,5 +103,40 @@ describe('Mongoloid + Express', function() {
 
 				finish();
 			});
+	});
+
+	it('should save over an existing record via ReST', function(finish) {
+		async()
+			.then('widget', function(next) {
+				superagent.get('http://localhost:' + port + '/api/widgets')
+					.query({
+						name: 'Widget whollop',
+					})
+					.end(function(err, res) {
+						if (err) return next(err);
+						expect(err).to.be.not.ok;
+						expect(res).to.be.an.array;
+
+						next(null, res.body[0]);
+					});
+			})
+			.then(function(next) {
+				superagent.post('http://localhost:' + port + '/api/widget/' + this.widget._id)
+					.send({
+						status: 'deleted',
+					})
+					.end(function(err, res) {
+						expect(err).to.be.not.ok;
+
+						var widget = res.body;
+						expect(widget).to.be.an.object;
+
+						expect(widget).to.have.property('name', 'Widget whollop');
+						expect(widget).to.have.property('stats', 'deleted');
+
+						finish();
+					});
+			})
+			.end(finish);
 	});
 });
