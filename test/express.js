@@ -19,14 +19,16 @@ describe('Mongoloid + Express', function() {
 	before(function(finish) {
 		app.use(expressLogger);
 		app.use(bodyParser.json());
-		app.use(bodyParser.urlencoded());
 
 		app.get('/api/users', mongoloid.restGet('users'));
 		app.get('/api/users/:id', mongoloid.restGet('users'));
 		app.post('/api/users', mongoloid.restSave('users'));
+		app.post('/api/users/:id', mongoloid.restSave('users'));
 
 		app.get('/api/widgets', mongoloid.restGet('widgets'));
 		app.get('/api/widgets/:id', mongoloid.restGet('widgets'));
+		app.post('/api/widgets', mongoloid.restSave('widgets'));
+		app.post('/api/widgets/:id', mongoloid.restSave('widgets'));
 
 		server = app.listen(port, null, function(err) {
 			if (err) return finish(err);
@@ -121,7 +123,7 @@ describe('Mongoloid + Express', function() {
 					});
 			})
 			.then(function(next) {
-				superagent.post('http://localhost:' + port + '/api/widget/' + this.widget._id)
+				superagent.post('http://localhost:' + port + '/api/widgets/' + this.widget._id)
 					.send({
 						status: 'deleted',
 					})
@@ -132,7 +134,7 @@ describe('Mongoloid + Express', function() {
 						expect(widget).to.be.an.object;
 
 						expect(widget).to.have.property('name', 'Widget whollop');
-						expect(widget).to.have.property('stats', 'deleted');
+						expect(widget).to.have.property('status', 'deleted');
 
 						finish();
 					});

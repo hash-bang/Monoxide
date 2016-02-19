@@ -160,11 +160,13 @@ function Mongoloid() {
 
 		async()
 			.set('metaFields', [
+				'$id', // Mandatory field to specify while record to update
 				'$collection', // Collection to query to find the original record
 			])
 			// Sanity checks {{{
 			.then(function(next) {
 				if (!q || _.isEmpty(q)) return next('No query given');
+				if (!q.$collection) return next('$collection must be specified for save operation');
 				next();
 			})
 			// }}}
@@ -186,16 +188,23 @@ function Mongoloid() {
 				if (!q.$id) return next(); // Creating a new record - dont bother to find the old one
 				self.query({
 					$id: q.$id,
-					$collection: settings.$collection,
+					$collection: q.$collection,
 				}, next);
 			})
 			// }}}
-			// Save new fields {{{
+			// Save new / over {{{
 			.then('newRec', function(next) {
+				var row = this.row;
 				if (!q.$id) { // Create new record
 					this.connection.base.models[q.$collection].create(_.omit(q, this.metaFields), next);
 				} else { // Update existing record
-					next(null, this.row);
+					var saveFields = _(q)
+						.omit(this.metaFields) // Remove all meta fields
+						.forEach(function(val, key) { // NOTE: Implicit end to lodash
+							_.set(row, key, val);
+						});
+
+					this.row.save(next);
 				}
 			})
 			// }}}
@@ -267,6 +276,8 @@ function Mongoloid() {
 			var q = _.clone(req.body);
 
 			q.$collection = settings.collection;
+
+			if (req.params.id) q.$id = req.params.id;
 
 			self.save(q, function(err, rows) {
 				if (settings.passThrough) { // Act as middleware
