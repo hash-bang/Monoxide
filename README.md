@@ -17,8 +17,9 @@ TODO
 - [x] POST /api/:model
 - [x] POST /api/:model/:id
 - [ ] mongoloid.count(q, opts, cb)
-- [ ] GET /api/:model/count
-- [ ] DELETE /api/:model/:id
+- [x] GET /api/:model/count
+- [x] mongolid.delete(q, opts, cb)
+- [x] DELETE /api/:model/:id
 - [ ] PUT /api/:model/:id
 - [ ] PATCH /api/:model/:id
 - [ ] GET advanced queries e.g. `{"name":{"$regex":"^(Bob)"}}`

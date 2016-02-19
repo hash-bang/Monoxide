@@ -60,6 +60,7 @@ function Mongoloid() {
 				'$one', // Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
 				'$limit', // Limit the return to this many rows
 				'$skip', // Offset return by this number of rows
+				'$count', // Only count the results - do not return them. If enabled an object containing a single key ('count') is returned
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -117,7 +118,9 @@ function Mongoloid() {
 
 				//console.log('FIELDS', fields);
 				//console.log('POSTPOPFIELDS', self.filterPostPopulate);
-				if (q.$one) {
+				if (q.$count) {
+					next(null, this.connection.base.models[q.$collection].count(fields));
+				} else if (q.$one) {
 					next(null, this.connection.base.models[q.$collection].findOne(fields));
 				} else {
 					next(null, this.connection.base.models[q.$collection].find(fields));
@@ -126,6 +129,7 @@ function Mongoloid() {
 			// }}}
 			// Apply various simple criteria {{{
 			.then(function(next) {
+				if (q.$count) return next(); // No point doing anything else if just counting
 				if (q.$populate) this.query.populate(q.$populate);
 				if (q.$limit) this.query.sort(q.$limit);
 				if (q.$skip) this.query.sort(q.$skip);
@@ -140,10 +144,31 @@ function Mongoloid() {
 			// }}}
 			// End {{{
 			.end(function(err) {
-				if (err) return finish(err);
-				finish(null, this.result);
+				if (err) {
+					return finish(err);
+				} else if (q.$count) {
+					finish(null, {count: this.result});
+				} else {
+					finish(null, this.result);
+				}
 			});
 			// }}}
+	};
+	// }}}
+
+	// .count([q], [options], callback) {{{
+	self.count = function MongoloidCount(q, options, callback) {
+		var args = argx(arguments);
+		finish = args.pop('function') || function noop() {};
+		q = args.pop('object') || {};
+		options = args.shift('object') || {};
+
+		// Glue count functionality to query
+		q.$count = true;
+
+		console.log('CALL WITH', q, options, callback);
+
+		return self.query(q, options, callback);
 	};
 	// }}}
 
