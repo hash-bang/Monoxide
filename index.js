@@ -37,109 +37,110 @@ function extractFKs(schema, prefix, base) {
 }
 // }}}
 
-function MongoloidQuery(q, options, finish) {
-	var args = argx(arguments);
-	finish = args.pop('function') || function noop() {};
-	q = args.pop('object') || {};
-	options = args.shift('object') || {};
-
-	var settings = _.defaults(options || {}, {
-		cacheFKs: true, // Whether to cache model Foreign Keys (used for populates) or compute them every time
-	});
-
-	async()
-		.set('metaFields', [
-			'$collection', // Collection to query
-			'$sort', // Sorting criteria to apply
-			'$populate', // Population criteria to apply
-			'$one', // Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
-			'$limit', // Limit the return to this many rows
-			'$skip', // Offset return by this number of rows
-		])
-		// Sanity checks {{{
-		.then(function(next) {
-			if (!q) return next('No query given');
-			if (!finish) return next('No callback given');
-			next();
-		})
-		// }}}
-		// .connection {{{
-		.then('connection', function(next) {
-			if (!mongoose.connection) return next('No Mongoose connection open');
-			next(null, mongoose.connection);
-		})
-		// }}}
-		// .model {{{
-		.then('model', function(next) {
-			if (!q.$collection) return next('Collection not specified');
-			if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
-			next(null, this.connection.base.models[q.$collection].schema);
-		})
-		// }}}
-		// .modelFKs - Determine foreign keys {{{
-		.then('modelFKs', function(next) {
-			if (settings.cacheFKs && this.model._knownFKs) return next(null, this.model._knownFKs); // Already computed
-			var FKs = extractFKs(this.model);
-			if (settings.cacheFKs) this.model._knownFKs = FKs; // Cache for next time
-			next(null, FKs);
-		})
-		// }}}
-		// .query - start the find query {{{
-		.set('filterPostPopulate', {}) // Filter by these fields post populate
-		.then('query', function(next) {
-			var self = this;
-			var fields = _(q)
-				.omit(this.metaFields) // Remove all meta fields
-				// FIXME: Ensure all fields are flat
-				.omitBy(function(val, key) { // Remove all fields that will need populating later
-					if (_.some(self.modelFKs, function(FK) {
-						return _.startsWith(key, fk);
-					})) {
-						self.filterPostPopulate[key] = val;
-						return true;
-					} else {
-						return false;
-					}
-				})
-				.value();
-
-			//console.log('FIELDS', fields);
-			//console.log('POSTPOPFIELDS', self.filterPostPopulate);
-			if (q.$one) {
-				next(null, this.connection.base.models[q.$collection].findOne(fields));
-			} else {
-				next(null, this.connection.base.models[q.$collection].find(fields));
-			}
-		})
-		// }}}
-		// Apply various simple criteria {{{
-		.then(function(next) {
-			if (q.$populate) this.query.populate(q.$populate);
-			if (q.$limit) this.query.sort(q.$limit);
-			if (q.$skip) this.query.sort(q.$skip);
-			if (q.$sort) this.query.sort(q.$sort);
-			next();
-		})
-		// }}}
-		// Execute and capture return {{{
-		.then('result', function(next) {
-			this.query.exec(next);
-		})
-		// }}}
-		// End {{{
-		.end(function(err) {
-			if (err) return finish(err);
-			finish(null, this.result);
-		});
-		// }}}
-}
-
 function Mongoloid() {
 	var self = this;
 
-	self.query = MongoloidQuery;
+	// .query([q], [options], callback) {{{
+	self.query = function MongoloidQuery(q, options, finish) {
+		var args = argx(arguments);
+		finish = args.pop('function') || function noop() {};
+		q = args.pop('object') || {};
+		options = args.shift('object') || {};
 
-	self.restGet = function(settings) {
+		var settings = _.defaults(options || {}, {
+			cacheFKs: true, // Whether to cache model Foreign Keys (used for populates) or compute them every time
+		});
+
+		async()
+			.set('metaFields', [
+				'$collection', // Collection to query
+				'$sort', // Sorting criteria to apply
+				'$populate', // Population criteria to apply
+				'$one', // Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
+				'$limit', // Limit the return to this many rows
+				'$skip', // Offset return by this number of rows
+			])
+			// Sanity checks {{{
+			.then(function(next) {
+				if (!q) return next('No query given');
+				if (!finish) return next('No callback given');
+				next();
+			})
+			// }}}
+			// .connection {{{
+			.then('connection', function(next) {
+				if (!mongoose.connection) return next('No Mongoose connection open');
+				next(null, mongoose.connection);
+			})
+			// }}}
+			// .model {{{
+			.then('model', function(next) {
+				if (!q.$collection) return next('Collection not specified');
+				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
+				next(null, this.connection.base.models[q.$collection].schema);
+			})
+			// }}}
+			// .modelFKs - Determine foreign keys {{{
+			.then('modelFKs', function(next) {
+				if (settings.cacheFKs && this.model._knownFKs) return next(null, this.model._knownFKs); // Already computed
+				var FKs = extractFKs(this.model);
+				if (settings.cacheFKs) this.model._knownFKs = FKs; // Cache for next time
+				next(null, FKs);
+			})
+			// }}}
+			// .query - start the find query {{{
+			.set('filterPostPopulate', {}) // Filter by these fields post populate
+			.then('query', function(next) {
+				var self = this;
+				var fields = _(q)
+					.omit(this.metaFields) // Remove all meta fields
+					// FIXME: Ensure all fields are flat
+					.omitBy(function(val, key) { // Remove all fields that will need populating later
+						if (_.some(self.modelFKs, function(FK) {
+							return _.startsWith(key, fk);
+						})) {
+							self.filterPostPopulate[key] = val;
+							return true;
+						} else {
+							return false;
+						}
+					})
+					.value();
+
+				//console.log('FIELDS', fields);
+				//console.log('POSTPOPFIELDS', self.filterPostPopulate);
+				if (q.$one) {
+					next(null, this.connection.base.models[q.$collection].findOne(fields));
+				} else {
+					next(null, this.connection.base.models[q.$collection].find(fields));
+				}
+			})
+			// }}}
+			// Apply various simple criteria {{{
+			.then(function(next) {
+				if (q.$populate) this.query.populate(q.$populate);
+				if (q.$limit) this.query.sort(q.$limit);
+				if (q.$skip) this.query.sort(q.$skip);
+				if (q.$sort) this.query.sort(q.$sort);
+				next();
+			})
+			// }}}
+			// Execute and capture return {{{
+			.then('result', function(next) {
+				this.query.exec(next);
+			})
+			// }}}
+			// End {{{
+			.end(function(err) {
+				if (err) return finish(err);
+				finish(null, this.result);
+			});
+			// }}}
+	};
+	// }}}
+
+	// .restGet(settings) {{{
+	self.restGet = function MongoloidRestGet(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
@@ -176,6 +177,7 @@ function Mongoloid() {
 			});
 		};
 	};
+	// }}}
 
 	return self;
 }
