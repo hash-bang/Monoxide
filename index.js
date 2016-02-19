@@ -48,7 +48,14 @@ function MongoloidQuery(q, options, finish) {
 	});
 
 	async()
-		.set('metaFields', ['$collection', '$sort', '$populate'])
+		.set('metaFields', [
+			'$collection', // Collection to query
+			'$sort', // Sorting criteria to apply
+			'$populate', // Population criteria to apply
+			'$one', // Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
+			'$limit', // Limit the return to this many rows
+			'$skip', // Offset return by this number of rows
+		])
 		// Sanity checks {{{
 		.then(function(next) {
 			if (!q) return next('No query given');
@@ -95,13 +102,21 @@ function MongoloidQuery(q, options, finish) {
 					}
 				})
 				.value();
+
 			//console.log('FIELDS', fields);
 			//console.log('POSTPOPFIELDS', self.filterPostPopulate);
-			next(null, this.connection.base.models[q.$collection].find(fields));
+			if (q.$one) {
+				next(null, this.connection.base.models[q.$collection].findOne(fields));
+			} else {
+				next(null, this.connection.base.models[q.$collection].find(fields));
+			}
 		})
 		// }}}
-		// Apply sorting {{{
+		// Apply various simple criteria {{{
 		.then(function(next) {
+			if (q.$populate) this.query.populate(q.$populate);
+			if (q.$limit) this.query.sort(q.$limit);
+			if (q.$skip) this.query.sort(q.$skip);
 			if (q.$sort) this.query.sort(q.$sort);
 			next();
 		})
@@ -120,8 +135,49 @@ function MongoloidQuery(q, options, finish) {
 }
 
 function Mongoloid() {
-	this.query = MongoloidQuery;
-	return this;
+	var self = this;
+
+	self.query = MongoloidQuery;
+
+	self.restGet = function(settings) {
+		// Deal with incomming settings object {{{
+		if (_.isString(settings)) settings = {collection: settings};
+
+		_.defaults(settings, {
+			collection: null, // The collection to operate on
+			queryRemaps: { // Remap incomming values on left to keys on right
+				sort: '$sort',
+				populate: '$populate',
+			},
+			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
+		});
+
+		if (!settings.collection) throw new Error('No collection specified for mongoloid.restGet(). Specify as a string or {collection: String}');
+		// }}}
+
+		return function(req, res, next) {
+			var q = _(req.query)
+				.mapKeys(function(val, key) {
+					if (settings.queryRemaps[key]) return settings.queryRemaps[key];
+					return key;
+				})
+				.value();
+
+			q.$collection = settings.collection;
+
+			self.query(q, function(err, rows) {
+				if (settings.passThrough) { // Act as middleware
+					next(err, rows);
+				} else if (err) { // Act as endpoint and there was an error
+					res.status(400).end();
+				} else { // Act as endpoint and result is ok
+					res.send(rows).end();
+				}
+			});
+		};
+	};
+
+	return self;
 }
 
 util.inherits(Mongoloid, events.EventEmitter);

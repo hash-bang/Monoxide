@@ -40,4 +40,22 @@ describe('Mongoloid - query', function() {
 			finish();
 		});
 	});
+
+	it('should support population', function(finish) {
+		mongoloid.query({
+			$collection: 'users',
+			$sort: 'name',
+			$populate: 'favourite',
+		}, function(err, users) {
+			expect(err).to.not.be.ok;
+			expect(users).to.be.an.array;
+
+			expect(users[0]).to.have.property('favourite');
+			expect(users[0].favourite).to.be.an.object;
+
+			expect(users[0].favourite).to.have.property('name', 'Widget bang');
+
+			finish();
+		});
+	});
 });
