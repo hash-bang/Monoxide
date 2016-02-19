@@ -165,7 +165,7 @@ function Mongoloid() {
 			])
 			// Sanity checks {{{
 			.then(function(next) {
-				if (!q || _.isEmpty(q)) return next('No query given');
+				if (!q || _.isEmpty(q)) return next('No query given for save operation');
 				if (!q.$collection) return next('$collection must be specified for save operation');
 				next();
 			})
@@ -206,6 +206,65 @@ function Mongoloid() {
 
 					this.row.save(next);
 				}
+			})
+			// }}}
+			// End {{{
+			.end(function(err) {
+				if (err) return finish(err);
+				return finish(null, this.newRec);
+			});
+			// }}}
+	};
+	// }}}
+
+	// .delete([item], options, callback) {{{
+	self.delete = function MongoloidQuery(q, options, finish) {
+		var self = this;
+		var args = argx(arguments);
+		finish = args.pop('function') || function noop() {};
+		q = args.pop('object') || {};
+		options = args.shift('object') || {};
+
+		var settings = _.defaults(options || {}, {
+		});
+
+		async()
+			.set('metaFields', [
+				'$id', // Mandatory field to specify while record to update
+				'$collection', // Collection to query to find the original record
+			])
+			// Sanity checks {{{
+			.then(function(next) {
+				if (!q || _.isEmpty(q)) return next('No query given for delete operation');
+				if (!q.$collection) return next('$collection must be specified for delete operation');
+				if (!q.$id) return next('ID must be speciied during delete operation');
+				next();
+			})
+			// }}}
+			// .connection {{{
+			.then('connection', function(next) {
+				if (!mongoose.connection) return next('No Mongoose connection open');
+				next(null, mongoose.connection);
+			})
+			// }}}
+			// .model {{{
+			.then('model', function(next) {
+				if (!q.$collection) return next('Collection not specified');
+				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
+				next(null, this.connection.base.models[q.$collection].schema);
+			})
+			// }}}
+			// Find the row by its ID - call to self.query() {{{
+			.then('row', function(next) {
+				self.query({
+					$id: q.$id,
+					$collection: q.$collection,
+				}, next);
+			})
+			// }}}
+			// Delete record {{{
+			.then('newRec', function(next) {
+				this.row.remove(next);
 			})
 			// }}}
 			// End {{{
@@ -280,6 +339,39 @@ function Mongoloid() {
 			if (req.params.id) q.$id = req.params.id;
 
 			self.save(q, function(err, rows) {
+				if (settings.passThrough) { // Act as middleware
+					next(err, rows);
+				} else if (err) { // Act as endpoint and there was an error
+					res.status(400).end();
+				} else { // Act as endpoint and result is ok
+					res.send(rows).end();
+				}
+			});
+		};
+	};
+	// }}}
+
+	// .restDelete(settings) {{{
+	self.restDelete = function MongoloidRestSave(settings) {
+		// Deal with incomming settings object {{{
+		if (_.isString(settings)) settings = {collection: settings};
+
+		_.defaults(settings, {
+			collection: null, // The collection to operate on
+			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
+		});
+
+		if (!settings.collection) throw new Error('No collection specified for mongoloid.restGet(). Specify as a string or {collection: String}');
+		// }}}
+
+		return function(req, res, next) {
+			var q = _.clone(req.body);
+
+			q.$collection = settings.collection;
+
+			if (req.params.id) q.$id = req.params.id;
+
+			self.delete(q, function(err, rows) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error

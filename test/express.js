@@ -29,6 +29,7 @@ describe('Mongoloid + Express', function() {
 		app.get('/api/widgets/:id', mongoloid.restGet('widgets'));
 		app.post('/api/widgets', mongoloid.restSave('widgets'));
 		app.post('/api/widgets/:id', mongoloid.restSave('widgets'));
+		app.delete('/api/widgets/:id', mongoloid.restDelete('widgets'));
 
 		server = app.listen(port, null, function(err) {
 			if (err) return finish(err);
@@ -194,6 +195,21 @@ describe('Mongoloid + Express', function() {
 					});
 			})
 			.end(finish);
+	});
+
+	it('should have removed the record from the db', function(finish) {
+		superagent.get('http://localhost:' + port + '/api/widgets')
+			.query({
+				name: 'New Widget',
+			})
+			.end(function(err, res) {
+				if (err) return next(err);
+				expect(err).to.be.not.ok;
+				expect(res.body).to.be.an.array;
+				expect(res.body).to.have.length(0);
+
+				finish();
+			});
 	});
 	// }}}
 
