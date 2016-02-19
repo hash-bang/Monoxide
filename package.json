@@ -17,5 +17,16 @@
   "bugs": {
     "url": "https://github.com/hash-bang/Mongoloid/issues"
   },
-  "homepage": "https://github.com/hash-bang/Mongoloid"
+  "homepage": "https://github.com/hash-bang/Mongoloid",
+  "dependencies": {
+    "argx": "^1.3.1",
+    "async-chainable": "^1.7.15",
+    "lodash": "^4.3.0",
+    "mongoose": "^4.4.3"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5",
+    "mongoose-scenario": "^2.0.1"
+  }
 }
