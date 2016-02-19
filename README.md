@@ -3,6 +3,21 @@
 **THIS PROJECT IS CURRENTLY NON-FUNCTIONAL - PLEASE DO NOT INSTALL IT**
 
 
+TODO
+====
+- [x] mongoloid.query(q, opts, cb)
+- [x] GET /api/:model
+- [x] mongoloid.save(q, opts, cb)
+- [x] POST /api/:model
+- [ ] POST /api/:model/:id
+- [ ] mongoloid.count(q, opts, cb)
+- [ ] GET /api/:model/count
+- [ ] DELETE /api/:model/:id
+- [ ] PUT /api/:model/:id
+- [ ] PATCH /api/:model/:id
+- [ ] GET advanced queries e.g. `{"name":{"$regex":"^(Bob)"}}`
+
+
 Mongoloid
 =========
 A nicer way to work with Mongo.
@@ -260,3 +275,10 @@ Does not work. The reason is that Mongo expects all selectors to be written in d
 Mongoloid builds on the [DWIM](https://en.wikipedia.org/wiki/DWIM) philosophy where certain functionality is handled by Mongoloid to get the expected results.
 
 Mongoloid supports *both* of these formats allowing you to be as explicit as you require in your selection functions. Mongoloid will rewrite complex array selects (see first example) into dotted notation before passing the aggregate query onto the Mongo driver.
+
+
+
+Other ideas
+===========
+
+* ForEach ability on returned record. Combines `.exec() + found.forEach()`. Possibly uses a generator or something so we dont have to hold the entire found result set in memory

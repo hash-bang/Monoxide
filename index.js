@@ -54,6 +54,7 @@ function Mongoloid() {
 		async()
 			.set('metaFields', [
 				'$collection', // Collection to query
+				'$id', // If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
 				'$sort', // Sorting criteria to apply
 				'$populate', // Population criteria to apply
 				'$one', // Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
@@ -62,7 +63,7 @@ function Mongoloid() {
 			])
 			// Sanity checks {{{
 			.then(function(next) {
-				if (!q) return next('No query given');
+				if (!q || _.isEmpty(q)) return next('No query given');
 				if (!finish) return next('No callback given');
 				next();
 			})
@@ -92,20 +93,27 @@ function Mongoloid() {
 			.set('filterPostPopulate', {}) // Filter by these fields post populate
 			.then('query', function(next) {
 				var self = this;
-				var fields = _(q)
-					.omit(this.metaFields) // Remove all meta fields
-					// FIXME: Ensure all fields are flat
-					.omitBy(function(val, key) { // Remove all fields that will need populating later
-						if (_.some(self.modelFKs, function(FK) {
-							return _.startsWith(key, fk);
-						})) {
-							self.filterPostPopulate[key] = val;
-							return true;
-						} else {
-							return false;
-						}
-					})
-					.value();
+				var fields;
+				
+				if (q.$id) { // Search by one ID only - ignore other fields
+					fields = {_id: q.$id};
+					q.$one = true;
+				} else { // Search by query
+					fields = _(q)
+						.omit(this.metaFields) // Remove all meta fields
+						// FIXME: Ensure all fields are flat
+						.omitBy(function(val, key) { // Remove all fields that will need populating later
+							if (_.some(self.modelFKs, function(FK) {
+								return _.startsWith(key, FK);
+							})) {
+								self.filterPostPopulate[key] = val;
+								return true;
+							} else {
+								return false;
+							}
+						})
+						.value();
+				}
 
 				//console.log('FIELDS', fields);
 				//console.log('POSTPOPFIELDS', self.filterPostPopulate);
@@ -134,6 +142,67 @@ function Mongoloid() {
 			.end(function(err) {
 				if (err) return finish(err);
 				finish(null, this.result);
+			});
+			// }}}
+	};
+	// }}}
+
+	// .save([item], options, callback) {{{
+	self.save = function MongoloidQuery(q, options, finish) {
+		var self = this;
+		var args = argx(arguments);
+		finish = args.pop('function') || function noop() {};
+		q = args.pop('object') || {};
+		options = args.shift('object') || {};
+
+		var settings = _.defaults(options || {}, {
+		});
+
+		async()
+			.set('metaFields', [
+				'$collection', // Collection to query to find the original record
+			])
+			// Sanity checks {{{
+			.then(function(next) {
+				if (!q || _.isEmpty(q)) return next('No query given');
+				next();
+			})
+			// }}}
+			// .connection {{{
+			.then('connection', function(next) {
+				if (!mongoose.connection) return next('No Mongoose connection open');
+				next(null, mongoose.connection);
+			})
+			// }}}
+			// .model {{{
+			.then('model', function(next) {
+				if (!q.$collection) return next('Collection not specified');
+				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
+				next(null, this.connection.base.models[q.$collection].schema);
+			})
+			// }}}
+			// Find the row by its ID - call to self.query() {{{
+			.then('row', function(next) {
+				if (!q.$id) return next(); // Creating a new record - dont bother to find the old one
+				self.query({
+					$id: q.$id,
+					$collection: settings.$collection,
+				}, next);
+			})
+			// }}}
+			// Save new fields {{{
+			.then('newRec', function(next) {
+				if (!q.$id) { // Create new record
+					this.connection.base.models[q.$collection].create(_.omit(q, this.metaFields), next);
+				} else { // Update existing record
+					next(null, this.row);
+				}
+			})
+			// }}}
+			// End {{{
+			.end(function(err) {
+				if (err) return finish(err);
+				return finish(null, this.newRec);
 			});
 			// }}}
 	};
@@ -178,6 +247,36 @@ function Mongoloid() {
 		};
 	};
 	// }}}
+
+	// .restSave(settings) {{{
+	self.restSave = function MongoloidRestSave(settings) {
+		// Deal with incomming settings object {{{
+		if (_.isString(settings)) settings = {collection: settings};
+
+		_.defaults(settings, {
+			collection: null, // The collection to operate on
+			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
+		});
+
+		if (!settings.collection) throw new Error('No collection specified for mongoloid.restGet(). Specify as a string or {collection: String}');
+		// }}}
+
+		return function(req, res, next) {
+			var q = _.clone(req.body);
+
+			q.$collection = settings.collection;
+
+			self.save(q, function(err, rows) {
+				if (settings.passThrough) { // Act as middleware
+					next(err, rows);
+				} else if (err) { // Act as endpoint and there was an error
+					res.status(400).end();
+				} else { // Act as endpoint and result is ok
+					res.send(rows).end();
+				}
+			});
+		};
+	};
 
 	return self;
 }

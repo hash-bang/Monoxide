@@ -1,3 +1,4 @@
+var bodyParser = require('body-parser');
 var expect = require('chai').expect;
 var express = require('express');
 var expressLogger = require('express-log-url');
@@ -11,12 +12,15 @@ var server;
 
 var port = 8181;
 
-describe('Mongoloid + Express - query', function() {
+describe('Mongoloid + Express', function() {
 	before(testSetup.init);
 
 	before(function(finish) {
 		app.use(expressLogger);
+		app.use(bodyParser.json({limit: '16mb'}));
+		app.use(bodyParser.urlencoded({limit: '16mb', extended: false}));
 		app.get('/api/users', mongoloid.restGet('users'));
+		app.post('/api/users', mongoloid.restSave('users'));
 		server = app.listen(port, null, function(err) {
 			if (err) return finish(err);
 			mlog.log('Server listening on http://localhost:' + port);
@@ -60,6 +64,35 @@ describe('Mongoloid + Express - query', function() {
 				expect(users[1].mostPurchased[1].item).to.be.a.string;
 				expect(users[1].mostPurchased[2]).to.have.property('number', 15);
 				expect(users[1].mostPurchased[2].item).to.be.a.string;
+
+				finish();
+			});
+	});
+
+	it('should create users via ReST', function(finish) {
+		superagent.post('http://localhost:' + port + '/api/users')
+			.send({
+				name: 'New User via ReST',
+				mostPurchased: [
+					{number: 80},
+					{number: 90},
+				],
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var user = res.body;
+				expect(user).to.be.an.object;
+
+				expect(user).to.have.property('name', 'New User via ReST');
+				expect(user).to.have.property('role', 'user');
+				expect(user).to.have.property('mostPurchased');
+				expect(user.mostPurchased).to.be.an.array;
+				expect(user.mostPurchased).to.have.length(2);
+				expect(user.mostPurchased[0]).to.have.property('number', 80);
+				expect(user.mostPurchased[0].item).to.be.a.string;
+				expect(user.mostPurchased[1]).to.have.property('number', 90);
+				expect(user.mostPurchased[1].item).to.be.a.string;
 
 				finish();
 			});
