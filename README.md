@@ -15,7 +15,7 @@ TODO
 - [x] GET /api/:model
 - [x] mongoloid.save(q, opts, cb)
 - [x] POST /api/:model
-- [ ] POST /api/:model/:id
+- [x] POST /api/:model/:id
 - [ ] mongoloid.count(q, opts, cb)
 - [ ] GET /api/:model/count
 - [ ] DELETE /api/:model/:id

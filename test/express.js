@@ -37,6 +37,7 @@ describe('Mongoloid + Express', function() {
 		});
 	});
 
+	// GET {{{
 	it('should query users via ReST', function(finish) {
 		superagent.get('http://localhost:' + port + '/api/users')
 			.query({
@@ -77,7 +78,9 @@ describe('Mongoloid + Express', function() {
 				finish();
 			});
 	});
+	// }}}
 
+	// POST - create {{{
 	it('should create users via ReST', function(finish) {
 		superagent.post('http://localhost:' + port + '/api/users')
 			.send({
@@ -107,12 +110,34 @@ describe('Mongoloid + Express', function() {
 			});
 	});
 
+	it('should create widgets via ReST', function(finish) {
+		superagent.post('http://localhost:' + port + '/api/widgets')
+			.send({
+				name: 'New Widget',
+				content: 'This is a new widget, there are many like it but this one is my own',
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var widget = res.body;
+				expect(widget).to.be.an.object;
+
+				expect(widget).to.have.property('name', 'New Widget');
+				expect(widget).to.have.property('content', 'This is a new widget, there are many like it but this one is my own');
+				expect(widget).to.have.property('status', 'active');
+
+				finish();
+			});
+	});
+	// }}}
+
+	// POST - update {{{
 	it('should save over an existing record via ReST', function(finish) {
 		async()
 			.then('widget', function(next) {
 				superagent.get('http://localhost:' + port + '/api/widgets')
 					.query({
-						name: 'Widget whollop',
+						name: 'New Widget',
 					})
 					.end(function(err, res) {
 						if (err) return next(err);
@@ -133,7 +158,7 @@ describe('Mongoloid + Express', function() {
 						var widget = res.body;
 						expect(widget).to.be.an.object;
 
-						expect(widget).to.have.property('name', 'Widget whollop');
+						expect(widget).to.have.property('name', 'New Widget');
 						expect(widget).to.have.property('status', 'deleted');
 
 						finish();
@@ -141,4 +166,35 @@ describe('Mongoloid + Express', function() {
 			})
 			.end(finish);
 	});
+	// }}}
+
+	// DELETE {{{
+	it('should delete an existing record via ReST', function(finish) {
+		async()
+			.then('widget', function(next) {
+				superagent.get('http://localhost:' + port + '/api/widgets')
+					.query({
+						name: 'New Widget',
+						status: 'deleted',
+					})
+					.end(function(err, res) {
+						if (err) return next(err);
+						expect(err).to.be.not.ok;
+						expect(res).to.be.an.array;
+
+						next(null, res.body[0]);
+					});
+			})
+			.then(function(next) {
+				superagent.delete('http://localhost:' + port + '/api/widgets/' + this.widget._id)
+					.end(function(err, res) {
+						expect(err).to.be.not.ok;
+
+						finish();
+					});
+			})
+			.end(finish);
+	});
+	// }}}
+
 });
