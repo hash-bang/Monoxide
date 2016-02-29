@@ -9,6 +9,46 @@ A nicer way to work with Mongo.
 
 Mongoloid attempts to provide nicer, chainable functionality on top of base Mongo while making some of the more C centric designs of Mongo more Node like.
 
+TODO
+----
+- [x] mongoloid.query(q, opts, cb)
+- [x] GET /api/:model
+- [x] mongoloid.save(q, opts, cb)
+- [x] POST /api/:model
+- [x] POST /api/:model/:id
+- [ ] mongoloid.count(q, opts, cb)
+- [x] GET /api/:model/count
+- [x] mongolid.delete(q, opts, cb)
+- [x] DELETE /api/:model/:id
+- [ ] PUT /api/:model/:id
+- [ ] PATCH /api/:model/:id
+- [ ] GET advanced queries e.g. `{"name":{"$regex":"^(Bob)"}}`
+
+
+
+ReST Server
+===========
+The primary interface to Mongoloid is the ReST server interface for Express:
+
+
+		var express = require('express');
+		var mongoloid = require('mongoloid');
+
+		var app = express();
+
+		app.get('/api/users', mongoloid.restGet('users'));
+		app.post('/api/users', mongoloid.restSave('users'));
+
+In the above the specified models are bound to their respective ReST end points (`GET /api/users` will return all users for example).
+
+You can also pass more complex options structures by specifying an object:
+
+		app.get('/api/users', mongoloid.restGet({
+			collection: 'users',
+			// ... other options here ... //
+		}));
+
+
 
 Features
 ========

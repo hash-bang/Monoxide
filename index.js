@@ -301,8 +301,9 @@ function Mongoloid() {
 	};
 	// }}}
 
-	// .express structure {{{
+	// Main .express structure {{{
 	self.express = {};
+	// }}}
 
 	// .express.get(settings) {{{
 	self.express.get = function MongoloidRestGet(settings) {
@@ -410,8 +411,6 @@ function Mongoloid() {
 			});
 		};
 	};
-	// }}}
-
 	// }}}
 
 	return self;
