@@ -42,8 +42,8 @@ describe('Mongoloid - query', function() {
 
 	it('should query the users model', function(finish) {
 		mongoloid.query({
-			collection: 'users',
-			sort: 'name',
+			$collection: 'users',
+			$sort: 'name',
 		}, function(err, rawRes) {
 			expect(err).to.not.be.ok;
 			res = rawRes;
