@@ -21,6 +21,7 @@
   "dependencies": {
     "argx": "^1.3.1",
     "async-chainable": "^1.7.15",
+    "express-log-url": "^1.0.3",
     "lodash": "^4.3.0",
     "mongoose": "^4.4.3"
   },
