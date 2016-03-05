@@ -55,17 +55,6 @@ describe('Mongoloid - query', function() {
 		});
 	});
 
-	it('should count the returns from users model (via count())', function(finish) {
-		mongoloid.count('users', function(err, res) {
-			expect(err).to.not.be.ok;
-			expect(res).to.be.an.object;
-
-			expect(res).to.have.property('count', 2);
-
-			finish();
-		});
-	});
-
 	it('should support population', function(finish) {
 		mongoloid.query({
 			$collection: 'users',

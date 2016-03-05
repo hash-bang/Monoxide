@@ -38,7 +38,7 @@ module.exports = {
 			id: mongoose.Schema.ObjectId,
 			name: String,
 			role: {type: String, enum: ['user', 'admin'], default: 'user'},
-			favourite: {type: mongoose.Schema.ObjectId, ref: 'widgets'},
+			favourite: {type: 'pointer', ref: 'widgets'},
 			items: [{type: mongoose.Schema.ObjectId, ref: 'widgets'}],
 			mostPurchased: [
 				{

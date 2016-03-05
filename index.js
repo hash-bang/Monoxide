@@ -1,4 +1,5 @@
-var _ = require('lodash');
+var _ = require('lodash')
+	.mixin(require('lodash-deep'));
 var async = require('async-chainable');
 var events = require('events');
 var mongoose = require('mongoose');
@@ -48,12 +49,17 @@ function Mongoloid() {
 		} else if (_.isObject(q) && _.isFunction(options)) {
 			callback = options;
 			options = {};
+		} else if (_.isString(q) && _.isObject(options) && _.isFunction(callback)) {
+			q = {$collection: q};
+		} else if (_.isString(q) && _.isFunction(options)) {
+			q = {$collection: q};
+			callback = options;
 		} else if (_.isFunction(q)) {
 			callback = q;
 			q = {};
 			options = {};
 		} else if (!_.isFunction(callback)) {
-			throw new Error('Callback parameter is mandatory');
+			throw new Error('Callback parameter must be function');
 		} else {
 			throw new Error('Unknown function call pattern');
 		}
@@ -183,6 +189,11 @@ function Mongoloid() {
 		} else if (_.isObject(q) && _.isFunction(options)) {
 			callback = options;
 			options = {};
+		} else if (_.isString(q) && _.isObject(options) && _.isFunction(callback)) {
+			q = {$collection: q};
+		} else if (_.isString(q) && _.isFunction(options)) {
+			q = {$collection: q};
+			callback = options;
 		} else if (!_.isFunction(q)) {
 			callback = q;
 			q = {};
@@ -440,7 +451,15 @@ function Mongoloid() {
 	self.schema = function(model, spec) {
 		if (!_.isString(model) || !_.isObject(spec)) throw new Error('Schema construction requires a model ID + schema object');
 
-		var schema = new mongoose.Schema(spec);
+		var schema = new mongoose.Schema(_.deepMapValues(spec, function(value, path) {
+			if ( // Rewrite types to support 'oid' / 'objectId' / 'objectID' types
+				_.endsWith(path, '.type') &&
+				_.includes(['oid', 'pointer', 'objectId', 'objectID', 'ObjectID'], value)
+			) {
+				return mongoose.Schema.ObjectId;
+			}
+			return value;
+		}));
 		self.models[model] = mongoose.model(model, schema);
 		return self.models[model];
 	};

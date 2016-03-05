@@ -6,9 +6,7 @@ describe('Mongoloid - count', function() {
 	before(testSetup.init);
 
 	it('should count the users model', function(finish) {
-		mongoloid.count({
-			$collection: 'users',
-		}, function(err, count) {
+		mongoloid.count('users', function(err, count) {
 			expect(err).to.not.be.ok;
 
 			expect(count).to.be.an.object;
@@ -21,9 +19,7 @@ describe('Mongoloid - count', function() {
 	});
 
 	it('should count the widgets model', function(finish) {
-		mongoloid.count({
-			$collection: 'widgets',
-		}, function(err, count) {
+		mongoloid.count('widgets', function(err, count) {
 			expect(err).to.not.be.ok;
 
 			expect(count).to.be.an.object;
