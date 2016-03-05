@@ -37,12 +37,12 @@ function extractFKs(schema, prefix, base) {
 }
 // }}}
 
-function Mongoloid() {
+function Monoxide() {
 	var self = this;
 	self.models = {};
 
 	// .query([q], [options], callback) {{{
-	self.query = function MongoloidQuery(q, options, callback) {
+	self.query = function MonoxideQuery(q, options, callback) {
 		// Deal with arguments {{{
 		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
 			// All ok
@@ -182,7 +182,7 @@ function Mongoloid() {
 	// }}}
 
 	// .count([q], [options], callback) {{{
-	self.count = function MongoloidCount(q, options, callback) {
+	self.count = function MonoxideCount(q, options, callback) {
 		// Deal with arguments {{{
 		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
 			// All ok
@@ -213,7 +213,7 @@ function Mongoloid() {
 	// }}}
 
 	// .save([item], options, callback) {{{
-	self.save = function MongoloidQuery(q, options, callback) {
+	self.save = function MonoxideQuery(q, options, callback) {
 		var self = this;
 		// Deal with arguments {{{
 		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
@@ -295,7 +295,7 @@ function Mongoloid() {
 	// }}}
 
 	// .delete([item], options, callback) {{{
-	self.delete = function MongoloidQuery(q, options, callback) {
+	self.delete = function MonoxideQuery(q, options, callback) {
 		var self = this;
 		// Deal with arguments {{{
 		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
@@ -469,7 +469,7 @@ function Mongoloid() {
 	self.express = {};
 
 	// .express.get(settings) {{{
-	self.express.get = function MongoloidExpressGet(settings) {
+	self.express.get = function MonoxideExpressGet(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
@@ -482,7 +482,7 @@ function Mongoloid() {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
 
-		if (!settings.collection) throw new Error('No collection specified for mongoloid.restGet(). Specify as a string or {collection: String}');
+		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
 		// }}}
 
 		return function(req, res, next) {
@@ -512,7 +512,7 @@ function Mongoloid() {
 	// }}}
 
 	// .express.count(settings) {{{
-	self.express.count = function MongoloidExpressCount(settings) {
+	self.express.count = function MonoxideExpressCount(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
@@ -521,7 +521,7 @@ function Mongoloid() {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
 
-		if (!settings.collection) throw new Error('No collection specified for mongoloid.restGet(). Specify as a string or {collection: String}');
+		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
 		// }}}
 
 		return function(req, res, next) {
@@ -545,7 +545,7 @@ function Mongoloid() {
 	// }}}
 
 	// .express.save(settings) {{{
-	self.express.save = function MongoloidExpressSave(settings) {
+	self.express.save = function MonoxideExpressSave(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
@@ -554,7 +554,7 @@ function Mongoloid() {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
 
-		if (!settings.collection) throw new Error('No collection specified for mongoloid.restGet(). Specify as a string or {collection: String}');
+		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
 		// }}}
 
 		return function(req, res, next) {
@@ -578,7 +578,7 @@ function Mongoloid() {
 	// }}}
 
 	// .express.delete(settings) {{{
-	self.express.delete = function MongoloidExpressSave(settings) {
+	self.express.delete = function MonoxideExpressSave(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
@@ -587,7 +587,7 @@ function Mongoloid() {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
 
-		if (!settings.collection) throw new Error('No collection specified for mongoloid.restGet(). Specify as a string or {collection: String}');
+		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
 		// }}}
 
 		return function(req, res, next) {
@@ -615,6 +615,6 @@ function Mongoloid() {
 	return self;
 }
 
-util.inherits(Mongoloid, events.EventEmitter);
+util.inherits(Monoxide, events.EventEmitter);
 
-module.exports = Mongoloid();
+module.exports = Monoxide();

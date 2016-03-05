@@ -1,12 +1,12 @@
 var expect = require('chai').expect;
-var mongoloid = require('..');
+var monoxide = require('..');
 var testSetup = require('./setup');
 
-describe('Mongoloid - save', function() {
+describe('Monoxide - save', function() {
 	before(testSetup.init);
 
 	it('should save new item', function(finish) {
-		mongoloid.query({
+		monoxide.query({
 			$collection: 'users',
 			name: 'New User',
 			mostPurchased: [

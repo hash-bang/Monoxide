@@ -1,12 +1,12 @@
 var expect = require('chai').expect;
-var mongoloid = require('..');
+var monoxide = require('..');
 var testSetup = require('./setup');
 
-describe('Mongoloid - query', function() {
+describe('Monoxide - query', function() {
 	before(testSetup.init);
 
 	it('should query the users model', function(finish) {
-		mongoloid.query({
+		monoxide.query({
 			$collection: 'users',
 			$sort: 'name',
 		}, function(err, users) {
@@ -42,7 +42,7 @@ describe('Mongoloid - query', function() {
 	});
 
 	it('should count the returns from users model (via query())', function(finish) {
-		mongoloid.query({
+		monoxide.query({
 			$collection: 'users',
 			$count: true,
 		}, function(err, res) {
@@ -56,7 +56,7 @@ describe('Mongoloid - query', function() {
 	});
 
 	it('should support population', function(finish) {
-		mongoloid.query({
+		monoxide.query({
 			$collection: 'users',
 			$sort: 'name',
 			$populate: 'favourite',

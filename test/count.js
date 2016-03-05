@@ -1,12 +1,12 @@
 var expect = require('chai').expect;
-var mongoloid = require('..');
+var monoxide = require('..');
 var testSetup = require('./setup');
 
-describe('Mongoloid - count', function() {
+describe('Monoxide - count', function() {
 	before(testSetup.init);
 
 	it('should count the users model', function(finish) {
-		mongoloid.count('users', function(err, count) {
+		monoxide.count('users', function(err, count) {
 			expect(err).to.not.be.ok;
 
 			expect(count).to.be.an.object;
@@ -19,7 +19,7 @@ describe('Mongoloid - count', function() {
 	});
 
 	it('should count the widgets model', function(finish) {
-		mongoloid.count('widgets', function(err, count) {
+		monoxide.count('widgets', function(err, count) {
 			expect(err).to.not.be.ok;
 
 			expect(count).to.be.an.object;
@@ -32,7 +32,7 @@ describe('Mongoloid - count', function() {
 	});
 
 	it('should count the widgets model (with filter)', function(finish) {
-		mongoloid.count({
+		monoxide.count({
 			$collection: 'widgets',
 			color: 'blue',
 		}, function(err, count) {
@@ -48,7 +48,7 @@ describe('Mongoloid - count', function() {
 	});
 
 	it('should count the widgets model (with non-matching)', function(finish) {
-		mongoloid.count({
+		monoxide.count({
 			$collection: 'widgets',
 			color: 'orange',
 		}, function(err, count) {

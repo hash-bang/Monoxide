@@ -1,6 +1,6 @@
 var async = require('async-chainable');
 var expect = require('chai').expect;
-var mongoloid = require('..');
+var monoxide = require('..');
 var mongoose = require('mongoose');
 var scenario = require('mongoose-scenario');
 
@@ -26,7 +26,7 @@ module.exports = {
 
 	// initConnection {{{
 	initConnection: function(finish) {
-		mongoose.connect('mongodb://localhost/mongoloid-test', finish);
+		mongoose.connect('mongodb://localhost/monoxide-test', finish);
 		mongoose.connection.on('error', console.error.bind(console, 'DB connection error:'));
 	},
 	// }}}
@@ -34,7 +34,7 @@ module.exports = {
 	// initSchemas {{{
 	initSchemas: function(finish) {
 		// User {{{
-		var Users = mongoloid.schema('users', {
+		var Users = monoxide.schema('users', {
 			id: mongoose.Schema.ObjectId,
 			name: String,
 			role: {type: String, enum: ['user', 'admin'], default: 'user'},
@@ -50,7 +50,7 @@ module.exports = {
 		// }}}
 
 		// Widget {{{
-		var Widgets = mongoloid.schema('widgets', {
+		var Widgets = monoxide.schema('widgets', {
 			id: mongoose.Schema.ObjectId,
 			name: String,
 			content: String,
@@ -60,7 +60,7 @@ module.exports = {
 		// }}}
 
 		// Group {{{
-		var Groups = mongoloid.schema('groups', {
+		var Groups = monoxide.schema('groups', {
 			id: mongoose.Schema.ObjectId,
 			name: String,
 			preferences: {

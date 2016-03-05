@@ -4,7 +4,7 @@ var expect = require('chai').expect;
 var express = require('express');
 var expressLogger = require('express-log-url');
 var mlog = require('mocha-logger');
-var mongoloid = require('..');
+var monoxide = require('..');
 var superagent = require('superagent');
 var testSetup = require('./setup');
 
@@ -13,7 +13,7 @@ var server;
 
 var port = 8181;
 
-describe('Mongoloid + Express', function() {
+describe('Monoxide + Express', function() {
 	before(testSetup.init);
 
 	// Express routes installation {{{
@@ -22,17 +22,17 @@ describe('Mongoloid + Express', function() {
 		app.use(bodyParser.json());
 		app.set('log.indent', '      ');
 
-		app.get('/api/users', mongoloid.express.get('users'));
-		app.get('/api/users/:id', mongoloid.express.get('users'));
-		app.post('/api/users', mongoloid.express.save('users'));
-		app.post('/api/users/:id', mongoloid.express.save('users'));
+		app.get('/api/users', monoxide.express.get('users'));
+		app.get('/api/users/:id', monoxide.express.get('users'));
+		app.post('/api/users', monoxide.express.save('users'));
+		app.post('/api/users/:id', monoxide.express.save('users'));
 
-		app.get('/api/widgets', mongoloid.express.get('widgets'));
-		app.get('/api/widgets/count', mongoloid.express.count('widgets'));
-		app.get('/api/widgets/:id', mongoloid.express.get('widgets'));
-		app.post('/api/widgets', mongoloid.express.save('widgets'));
-		app.post('/api/widgets/:id', mongoloid.express.save('widgets'));
-		app.delete('/api/widgets/:id', mongoloid.express.delete('widgets'));
+		app.get('/api/widgets', monoxide.express.get('widgets'));
+		app.get('/api/widgets/count', monoxide.express.count('widgets'));
+		app.get('/api/widgets/:id', monoxide.express.get('widgets'));
+		app.post('/api/widgets', monoxide.express.save('widgets'));
+		app.post('/api/widgets/:id', monoxide.express.save('widgets'));
+		app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 
 		server = app.listen(port, null, function(err) {
 			if (err) return finish(err);

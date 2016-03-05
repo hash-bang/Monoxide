@@ -1,12 +1,12 @@
 var expect = require('chai').expect;
-var mongoloid = require('..');
+var monoxide = require('..');
 var testSetup = require('./setup');
 
-describe('Mongoloid - query builder', function() {
+describe('Monoxide - query builder', function() {
 	before(testSetup.init);
 
 	it('should query the users model', function(finish) {
-		mongoloid.model('users')
+		monoxide.model('users')
 			.find()
 			.sort('name')
 			.populate('items')

@@ -1,11 +1,11 @@
 {
-  "name": "mongoloid",
-  "version": "0.0.1",
-  "description": "A nicer way to work with Mongo",
+  "name": "monoxide",
+  "version": "0.0.0",
+  "description": "A less poisonous to work with Mongo",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/hash-bang/Mongoloid.git"
+    "url": "git://github.com/hash-bang/Monoxide.git"
   },
   "keywords": [
     "mongo",
@@ -15,9 +15,9 @@
   "author": "Matt Carter <m@ttcarter.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hash-bang/Mongoloid/issues"
+    "url": "https://github.com/hash-bang/Monoxide/issues"
   },
-  "homepage": "https://github.com/hash-bang/Mongoloid",
+  "homepage": "https://github.com/hash-bang/Monoxide",
   "dependencies": {
     "async-chainable": "^1.7.15",
     "lodash": "^4.3.0",

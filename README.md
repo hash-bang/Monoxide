@@ -3,52 +3,52 @@
 **THIS PROJECT IS CURRENTLY NON-FUNCTIONAL - PLEASE DO NOT INSTALL IT**
 
 
-Mongoloid
+Monoxide
 =========
 A nicer way to work with Mongo.
 
-Mongoloid attempts to provide nicer, chainable functionality on top of base Mongo while making some of the more C centric designs of Mongo more Node like.
+Monoxide attempts to provide nicer, chainable functionality on top of base Mongo while making some of the more C centric designs of Mongo more Node like.
 
 TODO
 ----
-- [x] mongoloid.query(q, opts, cb)
+- [x] monoxide.query(q, opts, cb)
 - [x] GET /api/:model
-- [x] mongoloid.save(q, opts, cb)
+- [x] monoxide.save(q, opts, cb)
 - [x] POST /api/:model
 - [x] POST /api/:model/:id
-- [x] mongoloid.count(q, opts, cb)
+- [x] monoxide.count(q, opts, cb)
 - [x] GET /api/:model/count
 - [x] mongolid.delete(q, opts, cb)
 - [x] DELETE /api/:model/:id
 - [ ] PUT /api/:model/:id
 - [ ] PATCH /api/:model/:id
 - [ ] GET advanced queries e.g. `{"name":{"$regex":"^(Bob)"}}`
-- [x] mongoloid.model() - query builder
-- [x] mongoloid.schema(model, schema) - schema builder
+- [x] monoxide.model() - query builder
+- [x] monoxide.schema(model, schema) - schema builder
 
 
 
 ReST Server
 ===========
-The primary interface to Mongoloid is the ReST server interface for Express:
+The primary interface to Monoxide is the ReST server interface for Express:
 
 
 		var express = require('express');
-		var mongoloid = require('mongoloid');
+		var monoxide = require('monoxide');
 
 		var app = express();
 
-		app.get('/api/users', mongoloid.express.get('users'));
-		app.get('/api/users/count', mongoloid.express.count('users'));
-		app.get('/api/users/:id', mongoloid.express.get('users'));
-		app.post('/api/users', mongoloid.express.save('users'));
-		app.delete('/api/users/:id', mongoloid.express.delete('users'));
+		app.get('/api/users', monoxide.express.get('users'));
+		app.get('/api/users/count', monoxide.express.count('users'));
+		app.get('/api/users/:id', monoxide.express.get('users'));
+		app.post('/api/users', monoxide.express.save('users'));
+		app.delete('/api/users/:id', monoxide.express.delete('users'));
 
 In the above the specified models are bound to their respective ReST end points (`GET /api/users` will return all users for example).
 
 You can also pass more complex options structures by specifying an object:
 
-		app.get('/api/users', mongoloid.restGet({
+		app.get('/api/users', monoxide.restGet({
 			collection: 'users',
 			// ... other options here ... //
 		}));
@@ -69,7 +69,7 @@ While libraries like Mongoose provide some chainable methods they don't quite wo
 		.where('widgets.enabled', true)
 		.exec(handler);
 
-Will *not* work in Mongo or Mongoose due to the way that populate is a late binding. Mongoloid however will see that widgets needs populating THEN the where needs to be executed later on and actually make all this work.
+Will *not* work in Mongo or Mongoose due to the way that populate is a late binding. Monoxide however will see that widgets needs populating THEN the where needs to be executed later on and actually make all this work.
 
 
 Deep population
@@ -86,27 +86,27 @@ For example assuming you had three collections: `foo`, `bar` and `baz` each havi
 
 However that will not work. Only the first level of population (in this case `foo.bar`) will be executed. The second level (`foo.bar.baz`) will not be actioned. Worse than that - it will also fail silently.
 
-Mongoloid supports multi-level population automatically. The final handler (`exec()`) will only be invoked when all requested populations are executed first.
+Monoxide supports multi-level population automatically. The final handler (`exec()`) will only be invoked when all requested populations are executed first.
 
 
 JavaScript style casing
 -----------------------
 As Mongo is C based some of the methods, properties or functions using first-letter-caps rather than the Node style camelCasing.
 
-Mongoloid rewrites the cases to work in a more Node-y way.
+Monoxide rewrites the cases to work in a more Node-y way.
 
 Here are some examples:
 
-| Mongoose                      | Mongoloid                                |
+| Mongoose                      | Monoxide                                |
 |-------------------------------|------------------------------------------|
-| `mongoose.Schema.ObjectId`    | `mongoloid.types.id`                     |
-| `mongoose.Schema`             | `mongoloid.schema` or `mongoloid.define` |
-| `mongoose.Schema.Types.Mixed` | `mongoloid.types.mixed`                  |
+| `mongoose.Schema.ObjectId`    | `monoxide.types.id`                     |
+| `mongoose.Schema`             | `monoxide.schema` or `monoxide.define` |
+| `mongoose.Schema.Types.Mixed` | `monoxide.types.mixed`                  |
 
 
 Hooks that actually work
 ------------------------
-Mongo / Mongoose provide very rudimentary hooks like `model.pre('save', callback)` which work *some of the time* (in the example this hook **wont** trigger if the document is being saved on an insert for example). Mongoloid extends the hook capability by using the [Node EventEmitter](http://nodejs.org/api/events.html#events_class_events_eventemitter) to provide much-needed event support.
+Mongo / Mongoose provide very rudimentary hooks like `model.pre('save', callback)` which work *some of the time* (in the example this hook **wont** trigger if the document is being saved on an insert for example). Monoxide extends the hook capability by using the [Node EventEmitter](http://nodejs.org/api/events.html#events_class_events_eventemitter) to provide much-needed event support.
 
 | Hook                     | Supported by Mongo                                    | Description                                                                   |
 |--------------------------|-------------------------------------------------------|-------------------------------------------------------------------------------|
@@ -136,7 +136,7 @@ Virtuals that work asynchronously
 ---------------------------------
 Virtuals are a great feature but the lack of async support in Node makes writing non-blocking scripts difficult.
 
-Mongoloid patches this functionality by making all Virtuals async - both getters and setters.
+Monoxide patches this functionality by making all Virtuals async - both getters and setters.
 
 	userSchema
 		.virtual('password')
@@ -175,31 +175,31 @@ One way is to create the schema using the new `define()` functionality:
 
 Or fields can be defined individually in a chain using `define()` + `field()`:
 
-	mongoloid.define('user')
+	monoxide.define('user')
 		.field('id', mongrol.types.id)
-		.field('email', mongoloid.types.string)
-		.field('passhash', mongoloid.types.string)
-		.field('passsalt', mongoloid.types.string)
-		.field('name', mongoloid.types.string)
-		.field('contact', mongoloid.types.object, {
-			phone: {type: mongoloid.types.string},
-			mobile: {type: mongoloid.types.string},
+		.field('email', monoxide.types.string)
+		.field('passhash', monoxide.types.string)
+		.field('passsalt', monoxide.types.string)
+		.field('name', monoxide.types.string)
+		.field('contact', monoxide.types.object, {
+			phone: {type: monoxide.types.string},
+			mobile: {type: monoxide.types.string},
 		})
-		.field('status', mongoloid.types.string, {enum: ['active', 'deleted'], default: 'active'})
-		.field('role', mongoloid.types.string, {enum: ['user', 'admin', 'root'], default: 'user'})
-		.field('created', mongoloid.types.date, {default: Date.now});
+		.field('status', monoxide.types.string, {enum: ['active', 'deleted'], default: 'active'})
+		.field('role', monoxide.types.string, {enum: ['user', 'admin', 'root'], default: 'user'})
+		.field('created', monoxide.types.date, {default: Date.now});
 
-Or by using Mongoloids pluggable type system:
+Or by using Monoxides pluggable type system:
 
-	mongoloid.define('user')
+	monoxide.define('user')
 		.id('id')
 		.string('email')
 		.string('passhash')
 		.string('passsalt')
 		.string('name')
 		.object('contact', {
-			phone: {type: mongoloid.types.string},
-			mobile: {type: mongoloid.types.string},
+			phone: {type: monoxide.types.string},
+			mobile: {type: monoxide.types.string},
 		})
 		.string('status', {enum: ['active', 'deleted'], default: 'active'})
 		.string('role', {enum: ['user', 'admin', 'root'], default: 'user'})
@@ -208,11 +208,11 @@ Or by using Mongoloids pluggable type system:
 
 Field transforms
 ----------------
-Assuming you wanted to rewrite a value before it hits the database Mongoloid can asynchronously rewrite the incoming value on a per field basis without using hooks.
+Assuming you wanted to rewrite a value before it hits the database Monoxide can asynchronously rewrite the incoming value on a per field basis without using hooks.
 
 For example:
 
-	mongoloid.define('widgets')
+	monoxide.define('widgets')
 		.string('status', {
 			transform: function(value, next) {
 				// Do something complicated
@@ -227,7 +227,7 @@ Instead of just one validation or transform function multiple functions can be d
 
 For example:
 
-	mongoloid.define('widgets')
+	monoxide.define('widgets')
 		.string('status', {
 			validate: [
 				function(value, next) {
@@ -246,13 +246,13 @@ Late binding of field functions
 -------------------------------
 Hooks and field functions can also be attached after the schema definition stage.
 
-This is accomplished using the same definition syntax. If a schema is already defined with the given name Mongoloid will attach the new functionality to the existing schema.
+This is accomplished using the same definition syntax. If a schema is already defined with the given name Monoxide will attach the new functionality to the existing schema.
 
 For example:
 
 	// Assume that 'users' has already been defined elsewhere
 
-	mongoloid.define('users')
+	monoxide.define('users')
 		.field('password', {
 			changed: function(value, next) {
 				// Do something when user password changes
@@ -261,7 +261,7 @@ For example:
 
 Alternatively the event system can also be used via [EventEmitter](http://nodejs.org/api/events.html#events_class_events_eventemitter):
 
-	mongoloid.on('change-users-password', function(next) {
+	monoxide.on('change-users-password', function(next) {
 		// Password has changed
 		next();
 	});
@@ -271,7 +271,7 @@ Functional operators
 --------------------
 There are certain database operations which are so common they should be provided at the driver level.
 
-Below are some query functions which can be used directly within Mongoloid without plugins.
+Below are some query functions which can be used directly within Monoxide without plugins.
 
 
 | Function                          | Description                                                           |
@@ -302,9 +302,9 @@ Does not work. The reason is that Mongo expects all selectors to be written in d
 		'auth.tokens.token': 'abc124'
 	}, callback);
 
-Mongoloid builds on the [DWIM](https://en.wikipedia.org/wiki/DWIM) philosophy where certain functionality is handled by Mongoloid to get the expected results.
+Monoxide builds on the [DWIM](https://en.wikipedia.org/wiki/DWIM) philosophy where certain functionality is handled by Monoxide to get the expected results.
 
-Mongoloid supports *both* of these formats allowing you to be as explicit as you require in your selection functions. Mongoloid will rewrite complex array selects (see first example) into dotted notation before passing the aggregate query onto the Mongo driver.
+Monoxide supports *both* of these formats allowing you to be as explicit as you require in your selection functions. Monoxide will rewrite complex array selects (see first example) into dotted notation before passing the aggregate query onto the Mongo driver.
 
 
 
