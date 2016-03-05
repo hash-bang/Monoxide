@@ -135,9 +135,23 @@ function Mongoloid() {
 			.then(function(next) {
 				if (q.$count) return next(); // No point doing anything else if just counting
 				if (q.$populate) this.query.populate(q.$populate);
-				if (q.$limit) this.query.sort(q.$limit);
-				if (q.$skip) this.query.sort(q.$skip);
-				if (q.$sort) this.query.sort(q.$sort);
+				if (q.$limit) this.query.limit(q.$limit);
+				if (q.$skip) this.query.skip(q.$skip);
+
+				// q.sort {{{
+				if (q.$sort) {
+					if (_.isArray(q.$sort)) {
+						var query = this.query;
+						q.$sort.forEach(function(s) {
+							query.sort(s);
+						});
+					} else if (_.isString(q.$sort) || _.isObject(q.$sort)) {
+						this.query.sort(q.$sort);
+					} else {
+						throw new Error('Invalid sort type: ' + typeof q.$sort);
+					}
+				}
+				// }}}
 				next();
 			})
 			// }}}
