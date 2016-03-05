@@ -1,5 +1,6 @@
 var async = require('async-chainable');
 var expect = require('chai').expect;
+var mongoloid = require('..');
 var mongoose = require('mongoose');
 var scenario = require('mongoose-scenario');
 
@@ -33,7 +34,7 @@ module.exports = {
 	// initSchemas {{{
 	initSchemas: function(finish) {
 		// User {{{
-		var userSchema = new mongoose.Schema({
+		var Users = mongoloid.schema('users', {
 			id: mongoose.Schema.ObjectId,
 			name: String,
 			role: {type: String, enum: ['user', 'admin'], default: 'user'},
@@ -46,22 +47,20 @@ module.exports = {
 				}
 			],
 		});
-		var User = mongoose.model('users', userSchema);
 		// }}}
 
 		// Widget {{{
-		var widgetSchema = new mongoose.Schema({
+		var Widgets = mongoloid.schema('widgets', {
 			id: mongoose.Schema.ObjectId,
 			name: String,
 			content: String,
 			status: {type: String, enum: ['active', 'deleted'], default: 'active'},
 			color: {type: String, enum: ['red', 'green', 'blue'], default: 'blue', index: true},
 		});
-		var Widget = mongoose.model('widgets', widgetSchema);
 		// }}}
 
 		// Group {{{
-		var groupSchema = new mongoose.Schema({
+		var Groups = mongoloid.schema('groups', {
 			id: mongoose.Schema.ObjectId,
 			name: String,
 			preferences: {
@@ -70,7 +69,6 @@ module.exports = {
 				}
 			},
 		});
-		var Group = mongoose.model('groups', groupSchema);
 		// }}}
 
 		finish();

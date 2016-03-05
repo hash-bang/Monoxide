@@ -23,6 +23,8 @@ TODO
 - [ ] PUT /api/:model/:id
 - [ ] PATCH /api/:model/:id
 - [ ] GET advanced queries e.g. `{"name":{"$regex":"^(Bob)"}}`
+- [x] mongoloid.model() - query builder
+- [x] mongoloid.schema(model, schema) - schema builder
 
 
 

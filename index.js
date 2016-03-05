@@ -38,6 +38,7 @@ function extractFKs(schema, prefix, base) {
 
 function Mongoloid() {
 	var self = this;
+	self.models = {};
 
 	// .query([q], [options], callback) {{{
 	self.query = function MongoloidQuery(q, options, callback) {
@@ -353,9 +354,100 @@ function Mongoloid() {
 	};
 	// }}}
 
-	// Main .express structure {{{
-	self.express = {};
+	// .find(q, [options], callback) - query builder {{{
+	self.queryBuilder = function(options) {
+		var settings = _.defaults(options || {}, {
+		});
+
+		var qb = this;
+		qb.query = {};
+		qb.settings = settings;
+
+		// qb.find(q, cb) {{{
+		qb.find = function(q, callback) {
+			if (_.isObject(q)) _.merge(qb.query, q);
+			if (_.isFunction(q)) return qb.exec(callback);
+			return qb;
+		};
+		// }}}
+
+		// qb.sort(q, cb) {{{
+		qb.sort = function(q, callback) {
+			if (_.isString(q)) {
+				if (qb.query.$sort) {
+					qb.query.$sort.push(q);
+				} else {
+					qb.query.$sort = [q];
+				}
+			} else if (_.isArray(q)) {
+				if (qb.query.$sort) {
+					qb.query.$sort.push.apply(this, q);
+				} else {
+					qb.query.$sort = q;
+				}
+			} else {
+				throw new Error('Sort parameter type is unsupported');
+			}
+			if (_.isFunction(q)) return qb.exec(callback);
+			return qb;
+		};
+		// }}}
+
+		// qb.populate(q, cb) {{{
+		qb.populate = function(q, callback) {
+			if (_.isString(q)) {
+				if (qb.query.$populate) {
+					qb.query.$populate.push(q);
+				} else {
+					qb.query.$populate = [q];
+				}
+			} else if (_.isArray(q)) {
+				if (qb.query.$populate) {
+					qb.query.$populate.push.apply(this, q);
+				} else {
+					qb.query.$populate = q;
+				}
+			} else {
+				throw new Error('Populate parameter type is unsupported');
+			}
+			if (_.isFunction(q)) return qb.exec(callback);
+			return qb;
+		};
+		// }}}
+
+		// qb.exec(cb) {{{
+		qb.exec = function(callback) {
+			if (!_.isFunction(callback)) throw new Error('Callback to exec() is not a function');
+
+			return self.query(qb.query, qb.settings, callback);
+		};
+		// }}}
+
+		return qb;
+	};
+
+	self.model = function(model) {
+		// Deal with arguments {{{
+		if (!_.isString(model)) throw new Error('Model reference must be a string');
+		// }}}
+
+		var qb = new self.queryBuilder();
+		return qb.find({$collection: model});
+	};
 	// }}}
+
+	// .schema - Schema builder {{{
+	self.schema = function(model, spec) {
+		if (!_.isString(model) || !_.isObject(spec)) throw new Error('Schema construction requires a model ID + schema object');
+
+		var schema = new mongoose.Schema(spec);
+		self.models[model] = mongoose.model(model, schema);
+		return self.models[model];
+	};
+	// }}}
+
+	// .express structure {{{
+	self.express = {};
 
 	// .express.get(settings) {{{
 	self.express.get = function MongoloidExpressGet(settings) {
@@ -497,6 +589,8 @@ function Mongoloid() {
 			});
 		};
 	};
+	// }}}
+
 	// }}}
 
 	return self;
