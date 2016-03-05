@@ -5,7 +5,7 @@
 
 Monoxide
 =========
-A nicer way to work with Mongo.
+A less poisonous to work with Mongo.
 
 Monoxide attempts to provide nicer, chainable functionality on top of base Mongo while making some of the more C centric designs of Mongo more Node like.
 
