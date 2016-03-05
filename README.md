@@ -36,8 +36,11 @@ The primary interface to Mongoloid is the ReST server interface for Express:
 
 		var app = express();
 
-		app.get('/api/users', mongoloid.restGet('users'));
-		app.post('/api/users', mongoloid.restSave('users'));
+		app.get('/api/users', mongoloid.express.get('users'));
+		app.get('/api/users/count', mongoloid.express.count('users'));
+		app.get('/api/users/:id', mongoloid.express.get('users'));
+		app.post('/api/users', mongoloid.express.save('users'));
+		app.delete('/api/users/:id', mongoloid.express.delete('users'));
 
 In the above the specified models are bound to their respective ReST end points (`GET /api/users` will return all users for example).
 

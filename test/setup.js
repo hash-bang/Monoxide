@@ -79,6 +79,7 @@ module.exports = {
 	// initScenarios {{{
 	initScenarios: function(finish) {
 		scenario.import({
+			// Users {{{
 			users: [
 				{
 					name: 'Joe Random',
@@ -117,6 +118,8 @@ module.exports = {
 					],
 				},
 			],
+			// }}}
+			// Widgets {{{
 			widgets: [
 				{
 					_ref: 'widget-crash',
@@ -133,7 +136,8 @@ module.exports = {
 					name: 'Widget whollop',
 					content: 'This is the whollop widget',
 				}
-			]
+			],
+			// }}}
 		}, {
 			connection: mongoose.connection,
 			nuke: true,

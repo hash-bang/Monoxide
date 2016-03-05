@@ -3,9 +3,6 @@ var mongoloid = require('..');
 var testSetup = require('./setup');
 
 describe('Mongoloid - query', function() {
-	// Setup + validate {{{
-	var res;
-
 	before(testSetup.init);
 
 	it('should query the users model', function(finish) {

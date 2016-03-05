@@ -27,6 +27,7 @@ describe('Mongoloid + Express', function() {
 		app.post('/api/users/:id', mongoloid.express.save('users'));
 
 		app.get('/api/widgets', mongoloid.express.get('widgets'));
+		app.get('/api/widgets/count', mongoloid.express.count('widgets'));
 		app.get('/api/widgets/:id', mongoloid.express.get('widgets'));
 		app.post('/api/widgets', mongoloid.express.save('widgets'));
 		app.post('/api/widgets/:id', mongoloid.express.save('widgets'));
@@ -76,6 +77,22 @@ describe('Mongoloid + Express', function() {
 				expect(users[1].mostPurchased[1].item).to.be.a.string;
 				expect(users[1].mostPurchased[2]).to.have.property('number', 15);
 				expect(users[1].mostPurchased[2].item).to.be.a.string;
+
+				finish();
+			});
+	});
+	// }}}
+
+	// GET (as COUNT) {{{
+	it('should count widgets via ReST', function(finish) {
+		superagent.get('http://localhost:' + port + '/api/widgets/count')
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				expect(res.body).to.be.an.object;
+				expect(res.body).to.have.property('count');
+				expect(res.body.count).to.be.a.number;
+				expect(res.body.count).to.be.equal(3);
 
 				finish();
 			});

@@ -344,7 +344,7 @@ function Mongoloid() {
 	// }}}
 
 	// .express.get(settings) {{{
-	self.express.get = function MongoloidRestGet(settings) {
+	self.express.get = function MongoloidExpressGet(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
@@ -354,7 +354,7 @@ function Mongoloid() {
 				sort: '$sort',
 				populate: '$populate',
 			},
-			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
+			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
 
 		if (!settings.collection) throw new Error('No collection specified for mongoloid.restGet(). Specify as a string or {collection: String}');
@@ -374,6 +374,7 @@ function Mongoloid() {
 
 			self.query(q, function(err, rows) {
 				if (settings.passThrough) { // Act as middleware
+					req.document = rows;
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
 					res.status(400).end();
@@ -385,8 +386,41 @@ function Mongoloid() {
 	};
 	// }}}
 
+	// .express.count(settings) {{{
+	self.express.count = function MongoloidExpressCount(settings) {
+		// Deal with incomming settings object {{{
+		if (_.isString(settings)) settings = {collection: settings};
+
+		_.defaults(settings, {
+			collection: null, // The collection to operate on
+			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
+		});
+
+		if (!settings.collection) throw new Error('No collection specified for mongoloid.restGet(). Specify as a string or {collection: String}');
+		// }}}
+
+		return function(req, res, next) {
+			var q = req.query;
+
+			q.$collection = settings.collection;
+			q.$count = true;
+
+			self.query(q, function(err, count) {
+				if (settings.passThrough) { // Act as middleware
+					req.document = count;
+					next(err, count);
+				} else if (err) { // Act as endpoint and there was an error
+					res.status(400).end();
+				} else { // Act as endpoint and result is ok
+					res.send(count).end();
+				}
+			});
+		};
+	};
+	// }}}
+
 	// .express.save(settings) {{{
-	self.express.save = function MongoloidRestSave(settings) {
+	self.express.save = function MongoloidExpressSave(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
@@ -419,7 +453,7 @@ function Mongoloid() {
 	// }}}
 
 	// .express.delete(settings) {{{
-	self.express.delete = function MongoloidRestSave(settings) {
+	self.express.delete = function MongoloidExpressSave(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
