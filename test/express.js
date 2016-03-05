@@ -16,6 +16,7 @@ var port = 8181;
 describe('Mongoloid + Express', function() {
 	before(testSetup.init);
 
+	// Express routes installation {{{
 	before(function(finish) {
 		app.use(expressLogger);
 		app.use(bodyParser.json());
@@ -39,6 +40,7 @@ describe('Mongoloid + Express', function() {
 			finish();
 		});
 	});
+	// }}}
 
 	// GET {{{
 	it('should query users via ReST', function(finish) {

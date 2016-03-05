@@ -55,6 +55,7 @@ module.exports = {
 			name: String,
 			content: String,
 			status: {type: String, enum: ['active', 'deleted'], default: 'active'},
+			color: {type: String, enum: ['red', 'green', 'blue'], default: 'blue', index: true},
 		});
 		var Widget = mongoose.model('widgets', widgetSchema);
 		// }}}
@@ -125,16 +126,19 @@ module.exports = {
 					_ref: 'widget-crash',
 					name: 'Widget crash',
 					content: 'This is the crash widget',
+					// color: 'blue', // Should default to this via schema
 				},
 				{
 					_ref: 'widget-bang',
 					name: 'Widget bang',
 					content: 'This is the bang widget',
+					color: 'red',
 				},
 				{
 					_ref: 'widget-whollop',
 					name: 'Widget whollop',
 					content: 'This is the whollop widget',
+					color: 'blue',
 				}
 			],
 			// }}}
