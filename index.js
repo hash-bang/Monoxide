@@ -1,5 +1,4 @@
 var _ = require('lodash');
-var argx = require('argx');
 var async = require('async-chainable');
 var events = require('events');
 var mongoose = require('mongoose');
@@ -41,11 +40,23 @@ function Mongoloid() {
 	var self = this;
 
 	// .query([q], [options], callback) {{{
-	self.query = function MongoloidQuery(q, options, finish) {
-		var args = argx(arguments);
-		finish = args.pop('function') || function noop() {};
-		q = args.pop('object') || {};
-		options = args.shift('object') || {};
+	self.query = function MongoloidQuery(q, options, callback) {
+		// Deal with arguments {{{
+		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+			// All ok
+		} else if (_.isObject(q) && _.isFunction(options)) {
+			callback = options;
+			options = {};
+		} else if (_.isFunction(q)) {
+			callback = q;
+			q = {};
+			options = {};
+		} else if (!_.isFunction(callback)) {
+			throw new Error('Callback parameter is mandatory');
+		} else {
+			throw new Error('Unknown function call pattern');
+		}
+		// }}}
 
 		var settings = _.defaults(options || {}, {
 			cacheFKs: true, // Whether to cache model Foreign Keys (used for populates) or compute them every time
@@ -62,13 +73,6 @@ function Mongoloid() {
 				'$skip', // Offset return by this number of rows
 				'$count', // Only count the results - do not return them. If enabled an object containing a single key ('count') is returned
 			])
-			// Sanity checks {{{
-			.then(function(next) {
-				if (!q || _.isEmpty(q)) return next('No query given');
-				if (!finish) return next('No callback given');
-				next();
-			})
-			// }}}
 			// .connection {{{
 			.then('connection', function(next) {
 				if (!mongoose.connection) return next('No Mongoose connection open');
@@ -145,11 +149,11 @@ function Mongoloid() {
 			// End {{{
 			.end(function(err) {
 				if (err) {
-					return finish(err);
+					return callback(err);
 				} else if (q.$count) {
-					finish(null, {count: this.result});
+					callback(null, {count: this.result});
 				} else {
-					finish(null, this.result);
+					callback(null, this.result);
 				}
 			});
 			// }}}
@@ -158,27 +162,49 @@ function Mongoloid() {
 
 	// .count([q], [options], callback) {{{
 	self.count = function MongoloidCount(q, options, callback) {
-		var args = argx(arguments);
-		finish = args.pop('function') || function noop() {};
-		q = args.pop('object') || {};
-		options = args.shift('object') || {};
+		// Deal with arguments {{{
+		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+			// All ok
+		} else if (_.isObject(q) && _.isFunction(options)) {
+			callback = options;
+			options = {};
+		} else if (!_.isFunction(q)) {
+			callback = q;
+			q = {};
+			options = {};
+		} else if (_.isFunction(callback)) {
+			throw new Error('Callback parameter is mandatory');
+		} else {
+			throw new Error('Unknown function call pattern');
+		}
+		// }}}
 
 		// Glue count functionality to query
 		q.$count = true;
-
-		console.log('CALL WITH', q, options, callback);
 
 		return self.query(q, options, callback);
 	};
 	// }}}
 
 	// .save([item], options, callback) {{{
-	self.save = function MongoloidQuery(q, options, finish) {
+	self.save = function MongoloidQuery(q, options, callback) {
 		var self = this;
-		var args = argx(arguments);
-		finish = args.pop('function') || function noop() {};
-		q = args.pop('object') || {};
-		options = args.shift('object') || {};
+		// Deal with arguments {{{
+		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+			// All ok
+		} else if (_.isObject(q) && _.isFunction(options)) {
+			callback = options;
+			options = {};
+		} else if (!_.isFunction(q)) {
+			callback = q;
+			q = {};
+			options = {};
+		} else if (_.isFunction(callback)) {
+			throw new Error('Callback parameter is mandatory');
+		} else {
+			throw new Error('Unknown function call pattern');
+		}
+		// }}}
 
 		var settings = _.defaults(options || {}, {
 		});
@@ -235,20 +261,32 @@ function Mongoloid() {
 			// }}}
 			// End {{{
 			.end(function(err) {
-				if (err) return finish(err);
-				return finish(null, this.newRec);
+				if (err) return callback(err);
+				return callback(null, this.newRec);
 			});
 			// }}}
 	};
 	// }}}
 
 	// .delete([item], options, callback) {{{
-	self.delete = function MongoloidQuery(q, options, finish) {
+	self.delete = function MongoloidQuery(q, options, callback) {
 		var self = this;
-		var args = argx(arguments);
-		finish = args.pop('function') || function noop() {};
-		q = args.pop('object') || {};
-		options = args.shift('object') || {};
+		// Deal with arguments {{{
+		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+			// All ok
+		} else if (_.isObject(q) && _.isFunction(options)) {
+			callback = options;
+			options = {};
+		} else if (!_.isFunction(q)) {
+			callback = q;
+			q = {};
+			options = {};
+		} else if (_.isFunction(callback)) {
+			throw new Error('Callback parameter is mandatory');
+		} else {
+			throw new Error('Unknown function call pattern');
+		}
+		// }}}
 
 		var settings = _.defaults(options || {}, {
 		});
@@ -294,8 +332,8 @@ function Mongoloid() {
 			// }}}
 			// End {{{
 			.end(function(err) {
-				if (err) return finish(err);
-				return finish(null, this.newRec);
+				if (err) return callback(err);
+				return callback(null, this.newRec);
 			});
 			// }}}
 	};
