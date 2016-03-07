@@ -42,6 +42,20 @@ function Monoxide() {
 	self.models = {};
 
 	// .query([q], [options], callback) {{{
+	/**
+	* Query Mongo directly with the Monoxide query syntax
+	* @param {object} q The object to process
+	* @param {string} q.$collection The collection / model to query
+	* @param {string} q.$id If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
+	* @param {(string|string[]|object[])} q.$sort Sorting criteria to apply
+	* @param {(string|string[]|object[])} q.$populate Population criteria to apply
+	* @param {boolean=false} q.$one Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
+	* @param {number} q.$limit Limit the return to this many rows
+	* @param {number} q.$skip Offset return by this number of rows
+	* @param {boolean=false} q.$count Only count the results - do not return them. If enabled an object containing a single key ('count') is returned
+	* @param {object} [options] Optional options object which can alter behaviour of the function
+	* @param {function} callback(err, result) the callback to call on completion or error
+	*/
 	self.query = function MonoxideQuery(q, options, callback) {
 		// Deal with arguments {{{
 		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
@@ -365,7 +379,7 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .find(q, [options], callback) - query builder {{{
+	// .queryBuilder([options]) - query builder {{{
 	self.queryBuilder = function(options) {
 		var settings = _.defaults(options || {}, {
 		});
@@ -436,7 +450,9 @@ function Monoxide() {
 
 		return qb;
 	};
+	// }}}
 
+	// .model(model) - model returner {{{
 	self.model = function(model) {
 		// Deal with arguments {{{
 		if (!_.isString(model)) throw new Error('Model reference must be a string');
