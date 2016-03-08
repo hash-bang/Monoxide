@@ -44,17 +44,33 @@ function Monoxide() {
 	// .query([q], [options], callback) {{{
 	/**
 	* Query Mongo directly with the Monoxide query syntax
+	*
+	* @name monoxide.query
+	*
 	* @param {object} q The object to process
 	* @param {string} q.$collection The collection / model to query
-	* @param {string} q.$id If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
-	* @param {(string|string[]|object[])} q.$sort Sorting criteria to apply
-	* @param {(string|string[]|object[])} q.$populate Population criteria to apply
-	* @param {boolean=false} q.$one Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
-	* @param {number} q.$limit Limit the return to this many rows
-	* @param {number} q.$skip Offset return by this number of rows
-	* @param {boolean=false} q.$count Only count the results - do not return them. If enabled an object containing a single key ('count') is returned
+	* @param {string} [q.$id] If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
+	* @param {(string|string[]|object[])} [q.$sort] Sorting criteria to apply
+	* @param {(string|string[]|object[])} [q.$populate] Population criteria to apply
+	* @param {boolean} [q.$one=false] Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
+	* @param {number} [q.$limit] Limit the return to this many rows
+	* @param {number} [q.$skip] Offset return by this number of rows
+	* @param {boolean=false} [q.$count=false] Only count the results - do not return them. If enabled an object containing a single key ('count') is returned
+	* @param {...*} [q.filter] Any other field (not beginning with '$') is treated as filtering criteria
+	*
 	* @param {object} [options] Optional options object which can alter behaviour of the function
+	* @param {boolean} [options.cacheFKs=true] Whether to cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
+	*
 	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @example <caption>Return all Widgets, sorted by name</caption>
+	* monoxide.query({$collection: 'widgets', $sort: 'name'}, function(err, res) {
+	* 	console.log('Widgets:', res);
+	* });
+	* @example <caption>Filter Users to only return admins while also populating their country</capation>
+	* monoxide.query({$collection: 'users', $populate: 'country', role: 'admin'}, function(err, res) {
+	* 	console.log('Admin users:', res);
+	* });
 	*/
 	self.query = function MonoxideQuery(q, options, callback) {
 		// Deal with arguments {{{
@@ -196,6 +212,30 @@ function Monoxide() {
 	// }}}
 
 	// .count([q], [options], callback) {{{
+	/**
+	* Similar to query() but only return the count of possible results rather than the results themselves
+	*
+	* @name monoxide.count
+	* @see monoxide.query
+	*
+	* @param {object} q The object to process
+	* @param {string} q.$collection The collection / model to query
+	* @param {...*} [q.filter] Any other field (not beginning with '$') is treated as filtering criteria
+	*
+	* @param {object} [options] Optional options object which can alter behaviour of the function
+	*
+	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @example <caption>Count all Widgets</caption>
+	* monoxide.count({$collection: 'widgets'}, function(err, res) {
+	* 	console.log('Number of Widgets:', res.count);
+	* });
+	*
+	* @example <caption>Count all admin Users</capation>
+	* monoxide.query({$collection: 'users', role: 'admin'}, function(err, res) {
+	* 	console.log('Number of Admin Users:', res.count);
+	* });
+	*/
 	self.count = function MonoxideCount(q, options, callback) {
 		// Deal with arguments {{{
 		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
@@ -227,6 +267,25 @@ function Monoxide() {
 	// }}}
 
 	// .save([item], options, callback) {{{
+	/**
+	* Save a Mongo document by its ID
+	* This function will first attempt to retrieve the ID and if successful will save, if the document is not found this function will execute the callback with an error
+	*
+	* @name monoxide.save
+	*
+	* @param {object} q The object to process
+	* @param {string} q.$collection The collection / model to query
+	* @param {string} q.$id The ID of the document to save
+	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
+	*
+	* @param {object} [options] Optional options object which can alter behaviour of the function
+	*
+	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @example <caption>Save a Widgets</caption>
+	* monoxide.query({$collection: 'widgets', name: 'New name'}, function(err, res) {
+	* });
+	*/
 	self.save = function MonoxideQuery(q, options, callback) {
 		var self = this;
 		// Deal with arguments {{{
@@ -309,6 +368,24 @@ function Monoxide() {
 	// }}}
 
 	// .delete([item], options, callback) {{{
+	/**
+	* Delete a Mongo document by its ID
+	* This function will first attempt to retrieve the ID and if successful will delete it, if the document is not found this function will execute the callback with an error
+	*
+	* @name monoxide.delete
+	*
+	* @param {object} q The object to process
+	* @param {string} q.$collection The collection / model to query
+	* @param {string} q.$id The ID of the document to delete
+	*
+	* @param {object} [options] Optional options object which can alter behaviour of the function
+	*
+	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @example <caption>Save a Widgets</caption>
+	* monoxide.query({$collection: 'widgets', name: 'New name'}, function(err, res) {
+	* });
+	*/
 	self.delete = function MonoxideQuery(q, options, callback) {
 		var self = this;
 		// Deal with arguments {{{
