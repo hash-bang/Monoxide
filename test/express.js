@@ -12,6 +12,7 @@ var app = express();
 var server;
 
 var port = 8181;
+var url = 'http://localhost:' + port;
 
 describe('Monoxide + Express', function() {
 	before(testSetup.init);
@@ -34,9 +35,11 @@ describe('Monoxide + Express', function() {
 		app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 		app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 
+		app.all('/api/groups', monoxide.express.all('groups'));
+
 		server = app.listen(port, null, function(err) {
 			if (err) return finish(err);
-			mlog.log('Server listening on http://localhost:' + port);
+			mlog.log('Server listening on ' + url);
 			finish();
 		});
 	});
@@ -44,7 +47,7 @@ describe('Monoxide + Express', function() {
 
 	// GET {{{
 	it('should query users via ReST', function(finish) {
-		superagent.get('http://localhost:' + port + '/api/users')
+		superagent.get(url + '/api/users')
 			.query({
 				sort: 'name',
 				populate: 'favourite',
@@ -83,11 +86,51 @@ describe('Monoxide + Express', function() {
 				finish();
 			});
 	});
+
+	it('should query widgets via ReST', function(finish) {
+		superagent.get(url + '/api/widgets')
+			.query({
+				sort: 'name',
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var widgets = res.body;
+				expect(widgets).to.be.an.array;
+				expect(widgets).to.have.length(3);
+
+				expect(widgets[0]).to.have.property('name', 'Widget bang');
+				expect(widgets[1]).to.have.property('name', 'Widget crash');
+				expect(widgets[2]).to.have.property('name', 'Widget whollop');
+
+				finish();
+			});
+	});
+
+	it('should query groups via ReST', function(finish) {
+		superagent.get(url + '/api/groups')
+			.query({
+				sort: 'name',
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var widgets = res.body;
+				expect(widgets).to.be.an.array;
+				expect(widgets).to.have.length(3);
+
+				expect(widgets[0]).to.have.property('name', 'Group Bar');
+				expect(widgets[1]).to.have.property('name', 'Group Baz');
+				expect(widgets[2]).to.have.property('name', 'Group Foo');
+
+				finish();
+			});
+	});
 	// }}}
 
 	// GET (as COUNT) {{{
 	it('should count widgets via ReST', function(finish) {
-		superagent.get('http://localhost:' + port + '/api/widgets/count')
+		superagent.get(url + '/api/widgets/count')
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
@@ -103,7 +146,7 @@ describe('Monoxide + Express', function() {
 
 	// POST - create {{{
 	it('should create users via ReST', function(finish) {
-		superagent.post('http://localhost:' + port + '/api/users')
+		superagent.post(url + '/api/users')
 			.send({
 				name: 'New User via ReST',
 				mostPurchased: [
@@ -132,7 +175,7 @@ describe('Monoxide + Express', function() {
 	});
 
 	it('should create widgets via ReST', function(finish) {
-		superagent.post('http://localhost:' + port + '/api/widgets')
+		superagent.post(url + '/api/widgets')
 			.send({
 				name: 'New Widget',
 				content: 'This is a new widget, there are many like it but this one is my own',
@@ -156,7 +199,7 @@ describe('Monoxide + Express', function() {
 	it('should save over an existing record via ReST', function(finish) {
 		async()
 			.then('widget', function(next) {
-				superagent.get('http://localhost:' + port + '/api/widgets')
+				superagent.get(url + '/api/widgets')
 					.query({
 						name: 'New Widget',
 					})
@@ -169,7 +212,7 @@ describe('Monoxide + Express', function() {
 					});
 			})
 			.then(function(next) {
-				superagent.post('http://localhost:' + port + '/api/widgets/' + this.widget._id)
+				superagent.post(url + '/api/widgets/' + this.widget._id)
 					.send({
 						status: 'deleted',
 					})
@@ -193,7 +236,7 @@ describe('Monoxide + Express', function() {
 	it('should delete an existing record via ReST', function(finish) {
 		async()
 			.then('widget', function(next) {
-				superagent.get('http://localhost:' + port + '/api/widgets')
+				superagent.get(url + '/api/widgets')
 					.query({
 						name: 'New Widget',
 						status: 'deleted',
@@ -207,7 +250,7 @@ describe('Monoxide + Express', function() {
 					});
 			})
 			.then(function(next) {
-				superagent.delete('http://localhost:' + port + '/api/widgets/' + this.widget._id)
+				superagent.delete(url + '/api/widgets/' + this.widget._id)
 					.end(function(err, res) {
 						expect(err).to.be.not.ok;
 
@@ -218,7 +261,7 @@ describe('Monoxide + Express', function() {
 	});
 
 	it('should have removed the record from the db', function(finish) {
-		superagent.get('http://localhost:' + port + '/api/widgets')
+		superagent.get(url + '/api/widgets')
 			.query({
 				name: 'New Widget',
 			})
@@ -232,5 +275,4 @@ describe('Monoxide + Express', function() {
 			});
 	});
 	// }}}
-
 });

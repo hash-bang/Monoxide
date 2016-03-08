@@ -33,7 +33,7 @@ module.exports = {
 
 	// initSchemas {{{
 	initSchemas: function(finish) {
-		// User {{{
+		// Users {{{
 		var Users = monoxide.schema('users', {
 			id: mongoose.Schema.ObjectId,
 			name: String,
@@ -49,7 +49,7 @@ module.exports = {
 		});
 		// }}}
 
-		// Widget {{{
+		// Widgets {{{
 		var Widgets = monoxide.schema('widgets', {
 			id: mongoose.Schema.ObjectId,
 			name: String,
@@ -59,7 +59,7 @@ module.exports = {
 		});
 		// }}}
 
-		// Group {{{
+		// Groups {{{
 		var Groups = monoxide.schema('groups', {
 			id: mongoose.Schema.ObjectId,
 			name: String,
@@ -138,6 +138,34 @@ module.exports = {
 					content: 'This is the whollop widget',
 					color: 'blue',
 				}
+			],
+			// }}}
+			// Groups {{{
+			groups: [
+				{
+					name: 'Group Foo',
+					preferences: {
+						defaults: {
+							items: ['widget-whollop', 'widget-bang'],
+						},
+					},
+				},
+				{
+					name: 'Group Bar',
+					preferences: {
+						defaults: {
+							items: ['widget-crash', 'widget-bang'],
+						},
+					},
+				},
+				{
+					name: 'Group Baz',
+					preferences: {
+						defaults: {
+							items: ['widget-bang'],
+						},
+					},
+				},
 			],
 			// }}}
 		}, {

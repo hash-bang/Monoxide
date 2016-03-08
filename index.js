@@ -561,12 +561,42 @@ function Monoxide() {
 	// .express structure {{{
 	self.express = {};
 
+	// .express.all(settings) {{{
+	self.express.all = function(settings) {
+		// Deal with incomming settings object {{{
+		if (_.isString(settings)) settings = {collection: settings};
+
+		_.defaults(settings, {
+			count: true,
+			read: true,
+			write: false,
+			delete: false,
+		});
+
+		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
+		// }}}
+
+		// Setup handlers for each method {{{
+		var handlers = {};
+		if (settings.read) handlers.GET = self.express.get(_.defaults(settings, {redirectCount: settings.count}));
+		if (settings.write) handlers.POST = self.express.save(settings);
+		if (settings.delete) handlers.DELETE = self.express.delete(settings);
+		// }}}
+
+		return function(req, res, next) {
+			if (!handlers[req.method]) return res.status(404).end(); // Unsupported method
+			handlers[req.method](req, res, next); // Pass on to handler method
+		};
+	};
+	// }}}
+
 	// .express.get(settings) {{{
 	self.express.get = function MonoxideExpressGet(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
 		_.defaults(settings, {
+			redirectCount: false, // Allow rediretion to count() handler if `req.params.id`==`count`
 			collection: null, // The collection to operate on
 			queryRemaps: { // Remap incomming values on left to keys on right
 				sort: '$sort',
