@@ -561,31 +561,33 @@ function Monoxide() {
 	// .express structure {{{
 	self.express = {};
 
-	// .express.all(settings) {{{
-	self.express.all = function(settings) {
+	// .express.middleware(settings) {{{
+	self.express.middleware = function(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
 
 		_.defaults(settings, {
 			count: true,
-			read: true,
-			write: false,
+			get: true,
+			save: false,
 			delete: false,
 		});
 
 		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
 		// }}}
 
-		// Setup handlers for each method {{{
-		var handlers = {};
-		if (settings.read) handlers.GET = self.express.get(_.defaults(settings, {redirectCount: settings.count}));
-		if (settings.write) handlers.POST = self.express.save(settings);
-		if (settings.delete) handlers.DELETE = self.express.delete(settings);
-		// }}}
-
 		return function(req, res, next) {
-			if (!handlers[req.method]) return res.status(404).end(); // Unsupported method
-			handlers[req.method](req, res, next); // Pass on to handler method
+			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
+				self.express.count(settings)(req, res, next);
+			} else if (settings.get && req.method == 'GET') {
+				self.express.get(settings)(req, res, next);
+			} else if (settings.save && req.method == 'POST') {
+				self.express.save(settings)(req, res, next);
+			} else if (settings.delete && req.method == 'DELETE') {
+				self.express.delete(settings)(req, res, next);
+			} else {
+				res.status(404).end();
+			}
 		};
 	};
 	// }}}
@@ -596,7 +598,6 @@ function Monoxide() {
 		if (_.isString(settings)) settings = {collection: settings};
 
 		_.defaults(settings, {
-			redirectCount: false, // Allow rediretion to count() handler if `req.params.id`==`count`
 			collection: null, // The collection to operate on
 			queryRemaps: { // Remap incomming values on left to keys on right
 				sort: '$sort',

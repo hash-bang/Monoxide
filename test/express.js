@@ -35,7 +35,7 @@ describe('Monoxide + Express', function() {
 		app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 		app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 
-		app.all('/api/groups', monoxide.express.all('groups'));
+		app.use('/api/groups/:id?', monoxide.express.middleware('groups'));
 
 		server = app.listen(port, null, function(err) {
 			if (err) return finish(err);
@@ -129,8 +129,33 @@ describe('Monoxide + Express', function() {
 	// }}}
 
 	// GET (as COUNT) {{{
+	it('should not be allowed to count users via ReST', function(finish) {
+		superagent.get(url + '/api/users/count')
+			.end(function(err, res) {
+				expect(err).to.be.ok;
+
+				expect(res.body).to.be.an.object;
+
+				finish();
+			});
+	});
+
 	it('should count widgets via ReST', function(finish) {
 		superagent.get(url + '/api/widgets/count')
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				expect(res.body).to.be.an.object;
+				expect(res.body).to.have.property('count');
+				expect(res.body.count).to.be.a.number;
+				expect(res.body.count).to.be.equal(3);
+
+				finish();
+			});
+	});
+
+	it('should count groups via ReST', function(finish) {
+		superagent.get(url + '/api/groups/count')
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
