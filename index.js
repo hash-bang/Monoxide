@@ -5,38 +5,6 @@ var events = require('events');
 var mongoose = require('mongoose');
 var util = require('util');
 
-// Utility functions {{{
-/**
-* Extract all FKs in dotted path notation from a Mongoose model
-* @param object schema The schema object to examine (usually connection.base.models[model].schema
-* @param string prefix existing Path prefix to use (internal use only)
-* @param object base Base object to append flat paths to (internal use only)
-* @return object A dictionary of foreign keys for the schema (each key will be the info of the object)
-*/
-function extractFKs(schema, prefix, base) {
-	var FKs = {};
-	if (!prefix) prefix = '';
-	if (!base) base = FKs;
-
-	_.forEach(schema.paths, function(path, id) {
-		if (id == 'id' || id == '_id') {
-			// Pass
-		} else if (path.instance && path.instance == 'ObjectID') {
-			FKs[prefix + id] = {type: 'objectId'};
-		} else if (path.caster && path.caster.instance == 'ObjectID') { // Array of ObjectIDs
-			FKs[prefix + id] = {type: 'objectIdArray'};
-		} else if (path.schema) {
-			FKs[prefix + id] = {type: 'subDocument'};
-			_.forEach(extractFKs(path.schema, prefix + id + '.', base), function(val, key) {
-				base[key] = val;
-			});
-		}
-	});
-
-	return FKs;
-}
-// }}}
-
 function Monoxide() {
 	var self = this;
 	self.models = {};
@@ -47,7 +15,7 @@ function Monoxide() {
 	*
 	* @name monoxide.query
 	*
-	* @param {object} q The object to process
+	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {string} [q.$id] If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
 	* @param {(string|string[]|object[])} [q.$sort] Sorting criteria to apply
@@ -58,10 +26,12 @@ function Monoxide() {
 	* @param {boolean=false} [q.$count=false] Only count the results - do not return them. If enabled an object containing a single key ('count') is returned
 	* @param {...*} [q.filter] Any other field (not beginning with '$') is treated as filtering criteria
 	*
-	* @param {object} [options] Optional options object which can alter behaviour of the function
+	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	* @param {boolean} [options.cacheFKs=true] Whether to cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
 	*
 	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @return {Object} This chainable object
 	*
 	* @example <caption>Return all Widgets, sorted by name</caption>
 	* monoxide.query({$collection: 'widgets', $sort: 'name'}, function(err, res) {
@@ -126,7 +96,7 @@ function Monoxide() {
 			// .modelFKs - Determine foreign keys {{{
 			.then('modelFKs', function(next) {
 				if (settings.cacheFKs && this.model._knownFKs) return next(null, this.model._knownFKs); // Already computed
-				var FKs = extractFKs(this.model);
+				var FKs = self.utilities.extractFKs(this.model);
 				if (settings.cacheFKs) this.model._knownFKs = FKs; // Cache for next time
 				next(null, FKs);
 			})
@@ -208,6 +178,7 @@ function Monoxide() {
 				}
 			});
 			// }}}
+		return self;
 	};
 	// }}}
 
@@ -218,13 +189,15 @@ function Monoxide() {
 	* @name monoxide.count
 	* @see monoxide.query
 	*
-	* @param {object} q The object to process
+	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {...*} [q.filter] Any other field (not beginning with '$') is treated as filtering criteria
 	*
-	* @param {object} [options] Optional options object which can alter behaviour of the function
+	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	*
 	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @return {Object} This chainable object
 	*
 	* @example <caption>Count all Widgets</caption>
 	* monoxide.count({$collection: 'widgets'}, function(err, res) {
@@ -273,14 +246,16 @@ function Monoxide() {
 	*
 	* @name monoxide.save
 	*
-	* @param {object} q The object to process
+	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {string} q.$id The ID of the document to save
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
 	*
-	* @param {object} [options] Optional options object which can alter behaviour of the function
+	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	*
 	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @return {Object} This chainable object
 	*
 	* @example <caption>Save a Widgets</caption>
 	* monoxide.query({$collection: 'widgets', name: 'New name'}, function(err, res) {
@@ -364,6 +339,8 @@ function Monoxide() {
 				return callback(null, this.newRec);
 			});
 			// }}}
+
+			return self;
 	};
 	// }}}
 
@@ -374,13 +351,15 @@ function Monoxide() {
 	*
 	* @name monoxide.delete
 	*
-	* @param {object} q The object to process
+	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {string} q.$id The ID of the document to delete
 	*
-	* @param {object} [options] Optional options object which can alter behaviour of the function
+	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	*
 	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @return {Object} This chainable object
 	*
 	* @example <caption>Save a Widgets</caption>
 	* monoxide.query({$collection: 'widgets', name: 'New name'}, function(err, res) {
@@ -453,6 +432,8 @@ function Monoxide() {
 				return callback(null, this.newRec);
 			});
 			// }}}
+
+			return self;
 	};
 	// }}}
 
@@ -530,6 +511,16 @@ function Monoxide() {
 	// }}}
 
 	// .model(model) - model returner {{{
+	/**
+	* Return a defined Monoxide model
+	* The model must have been previously defined by monoxide.schema()
+	*
+	* @name monoxide.model
+	* @see monoxide.schema
+	*
+	* @param {string} model The model name (generally lowercase plurals e.g. 'users', 'widgets', 'favouriteItems' etc.)
+	* @returns {Object} The monoxide model of the generated schema
+	*/
 	self.model = function(model) {
 		// Deal with arguments {{{
 		if (!_.isString(model)) throw new Error('Model reference must be a string');
@@ -541,6 +532,39 @@ function Monoxide() {
 	// }}}
 
 	// .schema - Schema builder {{{
+	/**
+	* Construct and return a Mongo model
+	* This function creates a valid schema specificaion then returns it as if model() were called
+	*
+	* @name monoxide.schema
+	* @see monoxide.model
+	*
+	* @param {string} model The model name (generally lowercase plurals e.g. 'users', 'widgets', 'favouriteItems' etc.)
+	* @param {Object} spec The schema specification composed of a hierarhical object of keys with each value being the specification of that field
+	* @returns {Object} The monoxide model of the generated schema
+	*
+	* @example <caption>Example schema for a widget</caption>
+	* var Widgets = monoxide.schema('widgets', {
+	* 	name: String,
+	* 	content: String,
+	* 	status: {type: String, enum: ['active', 'deleted'], default: 'active'},
+	* 	color: {type: String, enum: ['red', 'green', 'blue'], default: 'blue', index: true},
+	* });
+	*
+	* @example <caption>Example schema for a user</caption>
+	* var Users = monoxide.schema('users', {
+	* 	name: String,
+	* 	role: {type: String, enum: ['user', 'admin'], default: 'user'},
+	* 	favourite: {type: 'pointer', ref: 'widgets'},
+	* 	items: [{type: 'pointer', ref: 'widgets'}],
+	* 	mostPurchased: [
+	* 		{
+	* 			number: {type: Number, default: 0},
+	* 			item: {type: 'pointer', ref: 'widgets'},
+	* 		}
+	* 	],
+	* });
+	*/
 	self.schema = function(model, spec) {
 		if (!_.isString(model) || !_.isObject(spec)) throw new Error('Schema construction requires a model ID + schema object');
 
@@ -567,12 +591,13 @@ function Monoxide() {
 	*
 	* @name monoxide.express.middleware
 	*
-	* @param {object} [settings] Middleware settings
+	* @param {Object} [settings] Middleware settings
 	* @param {boolean} [settings.count=true] Allow GET + Count functionality
 	* @param {boolean} [settings.get=true] Allow record retrieval via the GET method
 	* @param {boolean} [settings.query=true] Allow record querying via the GET method - this extends the regular settings.get by allowing all record retrieval. If this is disabled an ID MUST be specified for any GET to be successful
 	* @param {boolean} [settings.save=false] Allow saving of records via the POST method
 	* @param {boolean} [settings.delete=false] Allow deleting of records via the DELETE method
+	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example <caption>Bind an express method to serve widgets</caption>
 	* app.use('/api/widgets/:id?', monoxide.express.middleware('widgets'));
@@ -616,6 +641,18 @@ function Monoxide() {
 	// }}}
 
 	// .express.get(settings) {{{
+	/**
+	* Return an Express middleware binding for GET operations
+	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
+	*
+	* @name monoxide.express.get
+	*
+	* @param {Object} [settings] Middleware settings
+	* @returns {function} callback(req, res, next) Express compatible middleware function
+	*
+	* @example <caption>Bind an express method to serve widgets</caption>
+	* app.get('/api/widgets/:id?', monoxide.express.get('widgets'));
+	*/
 	self.express.get = function MonoxideExpressGet(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
@@ -659,6 +696,18 @@ function Monoxide() {
 	// }}}
 
 	// .express.count(settings) {{{
+	/**
+	* Return an Express middleware binding for GET operations - specifically for returning COUNTs of objects
+	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
+	*
+	* @name monoxide.express.count
+	*
+	* @param {Object} [settings] Middleware settings
+	* @returns {function} callback(req, res, next) Express compatible middleware function
+	*
+	* @example <caption>Bind an express method to count widgets</caption>
+	* app.get('/api/widgets/count', monoxide.express.get('widgets'));
+	*/
 	self.express.count = function MonoxideExpressCount(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
@@ -692,6 +741,18 @@ function Monoxide() {
 	// }}}
 
 	// .express.save(settings) {{{
+	/**
+	* Return an Express middleware binding for POST operations
+	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
+	*
+	* @name monoxide.express.save
+	*
+	* @param {Object} [settings] Middleware settings
+	* @returns {function} callback(req, res, next) Express compatible middleware function
+	*
+	* @example <caption>Bind an express method to save widgets</caption>
+	* app.post('/api/widgets/:id', monoxide.express.save('widgets'));
+	*/
 	self.express.save = function MonoxideExpressSave(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
@@ -725,6 +786,18 @@ function Monoxide() {
 	// }}}
 
 	// .express.delete(settings) {{{
+	/**
+	* Return an Express middleware binding for DELETE operations
+	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
+	*
+	* @name monoxide.express.delete
+	*
+	* @param {Object} [settings] Middleware settings
+	* @returns {function} callback(req, res, next) Express compatible middleware function
+	*
+	* @example <caption>Bind an express method to delete widgets</caption>
+	* app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
+	*/
 	self.express.delete = function MonoxideExpressSave(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
@@ -755,6 +828,46 @@ function Monoxide() {
 			});
 		};
 	};
+	// }}}
+
+	// }}}
+
+	// .utilities structure {{{
+	self.utilities = {};
+
+	// .utilities.extractFKs(schema, prefix, base) {{{
+	/**
+	* Extract all FKs in dotted path notation from a Mongoose model
+	*
+	* @name monoxide.utilities.extractFKs
+	*
+	* @param {Object} schema The schema object to examine (usually connection.base.models[model].schema
+	* @param {string} prefix existing Path prefix to use (internal use only)
+	* @param {Object} base Base object to append flat paths to (internal use only)
+	* @return {Object} A dictionary of foreign keys for the schema (each key will be the info of the object)
+	*/
+	self.utilities.extractFKs = function(schema, prefix, base) {
+		var FKs = {};
+		if (!prefix) prefix = '';
+		if (!base) base = FKs;
+
+		_.forEach(schema.paths, function(path, id) {
+			if (id == 'id' || id == '_id') {
+				// Pass
+			} else if (path.instance && path.instance == 'ObjectID') {
+				FKs[prefix + id] = {type: 'objectId'};
+			} else if (path.caster && path.caster.instance == 'ObjectID') { // Array of ObjectIDs
+				FKs[prefix + id] = {type: 'objectIdArray'};
+			} else if (path.schema) {
+				FKs[prefix + id] = {type: 'subDocument'};
+				_.forEach(self.utilities.extractFKs(path.schema, prefix + id + '.', base), function(val, key) {
+					base[key] = val;
+				});
+			}
+		});
+
+		return FKs;
+	}
 	// }}}
 
 	// }}}

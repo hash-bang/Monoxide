@@ -35,15 +35,14 @@ module.exports = {
 	initSchemas: function(finish) {
 		// Users {{{
 		var Users = monoxide.schema('users', {
-			id: mongoose.Schema.ObjectId,
 			name: String,
 			role: {type: String, enum: ['user', 'admin'], default: 'user'},
 			favourite: {type: 'pointer', ref: 'widgets'},
-			items: [{type: mongoose.Schema.ObjectId, ref: 'widgets'}],
+			items: [{type: 'pointer', ref: 'widgets'}],
 			mostPurchased: [
 				{
 					number: {type: Number, default: 0},
-					item: {type: mongoose.Schema.ObjectId, ref: 'widgets'},
+					item: {type: 'pointer', ref: 'widgets'},
 				}
 			],
 		});
@@ -51,7 +50,6 @@ module.exports = {
 
 		// Widgets {{{
 		var Widgets = monoxide.schema('widgets', {
-			id: mongoose.Schema.ObjectId,
 			name: String,
 			content: String,
 			status: {type: String, enum: ['active', 'deleted'], default: 'active'},
@@ -61,11 +59,10 @@ module.exports = {
 
 		// Groups {{{
 		var Groups = monoxide.schema('groups', {
-			id: mongoose.Schema.ObjectId,
 			name: String,
 			preferences: {
 				defaults: {
-					items: [{type: mongoose.Schema.ObjectId, ref: 'widgets'}]
+					items: [{type: 'pointer', ref: 'widgets'}]
 				}
 			},
 		});
