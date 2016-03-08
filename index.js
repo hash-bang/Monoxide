@@ -562,6 +562,24 @@ function Monoxide() {
 	self.express = {};
 
 	// .express.middleware(settings) {{{
+	/**
+	* Return an Express middleware binding
+	*
+	* @name monoxide.express.middleware
+	*
+	* @param {object} [settings] Middleware settings
+	* @param {boolean} [settings.count=true] Allow GET + Count functionality
+	* @param {boolean} [settings.get=true] Allow record retrieval via the GET method
+	* @param {boolean} [settings.query=true] Allow record querying via the GET method - this extends the regular settings.get by allowing all record retrieval. If this is disabled an ID MUST be specified for any GET to be successful
+	* @param {boolean} [settings.save=false] Allow saving of records via the POST method
+	* @param {boolean} [settings.delete=false] Allow deleting of records via the DELETE method
+	*
+	* @example <caption>Bind an express method to serve widgets</caption>
+	* app.use('/api/widgets/:id?', monoxide.express.middleware('widgets'));
+	*
+	* @example <caption>Bind an express method to serve users but disallow counting and querying (i.e. direct ID access only)</caption>
+	* app.use('/api/users/:id?', monoxide.express.middleware('users', {query: false, count: false}));
+	*/
 	self.express.middleware = function(settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(settings)) settings = {collection: settings};
@@ -569,6 +587,7 @@ function Monoxide() {
 		_.defaults(settings, {
 			count: true,
 			get: true,
+			query: true,
 			save: false,
 			delete: false,
 		});
@@ -580,7 +599,11 @@ function Monoxide() {
 			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
 				self.express.count(settings)(req, res, next);
 			} else if (settings.get && req.method == 'GET') {
-				self.express.get(settings)(req, res, next);
+				if (!settings.query && !req.params.id) { // Trying to query when querying is disabled
+					res.status(403).end();
+				} else {
+					self.express.get(settings)(req, res, next);
+				}
 			} else if (settings.save && req.method == 'POST') {
 				self.express.save(settings)(req, res, next);
 			} else if (settings.delete && req.method == 'DELETE') {
