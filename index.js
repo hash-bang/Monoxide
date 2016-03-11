@@ -591,7 +591,9 @@ function Monoxide() {
 	*
 	* @name monoxide.express.middleware
 	*
+	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
+	* @param {string} [settings.collection] The model name to bind to
 	* @param {boolean} [settings.count=true] Allow GET + Count functionality
 	* @param {boolean} [settings.get=true] Allow record retrieval via the GET method
 	* @param {boolean} [settings.query=true] Allow record querying via the GET method - this extends the regular settings.get by allowing all record retrieval. If this is disabled an ID MUST be specified for any GET to be successful
@@ -605,9 +607,13 @@ function Monoxide() {
 	* @example <caption>Bind an express method to serve users but disallow counting and querying (i.e. direct ID access only)</caption>
 	* app.use('/api/users/:id?', monoxide.express.middleware('users', {query: false, count: false}));
 	*/
-	self.express.middleware = function(settings) {
+	self.express.middleware = function(model, settings) {
 		// Deal with incomming settings object {{{
-		if (_.isString(settings)) settings = {collection: settings};
+		if (_.isString(model) && _.isObject(settings)) {
+			settings.collection = model;
+		} else if (_.isString(model)) {
+			settings = {collection: model};
+		}
 
 		_.defaults(settings, {
 			count: true,
@@ -617,7 +623,7 @@ function Monoxide() {
 			delete: false,
 		});
 
-		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
+		if (!settings.collection) throw new Error('No collection specified for monoxide.express.middleware(). Specify as a string or {collection: String}');
 		// }}}
 
 		return function(req, res, next) {
@@ -647,26 +653,34 @@ function Monoxide() {
 	*
 	* @name monoxide.express.get
 	*
+	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
+	* @param {string} [settings.collection] The model name to bind to
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example <caption>Bind an express method to serve widgets</caption>
 	* app.get('/api/widgets/:id?', monoxide.express.get('widgets'));
 	*/
-	self.express.get = function MonoxideExpressGet(settings) {
+	self.express.get = function MonoxideExpressGet(model, settings) {
 		// Deal with incomming settings object {{{
-		if (_.isString(settings)) settings = {collection: settings};
+		if (_.isString(model) && _.isObject(settings)) {
+			settings.collection = model;
+		} else if (_.isString(model)) {
+			settings = {collection: model};
+		}
 
 		_.defaults(settings, {
 			collection: null, // The collection to operate on
 			queryRemaps: { // Remap incomming values on left to keys on right
+				limit: '$limit',
+				skip: '$skip',
 				sort: '$sort',
 				populate: '$populate',
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
 
-		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
+		if (!settings.collection) throw new Error('No collection specified for monoxide.express.get(). Specify as a string or {collection: String}');
 		// }}}
 
 		return function(req, res, next) {
@@ -702,7 +716,9 @@ function Monoxide() {
 	*
 	* @name monoxide.express.count
 	*
+	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
+	* @param {string} [settings.collection] The model name to bind to
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example <caption>Bind an express method to count widgets</caption>
@@ -710,14 +726,18 @@ function Monoxide() {
 	*/
 	self.express.count = function MonoxideExpressCount(settings) {
 		// Deal with incomming settings object {{{
-		if (_.isString(settings)) settings = {collection: settings};
+		if (_.isString(model) && _.isObject(settings)) {
+			settings.collection = model;
+		} else if (_.isString(model)) {
+			settings = {collection: model};
+		}
 
 		_.defaults(settings, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
 
-		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
+		if (!settings.collection) throw new Error('No collection specified for monoxide.express.count(). Specify as a string or {collection: String}');
 		// }}}
 
 		return function(req, res, next) {
@@ -747,7 +767,9 @@ function Monoxide() {
 	*
 	* @name monoxide.express.save
 	*
+	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
+	* @param {string} [settings.collection] The model name to bind to
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example <caption>Bind an express method to save widgets</caption>
@@ -755,14 +777,18 @@ function Monoxide() {
 	*/
 	self.express.save = function MonoxideExpressSave(settings) {
 		// Deal with incomming settings object {{{
-		if (_.isString(settings)) settings = {collection: settings};
+		if (_.isString(model) && _.isObject(settings)) {
+			settings.collection = model;
+		} else if (_.isString(model)) {
+			settings = {collection: model};
+		}
 
-		_.defaults(settings, {
+		_.defaults(settings || {}, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
 
-		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
+		if (!settings.collection) throw new Error('No collection specified for monoxide.express.save(). Specify as a string or {collection: String}');
 		// }}}
 
 		return function(req, res, next) {
@@ -792,7 +818,9 @@ function Monoxide() {
 	*
 	* @name monoxide.express.delete
 	*
+	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
+	* @param {string} [settings.collection] The model name to bind to
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example <caption>Bind an express method to delete widgets</caption>
@@ -800,14 +828,18 @@ function Monoxide() {
 	*/
 	self.express.delete = function MonoxideExpressSave(settings) {
 		// Deal with incomming settings object {{{
-		if (_.isString(settings)) settings = {collection: settings};
+		if (_.isString(model) && _.isObject(settings)) {
+			settings.collection = model;
+		} else if (_.isString(model)) {
+			settings = {collection: model};
+		}
 
 		_.defaults(settings, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
 
-		if (!settings.collection) throw new Error('No collection specified for monoxide.restGet(). Specify as a string or {collection: String}');
+		if (!settings.collection) throw new Error('No collection specified for monoxide.express.delete(). Specify as a string or {collection: String}');
 		// }}}
 
 		return function(req, res, next) {
