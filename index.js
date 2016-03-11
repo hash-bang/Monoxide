@@ -613,6 +613,10 @@ function Monoxide() {
 			settings.collection = model;
 		} else if (_.isString(model)) {
 			settings = {collection: model};
+		} else if (_.isObject(model)) {
+			settings = model;
+		} else if (!settings) {
+			settings = {};
 		}
 
 		_.defaults(settings, {
@@ -667,6 +671,10 @@ function Monoxide() {
 			settings.collection = model;
 		} else if (_.isString(model)) {
 			settings = {collection: model};
+		} else if (_.isObject(model)) {
+			settings = model;
+		} else if (!settings) {
+			settings = {};
 		}
 
 		_.defaults(settings, {
@@ -724,12 +732,16 @@ function Monoxide() {
 	* @example <caption>Bind an express method to count widgets</caption>
 	* app.get('/api/widgets/count', monoxide.express.get('widgets'));
 	*/
-	self.express.count = function MonoxideExpressCount(settings) {
+	self.express.count = function MonoxideExpressCount(model, settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(model) && _.isObject(settings)) {
 			settings.collection = model;
 		} else if (_.isString(model)) {
 			settings = {collection: model};
+		} else if (_.isObject(model)) {
+			settings = model;
+		} else if (!settings) {
+			settings = {};
 		}
 
 		_.defaults(settings, {
@@ -775,12 +787,16 @@ function Monoxide() {
 	* @example <caption>Bind an express method to save widgets</caption>
 	* app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 	*/
-	self.express.save = function MonoxideExpressSave(settings) {
+	self.express.save = function MonoxideExpressSave(model, settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(model) && _.isObject(settings)) {
 			settings.collection = model;
 		} else if (_.isString(model)) {
 			settings = {collection: model};
+		} else if (_.isObject(model)) {
+			settings = model;
+		} else if (!settings) {
+			settings = {};
 		}
 
 		_.defaults(settings || {}, {
@@ -826,12 +842,16 @@ function Monoxide() {
 	* @example <caption>Bind an express method to delete widgets</caption>
 	* app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 	*/
-	self.express.delete = function MonoxideExpressSave(settings) {
+	self.express.delete = function MonoxideExpressSave(model, settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(model) && _.isObject(settings)) {
 			settings.collection = model;
 		} else if (_.isString(model)) {
 			settings = {collection: model};
+		} else if (_.isObject(model)) {
+			settings = model;
+		} else if (!settings) {
+			settings = {};
 		}
 
 		_.defaults(settings, {
