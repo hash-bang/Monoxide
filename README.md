@@ -25,6 +25,7 @@ TODO
 - [ ] GET advanced queries e.g. `{"name":{"$regex":"^(Bob)"}}`
 - [x] monoxide.model() - query builder
 - [x] monoxide.schema(model, schema) - schema builder
+- [ ] monoxide.express.middleware restrictions - restrict, restrictQuery
 
 
 
