@@ -39,7 +39,7 @@ The primary interface to Monoxide is the ReST server interface for Express:
 
 		var app = express();
 
-		app.get('/api/users', monoxide.express.get('users'));
+		app.get('/api/users', monoxide.express.query('users'));
 		app.get('/api/users/count', monoxide.express.count('users'));
 		app.get('/api/users/:id', monoxide.express.get('users'));
 		app.post('/api/users', monoxide.express.save('users'));
@@ -49,8 +49,15 @@ In the above the specified models are bound to their respective ReST end points 
 
 You can also pass more complex options structures by specifying an object:
 
-		app.get('/api/users', monoxide.restGet({
+		app.get('/api/users', monoxide.express.middleware({
 			collection: 'users',
+
+			get: true, // Allow retrieval by ID
+			query: true, // Allow retrieval of multiple records as a query
+			count: true, // Allow record counting via query
+			save: false, // Allow saving via POST / PATCH / PUT
+			delete: false, // Allow record deletion via DELETE
+
 			// ... other options here ... //
 		}));
 

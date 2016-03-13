@@ -9,6 +9,78 @@ function Monoxide() {
 	var self = this;
 	self.models = {};
 
+	// .get([q], [id], callback) {{{
+	/**
+	* Retrieve a single record from a model via its ID
+	* This function will ONLY retrieve via the ID field, all other fields are ignored
+	* NOTE: Really this function just wraps the monoxide.query() function to provide functionality like populate 
+	*
+	* @name monoxide.get
+	*
+	* @param {Object} q The object to process
+	* @param {string} q.$collection The collection / model to query
+	* @param {string} [q.$id] The ID to return
+	* @param {(string|string[]|object[])} [q.$populate] Population criteria to apply
+	*
+	* @param {string} [id] The ID to return (alternative syntax)
+	*
+	* @param {Object} [options] Optional options object which can alter behaviour of the function
+	*
+	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @return {Object} This chainable object
+	*
+	* @example <caption>Return a single widget by its ID (string syntax)</caption>
+	* monoxide.get('widgets', '56e2421f475c1ef4135a1d58', function(err, res) {
+	* 	console.log('Widget:', res);
+	* });
+	*
+	* @example <caption>Return a single widget by its ID (object syntax)</caption>
+	* monoxide.get({$collection: 'widgets', $id: '56e2421f475c1ef4135a1d58'}, function(err, res) {
+	* 	console.log('Widget:', res);
+	* });
+	*/
+	self.get = function(q, id, options, callback) {
+		// Deal with arguments {{{
+		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+			// All ok
+		} else if (_.isObject(q) && _.isFunction(id)) {
+			callback = id;
+			options = {};
+		} else if (_.isString(q) && _.isString(id) && _.isObject(options) && _.isFunction(callback)) {
+			q = {
+				$collection: q,
+				$id: id,
+			};
+		} else if (_.isString(q) && _.isObject(id) && _.isObject(options) && _.isFunction(callback)) { // Probably being passed a Mongoose objectId as the ID
+			q = {
+				$collection: q,
+				$id: id.toString(),
+			};
+		} else if (_.isString(q) && _.isObject(id) && _.isFunction(options)) { // Probably being passed a Mongoose objectId as the ID
+			q = {
+				$collection: q,
+				$id: id.toString(),
+			};
+			callback = options;
+		} else if (_.isString(q) && _.isString(id) && _.isFunction(options)) {
+			q = {
+				$collection: q,
+				$id: id,
+			};
+			callback = options;
+		} else if (!_.isFunction(callback)) {
+			throw new Error('Callback parameter must be function');
+		} else {
+			throw new Error('Unknown function call pattern');
+		}
+		// }}}
+
+		if (!q.$id) return callback('No $id specified');
+		return self.query(q, options, callback);
+	};
+	// }}}
+
 	// .query([q], [options], callback) {{{
 	/**
 	* Query Mongo directly with the Monoxide query syntax
@@ -595,8 +667,8 @@ function Monoxide() {
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
 	* @param {boolean} [settings.count=true] Allow GET + Count functionality
-	* @param {boolean} [settings.get=true] Allow record retrieval via the GET method
-	* @param {boolean} [settings.query=true] Allow record querying via the GET method - this extends the regular settings.get by allowing all record retrieval. If this is disabled an ID MUST be specified for any GET to be successful
+	* @param {boolean} [settings.get=true] Allow single record retrieval by its ID via the GET method. If this is disabled an ID MUST be specified for any GET to be successful within req.params
+	* @param {boolean} [settings.query=true] Allow record querying via the GET method
 	* @param {boolean} [settings.save=false] Allow saving of records via the POST method
 	* @param {boolean} [settings.delete=false] Allow deleting of records via the DELETE method
 	* @returns {function} callback(req, res, next) Express compatible middleware function
@@ -633,12 +705,10 @@ function Monoxide() {
 		return function(req, res, next) {
 			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
 				self.express.count(settings)(req, res, next);
+			} else if (settings.get && req.method == 'GET' && req.params.id) {
+				self.express.get(settings)(req, res, next);
 			} else if (settings.get && req.method == 'GET') {
-				if (!settings.query && !req.params.id) { // Trying to query when querying is disabled
-					res.status(403).end();
-				} else {
-					self.express.get(settings)(req, res, next);
-				}
+				self.express.query(settings)(req, res, next);
 			} else if (settings.save && req.method == 'POST') {
 				self.express.save(settings)(req, res, next);
 			} else if (settings.delete && req.method == 'DELETE') {
@@ -652,7 +722,7 @@ function Monoxide() {
 
 	// .express.get(settings) {{{
 	/**
-	* Return an Express middleware binding for GET operations
+	* Return an Express middleware binding for single record retrieval operations
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
 	* @name monoxide.express.get
@@ -660,12 +730,79 @@ function Monoxide() {
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
+	* @param {string} [settings.queryRemaps] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example <caption>Bind an express method to serve widgets</caption>
 	* app.get('/api/widgets/:id?', monoxide.express.get('widgets'));
 	*/
 	self.express.get = function MonoxideExpressGet(model, settings) {
+		// Deal with incomming settings object {{{
+		if (_.isString(model) && _.isObject(settings)) {
+			settings.collection = model;
+		} else if (_.isString(model)) {
+			settings = {collection: model};
+		} else if (_.isObject(model)) {
+			settings = model;
+		} else if (!settings) {
+			settings = {};
+		}
+
+		_.defaults(settings, {
+			collection: null, // The collection to operate on
+			queryRemaps: { // Remap incomming values on left to keys on right
+				populate: '$populate',
+			},
+			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
+		});
+
+		if (!settings.collection) throw new Error('No collection specified for monoxide.express.get(). Specify as a string or {collection: String}');
+		// }}}
+
+		return function(req, res, next) {
+			if (!req.params.id) return res.send('No ID specified').status(404).end();
+
+			var q = _(req.query)
+				.mapKeys(function(val, key) {
+					if (settings.queryRemaps[key]) return settings.queryRemaps[key];
+					return key;
+				})
+				.value();
+
+			q.$collection = settings.collection;
+			q.$id = req.params.id;
+
+			self.get(q, function(err, doc) {
+				if (settings.passThrough) { // Act as middleware
+					req.document = doc;
+					next(err, rows);
+				} else if (err) { // Act as endpoint and there was an error
+					res.status(400).end();
+				} else { // Act as endpoint and result is ok
+					res.send(doc).end();
+				}
+			});
+		};
+	};
+	// }}}
+
+	// .express.query(settings) {{{
+	/**
+	* Return an Express middleware binding for multiple record retrieval operations
+	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
+	*
+	* @name monoxide.express.query
+	*
+	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
+	* @param {Object} [settings] Middleware settings
+	* @param {string} [settings.collection] The model name to bind to
+	* @param {string} [settings.queryRemaps] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
+	* @returns {function} callback(req, res, next) Express compatible middleware function
+	*
+	* @example <caption>Bind an express method to serve widgets</caption>
+	* app.get('/api/widgets', monoxide.express.query('widgets'));
+	*/
+	self.express.query = function MonoxideExpressGet(model, settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(model) && _.isObject(settings)) {
 			settings.collection = model;
@@ -688,7 +825,7 @@ function Monoxide() {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
 
-		if (!settings.collection) throw new Error('No collection specified for monoxide.express.get(). Specify as a string or {collection: String}');
+		if (!settings.collection) throw new Error('No collection specified for monoxide.express.query(). Specify as a string or {collection: String}');
 		// }}}
 
 		return function(req, res, next) {
@@ -700,8 +837,6 @@ function Monoxide() {
 				.value();
 
 			q.$collection = settings.collection;
-
-			if (req.params.id) q.$id = req.params.id;
 
 			self.query(q, function(err, rows) {
 				if (settings.passThrough) { // Act as middleware

@@ -23,12 +23,12 @@ describe('Monoxide + Express', function() {
 		app.use(bodyParser.json());
 		app.set('log.indent', '      ');
 
-		app.get('/api/users', monoxide.express.get('users'));
+		app.get('/api/users', monoxide.express.query('users'));
 		app.get('/api/users/:id', monoxide.express.get('users'));
 		app.post('/api/users', monoxide.express.save('users'));
 		app.post('/api/users/:id', monoxide.express.save('users'));
 
-		app.get('/api/widgets', monoxide.express.get('widgets'));
+		app.get('/api/widgets', monoxide.express.query('widgets'));
 		app.get('/api/widgets/count', monoxide.express.count('widgets'));
 		app.get('/api/widgets/:id', monoxide.express.get('widgets'));
 		app.post('/api/widgets', monoxide.express.save('widgets'));
@@ -45,7 +45,8 @@ describe('Monoxide + Express', function() {
 	});
 	// }}}
 
-	// GET {{{
+	// GET (query) {{{
+	var users;
 	it('should query users via ReST', function(finish) {
 		superagent.get(url + '/api/users')
 			.query({
@@ -55,7 +56,7 @@ describe('Monoxide + Express', function() {
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
-				var users = res.body;
+				users = res.body;
 				expect(users).to.be.an.array;
 
 				expect(users[0]).to.have.property('name', 'Jane Quark');
@@ -128,7 +129,77 @@ describe('Monoxide + Express', function() {
 	});
 	// }}}
 
-	// GET (as COUNT) {{{
+	// GET (single ID) {{{
+	it('should retrieve users by ID via ReST', function(finish) {
+		superagent.get(url + '/api/users/' + users[0]._id)
+			.query({
+				populate: 'favourite',
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var user = res.body;
+				expect(user).to.be.an.object;
+
+				expect(user).to.have.property('name', 'Jane Quark');
+				expect(user).to.have.property('role', 'user');
+				expect(user).to.have.property('favourite');
+				expect(user.favourite).to.be.an.object;
+				expect(user.favourite).to.have.property('name', 'Widget bang');
+				expect(user).to.have.property('mostPurchased');
+				expect(user.mostPurchased).to.be.an.array;
+				expect(user.mostPurchased).to.have.length(2);
+				expect(user.mostPurchased[0]).to.have.property('number', 1);
+				expect(user.mostPurchased[0].item).to.be.a.string;
+				expect(user.mostPurchased[1]).to.have.property('number', 2);
+				expect(user.mostPurchased[1].item).to.be.a.string;
+
+				finish();
+			});
+	});
+
+	it('should query widgets via ReST', function(finish) {
+		superagent.get(url + '/api/widgets')
+			.query({
+				sort: 'name',
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var widgets = res.body;
+				expect(widgets).to.be.an.array;
+				expect(widgets).to.have.length(3);
+
+				expect(widgets[0]).to.have.property('name', 'Widget bang');
+				expect(widgets[1]).to.have.property('name', 'Widget crash');
+				expect(widgets[2]).to.have.property('name', 'Widget whollop');
+
+				finish();
+			});
+	});
+
+	it('should query groups via ReST', function(finish) {
+		superagent.get(url + '/api/groups')
+			.query({
+				sort: 'name',
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var widgets = res.body;
+				expect(widgets).to.be.an.array;
+				expect(widgets).to.have.length(3);
+
+				expect(widgets[0]).to.have.property('name', 'Group Bar');
+				expect(widgets[1]).to.have.property('name', 'Group Baz');
+				expect(widgets[2]).to.have.property('name', 'Group Foo');
+
+				finish();
+			});
+	});
+	// }}}
+
+	// GET (count) {{{
 	it('should not be allowed to count users via ReST', function(finish) {
 		superagent.get(url + '/api/users/count')
 			.end(function(err, res) {
