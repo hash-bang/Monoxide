@@ -21,7 +21,7 @@ describe('Monoxide + Express permissions', function() {
 		app.use(bodyParser.json());
 		app.set('log.indent', '      ');
 
-		app.get('/api/widgets', monoxide.express.middleware('widgets', {
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 			get: true,
 			query: true,
 			count: true,
@@ -48,14 +48,15 @@ describe('Monoxide + Express permissions', function() {
 		});
 	});
 
-	it('should be denied query by ID', function(finish) {
+	it('should be denied query by ID (get=false)', function(finish) {
 		var app = express();
 		app.use(expressLogger);
 		app.use(bodyParser.json());
 		app.set('log.indent', '      ');
 
-		app.get('/api/widgets', monoxide.express.middleware('widgets', {
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 			get: false,
+			query: false,
 		}));
 
 		var server = app.listen(port, null, function(err) {
@@ -72,13 +73,47 @@ describe('Monoxide + Express permissions', function() {
 		});
 	});
 
-	it('should be denied query', function(finish) {
+	it('should be denied query by ID selectively (get=function)', function(finish) {
 		var app = express();
 		app.use(expressLogger);
 		app.use(bodyParser.json());
 		app.set('log.indent', '      ');
 
-		app.get('/api/widgets', monoxide.express.middleware('widgets', {
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
+			get: function(req, res, next) {
+				if (req.params.id == widgets[0]._id) return res.status(403).send('Nope!').end();
+				next();
+			},
+		}));
+
+		var server = app.listen(port, null, function(err) {
+			if (err) return finish(err);
+
+			superagent.get(url + '/api/widgets/' + widgets[0]._id)
+				.end(function(err, res) {
+					expect(err).to.be.ok;
+					expect(res.body).to.be.empty;
+
+					superagent.get(url + '/api/widgets/' + widgets[1]._id)
+						.end(function(err, res) {
+							expect(err).to.be.not.ok;
+							expect(res.body).to.be.an.object;
+							expect(res.body).to.have.property('_id');
+
+							server.close();
+							finish();
+						});
+				});
+		});
+	});
+
+	it('should be denied query (query=false)', function(finish) {
+		var app = express();
+		app.use(expressLogger);
+		app.use(bodyParser.json());
+		app.set('log.indent', '      ');
+
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 			query: false,
 		}));
 
@@ -102,7 +137,7 @@ describe('Monoxide + Express permissions', function() {
 		app.use(bodyParser.json());
 		app.set('log.indent', '      ');
 
-		app.get('/api/widgets', monoxide.express.middleware('widgets', {
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 			count: false,
 		}));
 
@@ -151,7 +186,7 @@ describe('Monoxide + Express permissions', function() {
 		app.use(bodyParser.json());
 		app.set('log.indent', '      ');
 
-		app.get('/api/widgets', monoxide.express.middleware('widgets', {
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 			delete: false,
 		}));
 
