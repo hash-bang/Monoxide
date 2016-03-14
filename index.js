@@ -679,20 +679,21 @@ function Monoxide() {
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
-	* @param {Object} [q.$project] Fields to be supplied in the aggregation (in the form {field: true})
-	* @param {boolean} [q.$project._id=false] If true surpress the output of the `_id` field
-	* @param {Object} [q.$match]
-	* @param {Object} [q.$redract]
-	* @param {Object} [q.$limit]
-	* @param {Object} [q.$skip]
-	* @param {Object} [q.$unwind]
-	* @param {Object} [q.$group]
-	* @param {Object} [q.$sample]
-	* @param {Object} [q.$sort]
-	* @param {Object} [q.$geoNear]
-	* @param {Object} [q.$lookup]
-	* @param {Object} [q.$out]
-	* @param {Object} [q.$indexStats]
+	* @param {array} q.$stages The aggregation stages array
+	* @param {Object} [q.$stages.$project] Fields to be supplied in the aggregation (in the form `{field: true}`)
+	* @param {boolean} [q.$stages.$project._id=false] If true surpress the output of the `_id` field
+	* @param {Object} [q.$stages.$match] Specify a filter on fields (in the form `{field: CRITERIA}`)
+	* @param {Object} [q.$stages.$redract]
+	* @param {Object} [q.$stages.$limit]
+	* @param {Object} [q.$stages.$skip]
+	* @param {Object} [q.$stages.$unwind]
+	* @param {Object} [q.$stages.$group]
+	* @param {Object} [q.$stages.$sample]
+	* @param {Object} [q.$stages.$sort] Specify an object of fields to sort by (in the form `{field: 1|-1}` where 1 is ascending and -1 is decending sort order)
+	* @param {Object} [q.$stages.$geoNear]
+	* @param {Object} [q.$stages.$lookup]
+	* @param {Object} [q.$stages.$out]
+	* @param {Object} [q.$stages.$indexStats]
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	*
@@ -727,6 +728,12 @@ function Monoxide() {
 		});
 
 		async()
+			// Sanity checks {{{
+			.then(function(next) {
+				if (!q.$stages || !_.isArray(q.$stages)) return next('$stages must be specified as an array');
+				next();
+			})
+			// }}}
 			// .connection {{{
 			.then('connection', function(next) {
 				if (!mongoose.connection) return next('No Mongoose connection open');
@@ -740,22 +747,9 @@ function Monoxide() {
 				next(null, this.connection.collection(q.$collection));
 			})
 			// }}}
-			// Prepare aggregation query {{{
-			.then('query', function(next) {
-				var query = {};
-				['$project', '$match', '$redract', '$limit', '$skip', '$unwind', '$group', '$sample', '$sort', '$geoNear', '$lookup', '$out', '$indexStats']
-					.forEach(function(f) {
-						if (q[f]) query[f] = q[f];
-					});
-
-				if (!_.keys(q).length) return next('At least one field must be specified for an aggregation pipeline');
-				next(null, query);
-			})
-			// }}}
 			// Execute and capture return {{{
 			.then('result', function(next) {
-				console.log('WILLRUN', this.query);
-				this.model.aggregate(this.query, next);
+				this.model.aggregate(q.$stages, next);
 			})
 			// }}}
 			// End {{{
