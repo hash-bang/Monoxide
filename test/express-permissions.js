@@ -140,7 +140,7 @@ describe('Monoxide + Express permissions', function() {
 		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 			query: function(req, res, next) {
 				// Only allow querying if ?foobar=baz in the query
-				if (req.query.foobar || req.query.foobar == 'baz') {
+				if (req.query.foobar && req.query.foobar == 'baz') {
 					delete req.query.foobar; // Delete from query so we dont filter records by this
 					return next();
 				}
@@ -169,7 +169,7 @@ describe('Monoxide + Express permissions', function() {
 		});
 	});
 
-	it('should be denied count', function(finish) {
+	it('should be denied count (count=false)', function(finish) {
 		var app = express();
 		app.use(expressLogger);
 		app.use(bodyParser.json());
@@ -189,6 +189,41 @@ describe('Monoxide + Express permissions', function() {
 
 					server.close();
 					finish();
+				});
+		});
+	});
+
+	it('should be denied count (count=function)', function(finish) {
+		var app = express();
+		app.use(expressLogger);
+		app.use(bodyParser.json());
+		app.set('log.indent', '      ');
+
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
+			count: function(req, res, next) {
+				// Only allow count if ?color=blue
+				if (req.query.color && req.query.color == 'blue') return next();
+				return res.status(403).send('Nope!').end();
+			},
+		}));
+
+		var server = app.listen(port, null, function(err) {
+			if (err) return finish(err);
+
+			superagent.get(url + '/api/widgets/count?color=red')
+				.end(function(err, res) {
+					expect(err).to.be.ok;
+					expect(res.body).to.be.empty;
+
+					superagent.get(url + '/api/widgets/count?color=blue')
+						.end(function(err, res) {
+							expect(err).to.be.not.ok;
+							expect(res.body).to.be.an.object;
+							expect(res.body).to.have.property('count', 2);
+
+							server.close();
+							finish();
+						});
 				});
 		});
 	});

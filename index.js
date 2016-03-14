@@ -666,7 +666,7 @@ function Monoxide() {
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
-	* @param {boolean} [settings.count=true] Allow GET + Count functionality
+	* @param {boolean|function(req,res,next)} [settings.count=true] Allow GET + Count functionality
 	* @param {boolean|function(req,res,next)} [settings.get=true] Allow single record retrieval by its ID via the GET method. If this is disabled an ID MUST be specified for any GET to be successful within req.params
 	* @param {boolean|function(req,res,next)} [settings.query=true] Allow record querying via the GET method
 	* @param {boolean} [settings.save=false] Allow saving of records via the POST method
@@ -703,7 +703,12 @@ function Monoxide() {
 		// }}}
 
 		return function(req, res, next) {
-			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
+			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && _.isFunction(settings.count)) {
+				settings.count(req, res, function(err) {
+					if (err) return next(err);
+					self.express.count(settings)(req, res, next);
+				});
+			} else if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
 				self.express.count(settings)(req, res, next);
 			} else if (settings.get && req.method == 'GET' && req.params.id && _.isFunction(settings.get)) {
 				settings.get(req, res, function(err) {
