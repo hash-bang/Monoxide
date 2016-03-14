@@ -707,7 +707,7 @@ function Monoxide() {
 				self.express.count(settings)(req, res, next);
 			} else if (settings.get && req.method == 'GET' && req.params.id) {
 				self.express.get(settings)(req, res, next);
-			} else if (settings.get && req.method == 'GET') {
+			} else if (settings.query && req.method == 'GET') {
 				self.express.query(settings)(req, res, next);
 			} else if (settings.save && req.method == 'POST') {
 				self.express.save(settings)(req, res, next);
