@@ -86,7 +86,7 @@ You can also pass more complex options structures by specifying an object:
 
 	var app = express();
 
-	app.use('/api/users/:id?', monoxide.express.middleware('users', {
+	app.use('/api/users/:id?', monoxide.express.middleware({
 		collection: 'users',
 
 		get: true, // Allow retrieval by ID
@@ -96,6 +96,35 @@ You can also pass more complex options structures by specifying an object:
 		delete: false, // Allow record deletion via DELETE
 
 		// ... other options here ... //
+	}));
+
+
+You can also secure the various methods by passing in middleware:
+
+	app.use('/api/users/:id?', monoxide.express.middleware('users', {
+		get: true, // Allow retrieval by ID
+		query: false, // Dont allow querying of users (direct ID addressing is ok though)
+		count: false, // Disable counting
+
+		query: true, // Allow retrieval of multiple records as a query
+
+		save: function(req, res, next) {
+			// User must be logged in AND be either the right user OR an admin to save user info
+			if (
+				(req.user && req.user._id) && // Logged in AND
+				(
+					req.user._id == req.user._id || // Is the same user thats being saved (saving own profile) OR
+					req.user.role == 'admin' // User is an admin
+				)
+			) return next();
+			return res.status(403).send('Not logged in').end();
+		},
+
+		delete: function(req, res, next) {
+			// Only allow delete if the query contains 'force' as a string
+			if (req.query.force && req.query.force === 'confirm') return next();
+			return res.status(403).send('Nope!').end();
+		},
 	}));
 
 
