@@ -314,4 +314,38 @@ describe('Monoxide + Express permissions', function() {
 				});
 		});
 	});
+
+	it('should be denied delete selectively (delete=function)', function(finish) {
+		var app = express();
+		app.use(expressLogger);
+		app.use(bodyParser.json());
+		app.set('log.indent', '      ');
+
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
+			delete: function(req, res, next) {
+				// Only allow delete if the query contains 'force' as a string
+				if (req.query.force && req.query.force === 'confirm') return next();
+				return res.status(403).send('Nope!').end();
+			},
+		}));
+
+		var server = app.listen(port, null, function(err) {
+			if (err) return finish(err);
+
+			superagent.delete(url + '/api/widgets/' + widgets[0]._id)
+				.end(function(err, res) {
+					expect(err).to.be.ok;
+					expect(res.body).to.be.empty;
+
+					superagent.delete(url + '/api/widgets/' + widgets[0]._id)
+						.query({force: 'confirm'})
+						.end(function(err, res) {
+							expect(err).to.be.not.ok;
+
+							server.close();
+							finish();
+						});
+				});
+		});
+	});
 });

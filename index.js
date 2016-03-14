@@ -731,6 +731,11 @@ function Monoxide() {
 				});
 			} else if (settings.save && req.method == 'POST') {
 				self.express.save(settings)(req, res, next);
+			} else if (settings.delete && req.method == 'DELETE' && _.isFunction(settings.delete)) {
+				settings.delete(req, res, function(err) {
+					if (err) return next(err);
+					self.express.delete(settings)(req, res, next);
+				});
 			} else if (settings.delete && req.method == 'DELETE') {
 				self.express.delete(settings)(req, res, next);
 			} else {
