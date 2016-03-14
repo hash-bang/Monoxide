@@ -5,6 +5,9 @@ var events = require('events');
 var mongoose = require('mongoose');
 var util = require('util');
 
+/**
+* @static monoxide
+*/
 function Monoxide() {
 	var self = this;
 	self.models = {};
@@ -13,9 +16,10 @@ function Monoxide() {
 	/**
 	* Retrieve a single record from a model via its ID
 	* This function will ONLY retrieve via the ID field, all other fields are ignored
-	* NOTE: Really this function just wraps the monoxide.query() function to provide functionality like populate 
+	* NOTE: Really this function just wraps the monoxide.query() function to provide functionality like populate
 	*
 	* @name monoxide.get
+	* @memberof monoxide
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
@@ -30,12 +34,14 @@ function Monoxide() {
 	*
 	* @return {Object} This chainable object
 	*
-	* @example <caption>Return a single widget by its ID (string syntax)</caption>
+	* @example
+	* // Return a single widget by its ID (string syntax)
 	* monoxide.get('widgets', '56e2421f475c1ef4135a1d58', function(err, res) {
 	* 	console.log('Widget:', res);
 	* });
 	*
-	* @example <caption>Return a single widget by its ID (object syntax)</caption>
+	* @example
+	* // Return a single widget by its ID (object syntax)
 	* monoxide.get({$collection: 'widgets', $id: '56e2421f475c1ef4135a1d58'}, function(err, res) {
 	* 	console.log('Widget:', res);
 	* });
@@ -86,6 +92,7 @@ function Monoxide() {
 	* Query Mongo directly with the Monoxide query syntax
 	*
 	* @name monoxide.query
+	* @memberof monoxide
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
@@ -105,11 +112,13 @@ function Monoxide() {
 	*
 	* @return {Object} This chainable object
 	*
-	* @example <caption>Return all Widgets, sorted by name</caption>
+	* @example
+	* // Return all Widgets, sorted by name
 	* monoxide.query({$collection: 'widgets', $sort: 'name'}, function(err, res) {
 	* 	console.log('Widgets:', res);
 	* });
-	* @example <caption>Filter Users to only return admins while also populating their country</capation>
+	* @example
+	* // Filter Users to only return admins while also populating their country
 	* monoxide.query({$collection: 'users', $populate: 'country', role: 'admin'}, function(err, res) {
 	* 	console.log('Admin users:', res);
 	* });
@@ -271,12 +280,14 @@ function Monoxide() {
 	*
 	* @return {Object} This chainable object
 	*
-	* @example <caption>Count all Widgets</caption>
+	* @example
+	* // Count all Widgets
 	* monoxide.count({$collection: 'widgets'}, function(err, res) {
 	* 	console.log('Number of Widgets:', res.count);
 	* });
 	*
-	* @example <caption>Count all admin Users</capation>
+	* @example
+	* // Count all admin Users
 	* monoxide.query({$collection: 'users', role: 'admin'}, function(err, res) {
 	* 	console.log('Number of Admin Users:', res.count);
 	* });
@@ -329,7 +340,8 @@ function Monoxide() {
 	*
 	* @return {Object} This chainable object
 	*
-	* @example <caption>Save a Widgets</caption>
+	* @example
+	* // Save a Widgets
 	* monoxide.query({$collection: 'widgets', name: 'New name'}, function(err, res) {
 	* });
 	*/
@@ -433,8 +445,10 @@ function Monoxide() {
 	*
 	* @return {Object} This chainable object
 	*
-	* @example <caption>Save a Widgets</caption>
+	* @example
+	* // Save a Widgets
 	* monoxide.query({$collection: 'widgets', name: 'New name'}, function(err, res) {
+	* 	console.log('Saved widget:', res);
 	* });
 	*/
 	self.delete = function MonoxideQuery(q, options, callback) {
@@ -615,7 +629,8 @@ function Monoxide() {
 	* @param {Object} spec The schema specification composed of a hierarhical object of keys with each value being the specification of that field
 	* @returns {Object} The monoxide model of the generated schema
 	*
-	* @example <caption>Example schema for a widget</caption>
+	* @example
+	* // Example schema for a widget
 	* var Widgets = monoxide.schema('widgets', {
 	* 	name: String,
 	* 	content: String,
@@ -623,7 +638,8 @@ function Monoxide() {
 	* 	color: {type: String, enum: ['red', 'green', 'blue'], default: 'blue', index: true},
 	* });
 	*
-	* @example <caption>Example schema for a user</caption>
+	* @example
+	* // Example schema for a user
 	* var Users = monoxide.schema('users', {
 	* 	name: String,
 	* 	role: {type: String, enum: ['user', 'admin'], default: 'user'},
@@ -655,28 +671,33 @@ function Monoxide() {
 	// }}}
 
 	// .express structure {{{
+	/**
+	* @static monoxide.express
+	*/
 	self.express = {};
 
 	// .express.middleware(settings) {{{
 	/**
 	* Return an Express middleware binding
 	*
-	* @name monoxide.express.middleware
+	* @name middleware
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
-	* @param {boolean|function(req,res,next)} [settings.count=true] Allow GET + Count functionality
-	* @param {boolean|function(req,res,next)} [settings.get=true] Allow single record retrieval by its ID via the GET method. If this is disabled an ID MUST be specified for any GET to be successful within req.params
-	* @param {boolean|function(req,res,next)} [settings.query=true] Allow record querying via the GET method
-	* @param {boolean} [settings.save=false] Allow saving of records via the POST method
-	* @param {boolean} [settings.delete=false] Allow deleting of records via the DELETE method
+	* @param {boolean|expressMiddlewareCallback} [settings.count=true] Allow GET + Count functionality
+	* @param {boolean|expressMiddlewareCallback} [settings.get=true] Allow single record retrieval by its ID via the GET method. If this is disabled an ID MUST be specified for any GET to be successful within req.params
+	* @param {boolean|expressMiddlewareCallback} [settings.query=true] Allow record querying via the GET method
+	* @param {boolean|expressMiddlewareCallback} [settings.save=false] Allow saving of records via the POST method
+	* @param {boolean|expressMiddlewareCallback} [settings.delete=false] Allow deleting of records via the DELETE method
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
-	* @example <caption>Bind an express method to serve widgets</caption>
+	* @example
+	* // Bind an express method to serve widgets
 	* app.use('/api/widgets/:id?', monoxide.express.middleware('widgets'));
 	*
-	* @example <caption>Bind an express method to serve users but disallow counting and querying (i.e. direct ID access only)</caption>
+	* @example
+	* // Bind an express method to serve users but disallow counting and querying (i.e. direct ID access only)
 	* app.use('/api/users/:id?', monoxide.express.middleware('users', {query: false, count: false}));
 	*/
 	self.express.middleware = function(model, settings) {
@@ -750,7 +771,7 @@ function Monoxide() {
 	* Return an Express middleware binding for single record retrieval operations
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
-	* @name monoxide.express.get
+	* @name get
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
@@ -758,7 +779,8 @@ function Monoxide() {
 	* @param {string} [settings.queryRemaps] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
-	* @example <caption>Bind an express method to serve widgets</caption>
+	* @example
+	* // Bind an express method to serve widgets
 	* app.get('/api/widgets/:id?', monoxide.express.get('widgets'));
 	*/
 	self.express.get = function MonoxideExpressGet(model, settings) {
@@ -816,7 +838,7 @@ function Monoxide() {
 	* Return an Express middleware binding for multiple record retrieval operations
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
-	* @name monoxide.express.query
+	* @name query
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
@@ -824,7 +846,8 @@ function Monoxide() {
 	* @param {string} [settings.queryRemaps] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
-	* @example <caption>Bind an express method to serve widgets</caption>
+	* @example
+	* // Bind an express method to serve widgets
 	* app.get('/api/widgets', monoxide.express.query('widgets'));
 	*/
 	self.express.query = function MonoxideExpressGet(model, settings) {
@@ -882,14 +905,15 @@ function Monoxide() {
 	* Return an Express middleware binding for GET operations - specifically for returning COUNTs of objects
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
-	* @name monoxide.express.count
+	* @name count
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
-	* @example <caption>Bind an express method to count widgets</caption>
+	* @example
+	* // Bind an express method to count widgets
 	* app.get('/api/widgets/count', monoxide.express.get('widgets'));
 	*/
 	self.express.count = function MonoxideExpressCount(model, settings) {
@@ -937,14 +961,15 @@ function Monoxide() {
 	* Return an Express middleware binding for POST operations
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
-	* @name monoxide.express.save
+	* @name save
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
-	* @example <caption>Bind an express method to save widgets</caption>
+	* @example
+	* // Bind an express method to save widgets
 	* app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 	*/
 	self.express.save = function MonoxideExpressSave(model, settings) {
@@ -992,14 +1017,15 @@ function Monoxide() {
 	* Return an Express middleware binding for DELETE operations
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
-	* @name monoxide.express.delete
+	* @name delete
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
-	* @example <caption>Bind an express method to delete widgets</caption>
+	* @example
+	* // Bind an express method to delete widgets
 	* app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 	*/
 	self.express.delete = function MonoxideExpressSave(model, settings) {
@@ -1042,6 +1068,30 @@ function Monoxide() {
 	};
 	// }}}
 
+	// .express - MISC functionality {{{
+	// Express middleware callback {{{
+	/**
+	* Callback function for Express middleware
+	* This callback applies to the monoxide.express.middleware() function for get, query, save, delete etc.
+	*
+	* @name expressMiddlewareCallback
+	* @callback expressMiddlewareCallback
+	*
+	* @param {Object} req The request object
+	* @param {Object} res The response object
+	* @param {function} next The next callback chain (optional to call this or deal with `res` yourself)
+	* @example
+	* // Allow deleting of widgets only if 'force'===true
+	* app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
+	* 	delete: function(req, res, next) {
+	* 		// Only allow delete if the query contains 'force' as a string
+	* 		if (req.query.force && req.query.force === 'confirm') return next();
+	* 		return res.status(403).send('Nope!').end();
+	* 	},
+	* }));
+	*/
+	// }}}
+	// }}}
 	// }}}
 
 	// .utilities structure {{{
