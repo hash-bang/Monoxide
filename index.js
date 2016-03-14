@@ -670,6 +670,107 @@ function Monoxide() {
 	};
 	// }}}
 
+	// .aggregate([q], [options], callback) {{{
+	/**
+	* Perform a direct aggregation and return the result
+	*
+	* @name monoxide.aggregate
+	* @memberof monoxide
+	*
+	* @param {Object} q The object to process
+	* @param {string} q.$collection The collection / model to query
+	* @param {Object} [q.$project] Fields to be supplied in the aggregation (in the form {field: true})
+	* @param {boolean} [q.$project._id=false] If true surpress the output of the `_id` field
+	* @param {Object} [q.$match]
+	* @param {Object} [q.$redract]
+	* @param {Object} [q.$limit]
+	* @param {Object} [q.$skip]
+	* @param {Object} [q.$unwind]
+	* @param {Object} [q.$group]
+	* @param {Object} [q.$sample]
+	* @param {Object} [q.$sort]
+	* @param {Object} [q.$geoNear]
+	* @param {Object} [q.$lookup]
+	* @param {Object} [q.$out]
+	* @param {Object} [q.$indexStats]
+	*
+	* @param {Object} [options] Optional options object which can alter behaviour of the function
+	*
+	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @return {Object} This chainable object
+	*/
+	self.aggregate = function MonoxideAggregate(q, options, callback) {
+		// Deal with arguments {{{
+		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+			// All ok
+		} else if (_.isObject(q) && _.isFunction(options)) {
+			callback = options;
+			options = {};
+		} else if (_.isString(q) && _.isObject(options) && _.isFunction(callback)) {
+			q = {$collection: q};
+		} else if (_.isString(q) && _.isFunction(options)) {
+			q = {$collection: q};
+			callback = options;
+		} else if (_.isFunction(q)) {
+			callback = q;
+			q = {};
+			options = {};
+		} else if (!_.isFunction(callback)) {
+			throw new Error('Callback parameter must be function');
+		} else {
+			throw new Error('Unknown function call pattern');
+		}
+		// }}}
+
+		var settings = _.defaults(options || {}, {
+		});
+
+		async()
+			// .connection {{{
+			.then('connection', function(next) {
+				if (!mongoose.connection) return next('No Mongoose connection open');
+				next(null, mongoose.connection);
+			})
+			// }}}
+			// .model {{{
+			.then('model', function(next) {
+				if (!q.$collection) return next('Collection not specified');
+				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
+				next(null, this.connection.collection(q.$collection));
+			})
+			// }}}
+			// Prepare aggregation query {{{
+			.then('query', function(next) {
+				var query = {};
+				['$project', '$match', '$redract', '$limit', '$skip', '$unwind', '$group', '$sample', '$sort', '$geoNear', '$lookup', '$out', '$indexStats']
+					.forEach(function(f) {
+						if (q[f]) query[f] = q[f];
+					});
+
+				if (!_.keys(q).length) return next('At least one field must be specified for an aggregation pipeline');
+				next(null, query);
+			})
+			// }}}
+			// Execute and capture return {{{
+			.then('result', function(next) {
+				console.log('WILLRUN', this.query);
+				this.model.aggregate(this.query, next);
+			})
+			// }}}
+			// End {{{
+			.end(function(err) {
+				if (err) {
+					return callback(err);
+				} else {
+					callback(null, this.result);
+				}
+			});
+			// }}}
+		return self;
+	};
+	// }}}
+
 	// .express structure {{{
 	/**
 	* @static monoxide.express
