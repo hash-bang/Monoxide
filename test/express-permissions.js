@@ -193,7 +193,7 @@ describe('Monoxide + Express permissions', function() {
 		});
 	});
 
-	it('should be denied count (count=function)', function(finish) {
+	it('should be denied count selectively (count=function)', function(finish) {
 		var app = express();
 		app.use(expressLogger);
 		app.use(bodyParser.json());
@@ -228,7 +228,7 @@ describe('Monoxide + Express permissions', function() {
 		});
 	});
 
-	it('should be denied save', function(finish) {
+	it('should be denied save (save=false)', function(finish) {
 		var app = express();
 		app.use(expressLogger);
 		app.use(bodyParser.json());
@@ -253,7 +253,45 @@ describe('Monoxide + Express permissions', function() {
 		});
 	});
 
-	it('should be denied delete', function(finish) {
+	it('should be denied save selectively (save=function)', function(finish) {
+		var app = express();
+		app.use(expressLogger);
+		app.use(bodyParser.json());
+		app.set('log.indent', '      ');
+
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
+			save: function(req, res, next) {
+				// Only allow saving if the body contains 'force' as a true boolean variable
+				if (req.body.force && req.body.force === true) return next();
+				return res.status(403).send('Nope!').end();
+			},
+		}));
+
+		var server = app.listen(port, null, function(err) {
+			if (err) return finish(err);
+
+			superagent.post(url + '/api/widgets/' + widgets[0]._id)
+				.send({color: 'yellow'})
+				.end(function(err, res) {
+					expect(err).to.be.ok;
+					expect(res.body).to.be.empty;
+
+					superagent.post(url + '/api/widgets/' + widgets[0]._id)
+						.send({color: 'yellow', force: true})
+						.end(function(err, res) {
+							expect(err).to.be.not.ok;
+							expect(res.body).to.be.an.object;
+							expect(res.body).to.have.property('_id', widgets[0]._id);
+							expect(res.body).to.have.property('color', 'yellow');
+
+							server.close();
+							finish();
+						});
+				});
+		});
+	});
+
+	it('should be denied delete (delete=false)', function(finish) {
 		var app = express();
 		app.use(expressLogger);
 		app.use(bodyParser.json());

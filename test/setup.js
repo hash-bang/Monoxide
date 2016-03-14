@@ -53,7 +53,7 @@ module.exports = {
 			name: String,
 			content: String,
 			status: {type: String, enum: ['active', 'deleted'], default: 'active'},
-			color: {type: String, enum: ['red', 'green', 'blue'], default: 'blue', index: true},
+			color: {type: String, enum: ['red', 'green', 'blue', 'yellow'], default: 'blue', index: true},
 		});
 		// }}}
 
