@@ -596,7 +596,7 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .model(model) - model returner {{{
+	// .monoxideModel([options]) - monoxide model instance {{{
 	/**
 	* Return a defined Monoxide model
 	* The model must have been previously defined by monoxide.schema()
@@ -604,16 +604,49 @@ function Monoxide() {
 	* @name monoxide.model
 	* @see monoxide.schema
 	*
-	* @param {string} model The model name (generally lowercase plurals e.g. 'users', 'widgets', 'favouriteItems' etc.)
+	* @param {Object|string} options Either an options object or the model name (generally lowercase plurals e.g. 'users', 'widgets', 'favouriteItems' etc.)
+	* @param {string} [options.$collection] Alternative method to specify the model to use
 	* @returns {Object} The monoxide model of the generated schema
 	*/
-	self.model = function(model) {
+	self.monoxideModel = function(options) {
 		// Deal with arguments {{{
-		if (!_.isString(model)) throw new Error('Model reference must be a string');
+		if (_.isString(options)) {
+			options = {$collection: options};
+		} else if (_.isObject(options)) {
+			// All ok
+		} else {
+			throw new Error('Unknown function call pattern');
+		}
 		// }}}
 
-		var qb = new self.queryBuilder();
-		return qb.find({$collection: model});
+		var settings = _.defaults(options || {}, {
+		});
+
+		var mm = this;
+
+		mm.$collection = settings.$collection;
+
+		mm.find = function(q) {
+			return (new self.queryBuilder())
+				.find({$collection: mm.$collection}) // Set the collection from the model
+				.find(q); // Then re-parse the find query into the new queryBuilder
+		};
+
+		if (settings.$mongoose) {
+			self.models[mm.$collection] = mm;
+			self.models[mm.$collection].$mongoose = settings.$mongoose;
+		}
+
+		return mm;
+	};
+	// }}}
+
+	self.defineModel = function(settings) {
+		self.models[settings.$collection] = new self.monoxideModel(settings);
+	};
+
+	self.model = function(model) {
+		return self.models[model];
 	};
 	// }}}
 
@@ -665,7 +698,13 @@ function Monoxide() {
 			}
 			return value;
 		}));
-		self.models[model] = mongoose.model(model, schema);
+
+		// Add to model storage
+		self.defineModel({
+			$collection: model,
+			$mongoose: mongoose.model(model, schema),
+		});
+
 		return self.models[model];
 	};
 	// }}}

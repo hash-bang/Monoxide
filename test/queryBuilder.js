@@ -14,6 +14,7 @@ describe('Monoxide - query builder', function() {
 			.exec(function(err, users) {
 				expect(err).to.not.be.ok;
 				expect(users).to.be.an.array;
+				expect(users).to.have.length(2);
 
 				expect(users[0]).to.have.property('name', 'Jane Quark');
 				expect(users[0]).to.have.property('role', 'user');
@@ -38,6 +39,26 @@ describe('Monoxide - query builder', function() {
 				expect(users[1].mostPurchased[1].item).to.be.a.string;
 				expect(users[1].mostPurchased[2]).to.have.property('number', 15);
 				expect(users[1].mostPurchased[2].item).to.be.a.string;
+
+				finish();
+			});
+	});
+
+
+	it('should query the widgets model', function(finish) {
+		monoxide.models.widgets
+			.find({color: 'blue'})
+			.sort(['-name'])
+			.exec(function(err, widgets) {
+				expect(err).to.not.be.ok;
+				expect(widgets).to.be.an.array;
+				expect(widgets).to.have.length(2);
+
+				expect(widgets[0]).to.have.property('name', 'Widget whollop');
+				expect(widgets[0]).to.have.property('color', 'blue');
+
+				expect(widgets[1]).to.have.property('name', 'Widget crash');
+				expect(widgets[1]).to.have.property('color', 'blue');
 
 				finish();
 			});
