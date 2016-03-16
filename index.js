@@ -524,6 +524,13 @@ function Monoxide() {
 	// }}}
 
 	// .queryBuilder([options]) - query builder {{{
+	/**
+	* Returns data from a Monoxide model
+	* @class
+	* @name monoxide.queryBuilder
+	* @param {Object} [options] Optional options object which can alter behaviour of the function
+	* @return {monoxide.queryBuilder}
+	*/
 	self.queryBuilder = function(options) {
 		var settings = _.defaults(options || {}, {
 		});
@@ -533,6 +540,14 @@ function Monoxide() {
 		qb.settings = settings;
 
 		// qb.find(q, cb) {{{
+		/**
+		* Add a filtering function to an existing query
+		* @name monoxide.queryBuilder.find
+		* @memberof monoxide.queryBuilder
+		* @param {Object} [q] Optional filtering object
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder} This chainable object
+		*/
 		qb.find = function(q, callback) {
 			if (_.isObject(q)) _.merge(qb.query, q);
 			if (_.isFunction(q)) return qb.exec(callback);
@@ -541,6 +556,14 @@ function Monoxide() {
 		// }}}
 
 		// qb.sort(q, cb) {{{
+		/**
+		* Add sort criteria to an existing query
+		* @name monoxide.queryBuilder.sort
+		* @memberof monoxide.queryBuilder
+		* @param {Object|Array|string} [q] Sorting criteria, for strings or arrays of strings use the field name optionally prefixed with '-' for decending search order. For Objects use `{ field: 1|-1|'asc'|'desc'}`
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder} This chainable object
+		*/
 		qb.sort = function(q, callback) {
 			if (_.isString(q)) {
 				if (qb.query.$sort) {
@@ -563,6 +586,14 @@ function Monoxide() {
 		// }}}
 
 		// qb.populate(q, cb) {{{
+		/**
+		* Add population criteria to an existing query
+		* @name monoxide.queryBuilder.populate
+		* @memberof monoxide.queryBuilder
+		* @param {Array|string} [q] Population criteria, for strings or arrays of strings use the field name
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder} This chainable object
+		*/
 		qb.populate = function(q, callback) {
 			if (_.isString(q)) {
 				if (qb.query.$populate) {
@@ -585,6 +616,13 @@ function Monoxide() {
 		// }}}
 
 		// qb.exec(cb) {{{
+		/**
+		* Execute the query and return the error and any results
+		* @name monoxide.queryBuilder.exec
+		* @memberof monoxide.queryBuilder
+		* @param {function} callback(err,result)
+		* @return {monoxide.queryBuilder} This chainable object
+		*/
 		qb.exec = function(callback) {
 			if (!_.isFunction(callback)) throw new Error('Callback to exec() is not a function');
 
@@ -598,15 +636,7 @@ function Monoxide() {
 
 	// .monoxideModel([options]) - monoxide model instance {{{
 	/**
-	* Return a defined Monoxide model
-	* The model must have been previously defined by monoxide.schema()
-	*
-	* @name monoxide.model
-	* @see monoxide.schema
-	*
-	* @param {Object|string} options Either an options object or the model name (generally lowercase plurals e.g. 'users', 'widgets', 'favouriteItems' etc.)
-	* @param {string} [options.$collection] Alternative method to specify the model to use
-	* @returns {Object} The monoxide model of the generated schema
+	* @class
 	*/
 	self.monoxideModel = function(options) {
 		// Deal with arguments {{{
@@ -626,6 +656,15 @@ function Monoxide() {
 
 		mm.$collection = settings.$collection;
 
+		/**
+		* Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+		* @name monoxide.monoxideModel.find
+		* @see monoxide.queryBuilder.find
+		*
+		* @param {Object} [q] Optional filtering object
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder}
+		*/
 		mm.find = function(q) {
 			return (new self.queryBuilder())
 				.find({$collection: mm.$collection}) // Set the collection from the model
@@ -641,10 +680,18 @@ function Monoxide() {
 	};
 	// }}}
 
-	self.defineModel = function(settings) {
-		self.models[settings.$collection] = new self.monoxideModel(settings);
-	};
-
+	// .model(name) - helper function to return a declared model {{{
+	/**
+	* Return a defined Monoxide model
+	* The model must have been previously defined by monoxide.schema()
+	* This function is identical to accessing the model directly via `monoxide.models[modelName]`
+	*
+	* @name monoxide.model
+	* @see monoxide.schema
+	*
+	* @param {string} model The model name (generally lowercase plurals e.g. 'users', 'widgets', 'favouriteItems' etc.)
+	* @returns {Object} The monoxide model of the generated schema
+	*/
 	self.model = function(model) {
 		return self.models[model];
 	};
@@ -700,7 +747,7 @@ function Monoxide() {
 		}));
 
 		// Add to model storage
-		self.defineModel({
+		self.models[model] = new self.monoxideModel({
 			$collection: model,
 			$mongoose: mongoose.model(model, schema),
 		});

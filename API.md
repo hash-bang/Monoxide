@@ -213,12 +213,23 @@ app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 
 Return a defined Monoxide model
 The model must have been previously defined by monoxide.schema()
+This function is identical to accessing the model directly via `monoxide.models[modelName]`
 
 **Parameters**
 
 -   `model` **string** The model name (generally lowercase plurals e.g. 'users', 'widgets', 'favouriteItems' etc.)
 
 Returns **Object** The monoxide model of the generated schema
+
+# monoxide.queryBuilder
+
+Returns data from a Monoxide model
+
+**Parameters**
+
+-   `options` **[Object]** Optional options object which can alter behaviour of the function
+
+Returns **monoxide.queryBuilder** 
 
 # monoxide.save
 
@@ -295,6 +306,12 @@ Extract all FKs in dotted path notation from a Mongoose model
 -   `base` **Object** Base object to append flat paths to (internal use only)
 
 Returns **Object** A dictionary of foreign keys for the schema (each key will be the info of the object)
+
+# monoxideModel
+
+**Parameters**
+
+-   `options`  
 
 # Monoxide
 
@@ -396,3 +413,57 @@ monoxide.query({$collection: 'users', $populate: 'country', role: 'admin'}, func
 ```
 
 Returns **Object** This chainable object
+
+# monoxide.queryBuilder.exec
+
+Execute the query and return the error and any results
+
+**Parameters**
+
+-   `callback` **function** (err,result)
+
+Returns **monoxide.queryBuilder** This chainable object
+
+# monoxide.queryBuilder.find
+
+Add a filtering function to an existing query
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** This chainable object
+
+# monoxide.queryBuilder.populate
+
+Add population criteria to an existing query
+
+**Parameters**
+
+-   `q` **[Array or string]** Population criteria, for strings or arrays of strings use the field name
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** This chainable object
+
+# monoxide.queryBuilder.sort
+
+Add sort criteria to an existing query
+
+**Parameters**
+
+-   `q` **[Object or Array or string]** Sorting criteria, for strings or arrays of strings use the field name optionally prefixed with '-' for decending search order. For Objects use `{ field: 1|-1|'asc'|'desc'}`
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** This chainable object
+
+# monoxide.monoxideModel.find
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
