@@ -8,6 +8,12 @@ A less poisonous to work with Mongo.
 Monoxide attempts to provide nicer, chainable functionality on top of base Mongo while making some of the more C centric designs of Mongo more Node like.
 
 
+1. [API documentation](API.md)
+2. [ReST server setup](#reset-server)
+3. [TODO list](TODO.md)
+4. [Future ideas](IDEAS.md)
+
+
 Key differences from Mongoose:
 
 * Provides an out-of-the-box [Express middleware](#rest-server)
@@ -21,30 +27,6 @@ Comparisons to other frameworks
 
 
 See the [ideas list](ideas.md) for future ideas.
-
-
-TODO
-----
-
-- [x] monoxide.query(q, opts, cb)
-- [x] GET /api/:model
-- [x] monoxide.save(q, opts, cb)
-- [x] POST /api/:model
-- [x] POST /api/:model/:id
-- [x] monoxide.count(q, opts, cb)
-- [x] GET /api/:model/count
-- [x] mongolid.delete(q, opts, cb)
-- [x] DELETE /api/:model/:id
-- [ ] PUT /api/:model/:id
-- [ ] PATCH /api/:model/:id
-- [ ] GET advanced queries e.g. `{"name":{"$regex":"^(Bob)"}}`
-- [x] monoxide.model() - query builder
-- [x] monoxide.schema(model, schema) - schema builder
-- [x] monoxide.express.middleware restrictions - get, save etc. as functions
-- [ ] Support for other data types (number, string, object, array, any)
-- [ ] Late bound `$populate` functionality
-- [ ] monoxide.express.middleware - field blocking
-- [ ] monoxide.express.middleware - `all` request filter
 
 
 Schema Setup
@@ -146,3 +128,6 @@ You can also pick-and-choose the handlers to be used:
 	app.delete('/api/users/:id', monoxide.express.delete('users'));
 
 In the above the specified models are bound to their respective ReST end points (`GET /api/users` will return all users for example).
+
+
+See the [API documentation](API.md) for more detailed information.

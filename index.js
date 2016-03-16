@@ -775,16 +775,16 @@ function Monoxide() {
 	/**
 	* Return an Express middleware binding
 	*
-	* @name middleware
+	* @name monoxide.express.middleware
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
-	* @param {boolean|expressMiddlewareCallback} [settings.count=true] Allow GET + Count functionality
-	* @param {boolean|expressMiddlewareCallback} [settings.get=true] Allow single record retrieval by its ID via the GET method. If this is disabled an ID MUST be specified for any GET to be successful within req.params
-	* @param {boolean|expressMiddlewareCallback} [settings.query=true] Allow record querying via the GET method
-	* @param {boolean|expressMiddlewareCallback} [settings.save=false] Allow saving of records via the POST method
-	* @param {boolean|expressMiddlewareCallback} [settings.delete=false] Allow deleting of records via the DELETE method
+	* @param {boolean|monoxide.express.middlewareCallback} [settings.count=true] Allow GET + Count functionality
+	* @param {boolean|monoxide.express.middlewareCallback} [settings.get=true] Allow single record retrieval by its ID via the GET method. If this is disabled an ID MUST be specified for any GET to be successful within req.params
+	* @param {boolean|monoxide.express.middlewareCallback} [settings.query=true] Allow record querying via the GET method
+	* @param {boolean|monoxide.express.middlewareCallback} [settings.save=false] Allow saving of records via the POST method
+	* @param {boolean|monoxide.express.middlewareCallback} [settings.delete=false] Allow deleting of records via the DELETE method
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example
@@ -866,7 +866,7 @@ function Monoxide() {
 	* Return an Express middleware binding for single record retrieval operations
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
-	* @name get
+	* @name monoxide.express.get
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
@@ -933,7 +933,7 @@ function Monoxide() {
 	* Return an Express middleware binding for multiple record retrieval operations
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
-	* @name query
+	* @name monoxide.express.query
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
@@ -1000,7 +1000,7 @@ function Monoxide() {
 	* Return an Express middleware binding for GET operations - specifically for returning COUNTs of objects
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
-	* @name count
+	* @name monoxide.express.count
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
@@ -1056,7 +1056,7 @@ function Monoxide() {
 	* Return an Express middleware binding for POST operations
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
-	* @name save
+	* @name monoxide.express.save
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
@@ -1112,7 +1112,7 @@ function Monoxide() {
 	* Return an Express middleware binding for DELETE operations
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
-	* @name delete
+	* @name monoxide.express.delete
 	*
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
@@ -1169,8 +1169,8 @@ function Monoxide() {
 	* Callback function for Express middleware
 	* This callback applies to the monoxide.express.middleware() function for get, query, save, delete etc.
 	*
-	* @name expressMiddlewareCallback
-	* @callback expressMiddlewareCallback
+	* @name monoxide.express.middlewareCallback
+	* @callback monoxide.express.middlewareCallback
 	*
 	* @param {Object} req The request object
 	* @param {Object} res The response object
