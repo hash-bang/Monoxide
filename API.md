@@ -141,21 +141,21 @@ Similar to query() but only return the count of possible results rather than the
     -   `q.$collection` **string** The collection / model to query
     -   `q.filter` **[...Any]** Any other field (not beginning with '$') is treated as filtering criteria
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
--   `callback` **function** (err, result) the callback to call on completion or error
+-   `callback` **function** (err,count) the callback to call on completion or error
 
 **Examples**
 
 ```javascript
 // Count all Widgets
-monoxide.count({$collection: 'widgets'}, function(err, res) {
-	console.log('Number of Widgets:', res.count);
+monoxide.count({$collection: 'widgets'}, function(err, count) {
+	console.log('Number of Widgets:', count);
 });
 ```
 
 ```javascript
 // Count all admin Users
-monoxide.query({$collection: 'users', role: 'admin'}, function(err, res) {
-	console.log('Number of Admin Users:', res.count);
+monoxide.query({$collection: 'users', role: 'admin'}, function(err, count) {
+	console.log('Number of Admin Users:', count);
 });
 ```
 

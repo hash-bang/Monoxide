@@ -102,7 +102,7 @@ function Monoxide() {
 	* @param {boolean} [q.$one=false] Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
 	* @param {number} [q.$limit] Limit the return to this many rows
 	* @param {number} [q.$skip] Offset return by this number of rows
-	* @param {boolean=false} [q.$count=false] Only count the results - do not return them. If enabled an object containing a single key ('count') is returned
+	* @param {boolean=false} [q.$count=false] Only count the results - do not return them. If enabled a number of returned with the result
 	* @param {...*} [q.filter] Any other field (not beginning with '$') is treated as filtering criteria
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
@@ -159,7 +159,7 @@ function Monoxide() {
 				'$one', // Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
 				'$limit', // Limit the return to this many rows
 				'$skip', // Offset return by this number of rows
-				'$count', // Only count the results - do not return them. If enabled an object containing a single key ('count') is returned
+				'$count', // Only count the results - do not return them
 			])
 			// .connection {{{
 			.then('connection', function(next) {
@@ -253,7 +253,7 @@ function Monoxide() {
 				if (err) {
 					return callback(err);
 				} else if (q.$count) {
-					callback(null, {count: this.result});
+					callback(null, this.result);
 				} else {
 					callback(null, this.result);
 				}
@@ -276,20 +276,20 @@ function Monoxide() {
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	*
-	* @param {function} callback(err, result) the callback to call on completion or error
+	* @param {function} callback(err,count) the callback to call on completion or error
 	*
 	* @return {Object} This chainable object
 	*
 	* @example
 	* // Count all Widgets
-	* monoxide.count({$collection: 'widgets'}, function(err, res) {
-	* 	console.log('Number of Widgets:', res.count);
+	* monoxide.count({$collection: 'widgets'}, function(err, count) {
+	* 	console.log('Number of Widgets:', count);
 	* });
 	*
 	* @example
 	* // Count all admin Users
-	* monoxide.query({$collection: 'users', role: 'admin'}, function(err, res) {
-	* 	console.log('Number of Admin Users:', res.count);
+	* monoxide.query({$collection: 'users', role: 'admin'}, function(err, count) {
+	* 	console.log('Number of Admin Users:', count);
 	* });
 	*/
 	self.count = function MonoxideCount(q, options, callback) {
@@ -1126,11 +1126,11 @@ function Monoxide() {
 			self.query(q, function(err, count) {
 				if (settings.passThrough) { // Act as middleware
 					req.document = count;
-					next(err, count);
+					next(err, {count: count});
 				} else if (err) { // Act as endpoint and there was an error
 					res.status(400).end();
 				} else { // Act as endpoint and result is ok
-					res.send(count).end();
+					res.send({count: count}).end();
 				}
 			});
 		};

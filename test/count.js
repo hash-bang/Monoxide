@@ -9,10 +9,8 @@ describe('Monoxide - count', function() {
 		monoxide.count('users', function(err, count) {
 			expect(err).to.not.be.ok;
 
-			expect(count).to.be.an.object;
-			expect(count).to.have.property('count');
-			expect(count.count).to.be.a.number;
-			expect(count.count).to.be.equal(2);
+			expect(count).to.be.a.number;
+			expect(count).to.be.equal(2);
 
 			finish();
 		});
@@ -22,10 +20,8 @@ describe('Monoxide - count', function() {
 		monoxide.count('widgets', function(err, count) {
 			expect(err).to.not.be.ok;
 
-			expect(count).to.be.an.object;
-			expect(count).to.have.property('count');
-			expect(count.count).to.be.a.number;
-			expect(count.count).to.be.equal(3);
+			expect(count).to.be.a.number;
+			expect(count).to.be.equal(3);
 
 			finish();
 		});
@@ -38,10 +34,8 @@ describe('Monoxide - count', function() {
 		}, function(err, count) {
 			expect(err).to.not.be.ok;
 
-			expect(count).to.be.an.object;
-			expect(count).to.have.property('count');
-			expect(count.count).to.be.a.number;
-			expect(count.count).to.be.equal(2);
+			expect(count).to.be.a.number;
+			expect(count).to.be.equal(2);
 
 			finish();
 		});
@@ -54,10 +48,8 @@ describe('Monoxide - count', function() {
 		}, function(err, count) {
 			expect(err).to.not.be.ok;
 
-			expect(count).to.be.an.object;
-			expect(count).to.have.property('count');
-			expect(count.count).to.be.a.number;
-			expect(count.count).to.be.equal(0);
+			expect(count).to.be.a.number;
+			expect(count).to.be.equal(0);
 
 			finish();
 		});
