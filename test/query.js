@@ -47,9 +47,8 @@ describe('Monoxide - query', function() {
 			$count: true,
 		}, function(err, res) {
 			expect(err).to.not.be.ok;
-			expect(res).to.be.an.object;
-
-			expect(res).to.have.property('count', 2);
+			expect(res).to.be.a.number;
+			expect(res).to.be.equal(2);
 
 			finish();
 		});
