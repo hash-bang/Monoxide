@@ -1,7 +1,6 @@
 var async = require('async-chainable');
 var expect = require('chai').expect;
 var monoxide = require('..');
-var mongoose = require('mongoose');
 var scenario = require('mongoose-scenario');
 
 var hasSetup = false;
@@ -26,8 +25,7 @@ module.exports = {
 
 	// initConnection {{{
 	initConnection: function(finish) {
-		mongoose.connect('mongodb://localhost/monoxide-test', finish);
-		mongoose.connection.on('error', console.error.bind(console, 'DB connection error:'));
+		monoxide.connect('mongodb://localhost/monoxide-test', finish);
 	},
 	// }}}
 
@@ -166,7 +164,7 @@ module.exports = {
 			],
 			// }}}
 		}, {
-			connection: mongoose.connection,
+			connection: monoxide.connection,
 			nuke: true,
 		}, function(err, data) {
 			expect(err).to.be.not.ok;

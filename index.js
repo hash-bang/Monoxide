@@ -11,6 +11,21 @@ var util = require('util');
 function Monoxide() {
 	var self = this;
 	self.models = {};
+	self.connection;
+
+	// .connect {{{
+	/**
+	* Connect to a Mongo database
+	* @param {string} uri The URL of the database to connect to
+	* @param {function} callback Optional callback when connected, if omitted this function is syncronous
+	* @return {monoxide} The Monoxide chainable object
+	*/
+	self.connect = function(uri, callback) {
+		mongoose.connect('mongodb://localhost/monoxide-test', callback);
+		self.connection = mongoose.connection;
+		return self;
+	};
+	// }}}
 
 	// .get([q], [id], callback) {{{
 	/**

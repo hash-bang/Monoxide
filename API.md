@@ -1,3 +1,14 @@
+# connect
+
+Connect to a Mongo database
+
+**Parameters**
+
+-   `uri` **string** The URL of the database to connect to
+-   `callback` **function** Optional callback when connected, if omitted this function is syncronous
+
+Returns **monoxide** The Monoxide chainable object
+
 # express
 
 ## monoxide.express.count
@@ -19,6 +30,37 @@ app.get('/api/widgets/count', monoxide.express.get('widgets'));
 ```
 
 Returns **function** callback(req, res, next) Express compatible middleware function
+
+## monoxide.express.defaults
+
+Set the default settings used when calling other monoxide.express.middleware functions
+The provided settings will be merged with the existing defaults, so its possible to call this function multiple times to override previous invocations
+NOTE: This will only effect functions called AFTER it was invoked.
+
+**Parameters**
+
+-   `model` **[string]** The model name to bind to (this can also be specified as settings.collection)
+-   `settings` **[Object]** Middleware settings
+
+**Examples**
+
+```javascript
+// Enable saving globally
+monoxide.express.defaults({save: true});
+```
+
+```javascript
+// Add a middleware function to all delete operations (assuming the invidiual controllers dont override it)
+monoxide.express.defaults({
+	delete: function(req, res, next) {
+		// Check the user is logged in - deny otherwise
+		if (!req.user) return res.status(403).send('You are not logged in').end();
+		next();
+	},
+});
+```
+
+Returns **monoxide** This chainable monoxide instance
 
 ## monoxide.express.delete
 
@@ -64,6 +106,8 @@ Returns **function** callback(req, res, next) Express compatible middleware func
 ## monoxide.express.middleware
 
 Return an Express middleware binding
+
+See monoxide.express.defaults() to chanthe the default settings for this function globally
 
 **Parameters**
 
