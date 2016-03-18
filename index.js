@@ -859,10 +859,49 @@ function Monoxide() {
 	* @static monoxide.express
 	*/
 	self.express = {};
+	self.express._defaults = {
+		count: true,
+		get: true,
+		query: true,
+		save: false,
+		delete: false,
+	};
+
+	/**
+	* Set the default settings used when calling other monoxide.express.middleware functions
+	* The provided settings will be merged with the existing defaults, so its possible to call this function multiple times to override previous invocations
+	* NOTE: This will only effect functions called AFTER it was invoked.
+	*
+	* @name monoxide.express.defaults
+	*
+	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
+	* @param {Object} [settings] Middleware settings
+	* @returns {monoxide} This chainable monoxide instance
+	*
+	* @example
+	* // Enable saving globally
+	* monoxide.express.defaults({save: true});
+	*
+	* @example
+	* // Add a middleware function to all delete operations (assuming the invidiual controllers dont override it)
+	* monoxide.express.defaults({
+	* 	delete: function(req, res, next) {
+	* 		// Check the user is logged in - deny otherwise
+	* 		if (!req.user) return res.status(403).send('You are not logged in').end();
+	* 		next();
+	* 	},
+	* });
+	*/
+	self.express.defaults = function(settings) {
+		_.merge(self.express._defaults, settings);
+		return self;
+	};
 
 	// .express.middleware(settings) {{{
 	/**
 	* Return an Express middleware binding
+	*
+	* See monoxide.express.defaults() to chanthe the default settings for this function globally
 	*
 	* @name monoxide.express.middleware
 	*
@@ -896,13 +935,7 @@ function Monoxide() {
 			settings = {};
 		}
 
-		_.defaults(settings, {
-			count: true,
-			get: true,
-			query: true,
-			save: false,
-			delete: false,
-		});
+		_.defaults(settings, self.express._defaults);
 
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.middleware(). Specify as a string or {collection: String}');
 		// }}}
