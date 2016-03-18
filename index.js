@@ -351,6 +351,7 @@ function Monoxide() {
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
+	* @param {boolean} [options.refetch=true] Whether to refetch the record after update, false returns `null` in the callback
 	*
 	* @param {function} callback(err, result) the callback to call on completion or error
 	*
@@ -386,6 +387,7 @@ function Monoxide() {
 		// }}}
 
 		var settings = _.defaults(options || {}, {
+			refetch: true, // Fetch and return the record when updated (false returns null)
 		});
 
 		async()
@@ -414,28 +416,19 @@ function Monoxide() {
 				next(null, this.connection.base.models[q.$collection].schema);
 			})
 			// }}}
-			// Find the row by its ID - call to self.query() {{{
-			.then('row', function(next) {
-				self.query({
-					$id: q.$id,
-					$collection: q.$collection,
-				}, next);
+			// Peform the update {{{
+			.then('rawResponse', function(next) {
+				this.connection.base.models[q.$collection].update({_id: q.$id}, _.omit(q, this.metaFields), {multi: false}, next);
 			})
 			// }}}
-			// Save over record {{{
+			// Refetch the record {{{
 			.then('newRec', function(next) {
-				var row = this.row;
-				if (!row) { // Trying to save over a non existtant record
-					next('Not found');
-				} else { // Update existing record
-					var saveFields = _(q)
-						.omit(this.metaFields) // Remove all meta fields
-						.forEach(function(val, key) { // NOTE: Implicit end to lodash
-							_.set(row, key, val);
-						});
-
-					row.save(next);
-				}
+				if (!settings.refetch) return next(null, null);
+				self.query({
+					$collection: q.$collection,
+					$id: q.$id,
+					$one: true,
+				}, next);
 			})
 			// }}}
 			// End {{{
@@ -1666,7 +1659,6 @@ function Monoxide() {
 		return FKs;
 	}
 	// }}}
-
 	// }}}
 
 	return self;
