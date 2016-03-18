@@ -241,6 +241,7 @@ describe('Monoxide + Express', function() {
 	// }}}
 
 	// POST - create {{{
+	var newUser;
 	it('should create users via ReST', function(finish) {
 		superagent.post(url + '/api/users')
 			.send({
@@ -253,23 +254,24 @@ describe('Monoxide + Express', function() {
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
-				var user = res.body;
-				expect(user).to.be.an.object;
+				newUser = res.body;
+				expect(newUser).to.be.an.object;
 
-				expect(user).to.have.property('name', 'New User via ReST');
-				expect(user).to.have.property('role', 'user');
-				expect(user).to.have.property('mostPurchased');
-				expect(user.mostPurchased).to.be.an.array;
-				expect(user.mostPurchased).to.have.length(2);
-				expect(user.mostPurchased[0]).to.have.property('number', 80);
-				expect(user.mostPurchased[0].item).to.be.a.string;
-				expect(user.mostPurchased[1]).to.have.property('number', 90);
-				expect(user.mostPurchased[1].item).to.be.a.string;
+				expect(newUser).to.have.property('name', 'New User via ReST');
+				expect(newUser).to.have.property('role', 'user');
+				expect(newUser).to.have.property('mostPurchased');
+				expect(newUser.mostPurchased).to.be.an.array;
+				expect(newUser.mostPurchased).to.have.length(2);
+				expect(newUser.mostPurchased[0]).to.have.property('number', 80);
+				expect(newUser.mostPurchased[0].item).to.be.a.string;
+				expect(newUser.mostPurchased[1]).to.have.property('number', 90);
+				expect(newUser.mostPurchased[1].item).to.be.a.string;
 
 				finish();
 			});
 	});
 
+	var newWidget;
 	it('should create widgets via ReST', function(finish) {
 		superagent.post(url + '/api/widgets')
 			.send({
@@ -279,12 +281,12 @@ describe('Monoxide + Express', function() {
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
-				var widget = res.body;
-				expect(widget).to.be.an.object;
+				newWidget = res.body;
+				expect(newWidget).to.be.an.object;
 
-				expect(widget).to.have.property('name', 'New Widget');
-				expect(widget).to.have.property('content', 'This is a new widget, there are many like it but this one is my own');
-				expect(widget).to.have.property('status', 'active');
+				expect(newWidget).to.have.property('name', 'New Widget');
+				expect(newWidget).to.have.property('content', 'This is a new widget, there are many like it but this one is my own');
+				expect(newWidget).to.have.property('status', 'active');
 
 				finish();
 			});
@@ -293,81 +295,42 @@ describe('Monoxide + Express', function() {
 
 	// POST - update {{{
 	it('should save over an existing record via ReST', function(finish) {
-		async()
-			.then('widget', function(next) {
-				superagent.get(url + '/api/widgets')
-					.query({
-						name: 'New Widget',
-					})
-					.end(function(err, res) {
-						if (err) return next(err);
-						expect(err).to.be.not.ok;
-						expect(res).to.be.an.array;
-
-						next(null, res.body[0]);
-					});
+		superagent.post(url + '/api/widgets/' + newWidget._id)
+			.send({
+				status: 'deleted',
 			})
-			.then(function(next) {
-				superagent.post(url + '/api/widgets/' + this.widget._id)
-					.send({
-						status: 'deleted',
-					})
-					.end(function(err, res) {
-						expect(err).to.be.not.ok;
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
 
-						var widget = res.body;
-						expect(widget).to.be.an.object;
+				var widget = res.body;
+				expect(widget).to.be.an.object;
 
-						expect(widget).to.have.property('name', 'New Widget');
-						expect(widget).to.have.property('status', 'deleted');
+				expect(widget).to.have.property('name', 'New Widget');
+				expect(widget).to.have.property('status', 'deleted');
 
-						finish();
-					});
-			})
-			.end(finish);
+				finish();
+			});
 	});
 	// }}}
 
 	// DELETE {{{
-	it('should delete an existing record via ReST', function(finish) {
-		async()
-			.then('widget', function(next) {
+	it('should delete an existing widget via ReST', function(finish) {
+		superagent.delete(url + '/api/widgets/' + newWidget._id)
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
 				superagent.get(url + '/api/widgets')
 					.query({
 						name: 'New Widget',
-						status: 'deleted',
 					})
 					.end(function(err, res) {
 						if (err) return next(err);
 						expect(err).to.be.not.ok;
-						expect(res).to.be.an.array;
-
-						next(null, res.body[0]);
-					});
-			})
-			.then(function(next) {
-				superagent.delete(url + '/api/widgets/' + this.widget._id)
-					.end(function(err, res) {
-						expect(err).to.be.not.ok;
+						expect(res.body).to.be.an.array;
+						expect(res.body).to.have.length(0);
 
 						finish();
 					});
-			})
-			.end(finish);
-	});
-
-	it('should have removed the record from the db', function(finish) {
-		superagent.get(url + '/api/widgets')
-			.query({
-				name: 'New Widget',
-			})
-			.end(function(err, res) {
-				if (err) return next(err);
-				expect(err).to.be.not.ok;
-				expect(res.body).to.be.an.array;
-				expect(res.body).to.have.length(0);
-
-				finish();
 			});
 	});
 	// }}}
