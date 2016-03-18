@@ -46,4 +46,26 @@ describe('Monoxide - save', function() {
 			finish();
 		});
 	});
+
+	it('should save a user (via model)', function(finish) {
+		users[0].name = 'Edited User2';
+		users[0].save(function(err, user) {
+			expect(err).to.not.be.ok;
+			expect(user).to.be.an.object;
+
+			expect(user).to.have.property('name', 'Edited User2');
+			expect(user).to.have.property('role', 'user');
+			expect(user).to.have.property('favourite');
+			expect(user.favourite).to.be.a.string;
+			expect(user).to.have.property('mostPurchased');
+			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.have.length(2);
+			expect(user.mostPurchased[0]).to.have.property('number', 12);
+			expect(user.mostPurchased[0].item).to.be.undefined;
+			expect(user.mostPurchased[1]).to.have.property('number', 15);
+			expect(user.mostPurchased[1].item).to.be.undefined;
+
+			finish();
+		});
+	});
 });

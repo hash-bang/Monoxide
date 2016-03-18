@@ -260,7 +260,19 @@ function Monoxide() {
 			// }}}
 			// Execute and capture return {{{
 			.then('result', function(next) {
-				this.query.exec(next);
+				this.query.exec(function(err, res) {
+					if (err) return next(err);
+
+					if (q.$one) {
+						next(null, new monoxideDocument({$collection: q.$collection}, res));
+					} else if (q.$count) {
+						next(null, res);
+					} else {
+						next(null, res.map(function(doc) {
+							return new monoxideDocument({$collection: q.$collection}, doc.toObject());
+						}));
+					}
+				});
 			})
 			// }}}
 			// End {{{
@@ -341,7 +353,7 @@ function Monoxide() {
 	/**
 	* Save an existing Mongo document by its ID
 	* If you wish to create a new document see the monoxide.create() function.
-	* This function will first attempt to retrieve the ID and if successful will save, if the document is not found this function will execute the callback with an error
+	* If the existing document ID is not found this function will execute the callback with an error
 	*
 	* @name monoxide.save
 	*
@@ -904,6 +916,44 @@ function Monoxide() {
 		};
 
 		return mm;
+	};
+	// }}}
+
+	// .monoxideDocument([setup]) - monoxide document instance {{{
+	/**
+	* Returns a single instance of a Monoxide document
+	* @class
+	* @name monoxide.monoxideDocument
+	* @param {Object} setup The prototype fields (corresponds to $collection)
+	* @param {Object} data The initial data
+	* @return {monoxide.monoxideDocument}
+	*/
+	self.monoxideDocument = function monoxideDocument(setup, data) {
+		var proto = {
+			save: function(callback) {
+				var doc = this;
+				var fields = {
+					$collection: doc.$collection,
+					$id: doc._id,
+				};
+				_.extend(fields, _.pickBy(doc, function(v, k) {
+					if (!doc.hasOwnProperty(k)) return false;
+					if (k != 'name') return false;
+					// FIXME: Selectively pick only changed fields
+					return true;
+				}));
+
+				self.save(fields, callback);
+			},
+			$monoxide: true,
+		};
+		_.extend(proto, setup);
+
+		var doc = Object.create(proto);
+
+		_.extend(doc, data);
+
+		return doc;
 	};
 	// }}}
 
