@@ -5,28 +5,42 @@ var testSetup = require('./setup');
 describe('Monoxide - save', function() {
 	before(testSetup.init);
 
-	it('should save new item', function(finish) {
+	var users;
+	it('should get a list of existing users', function(finish) {
 		monoxide.query({
 			$collection: 'users',
-			name: 'New User',
+			$sort: 'name',
+		}, function(err, res) {
+			expect(err).to.be.not.ok;
+			expect(res).to.be.an.array;
+			users = res;
+			finish();
+		});
+	});
+
+	it('should save a user', function(finish) {
+		monoxide.save({
+			$collection: 'users',
+			$id: users[0]._id,
+			name: 'Edited User',
 			mostPurchased: [
-				{number: 50},
-				{number: 60},
+				{number: 12},
+				{number: 15},
 			],
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
 
-			expect(user).to.have.property('name', 'New User');
+			expect(user).to.have.property('name', 'Edited User');
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('favourite');
 			expect(user.favourite).to.be.a.string;
 			expect(user).to.have.property('mostPurchased');
 			expect(user.mostPurchased).to.be.an.array;
 			expect(user.mostPurchased).to.have.length(2);
-			expect(user.mostPurchased[0]).to.have.property('number', 50);
+			expect(user.mostPurchased[0]).to.have.property('number', 12);
 			expect(user.mostPurchased[0].item).to.be.undefined;
-			expect(user.mostPurchased[1]).to.have.property('number', 60);
+			expect(user.mostPurchased[1]).to.have.property('number', 15);
 			expect(user.mostPurchased[1].item).to.be.undefined;
 
 			finish();

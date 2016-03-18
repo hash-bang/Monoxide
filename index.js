@@ -339,7 +339,8 @@ function Monoxide() {
 
 	// .save([item], options, callback) {{{
 	/**
-	* Save a Mongo document by its ID
+	* Save an existing Mongo document by its ID
+	* If you wish to create a new document see the monoxide.create() function.
 	* This function will first attempt to retrieve the ID and if successful will save, if the document is not found this function will execute the callback with an error
 	*
 	* @name monoxide.save
@@ -356,8 +357,13 @@ function Monoxide() {
 	* @return {Object} This chainable object
 	*
 	* @example
-	* // Save a Widgets
-	* monoxide.query({$collection: 'widgets', name: 'New name'}, function(err, res) {
+	* // Save a Widget
+	* monoxide.save({
+	* 	$collection: 'widgets',
+	* 	$id: 1234,
+	* 	name: 'New name',
+	* }, function(err, widget) {
+	* 	console.log('Saved widget is now', widget);
 	* });
 	*/
 	self.save = function MonoxideQuery(q, options, callback) {
@@ -403,25 +409,23 @@ function Monoxide() {
 			// .model {{{
 			.then('model', function(next) {
 				if (!q.$collection) return next('Collection not specified');
+				if (!q.$id) return next('ID not specified');
 				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
 				next(null, this.connection.base.models[q.$collection].schema);
 			})
 			// }}}
 			// Find the row by its ID - call to self.query() {{{
 			.then('row', function(next) {
-				if (!q.$id) return next(); // Creating a new record - dont bother to find the old one
 				self.query({
 					$id: q.$id,
 					$collection: q.$collection,
 				}, next);
 			})
 			// }}}
-			// Save new / over {{{
+			// Save over record {{{
 			.then('newRec', function(next) {
 				var row = this.row;
-				if (!q.$id) { // Create new record
-					this.connection.base.models[q.$collection].create(_.omit(q, this.metaFields), next);
-				} else if (!this.row) { // Trying to save over a non existtant record
+				if (!row) { // Trying to save over a non existtant record
 					next('Not found');
 				} else { // Update existing record
 					var saveFields = _(q)
@@ -430,8 +434,96 @@ function Monoxide() {
 							_.set(row, key, val);
 						});
 
-					this.row.save(next);
+					row.save(next);
 				}
+			})
+			// }}}
+			// End {{{
+			.end(function(err) {
+				if (err) return callback(err);
+				return callback(null, this.newRec);
+			});
+			// }}}
+
+			return self;
+	};
+	// }}}
+
+	// .create([item], options, callback) {{{
+	/**
+	* Create a new Mongo document and return it
+	* If you wish to save an existing document see the monoxide.save() function.
+	*
+	* @name monoxide.create
+	*
+	* @param {Object} q The object to process
+	* @param {string} q.$collection The collection / model to query
+	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
+	*
+	* @param {Object} [options] Optional options object which can alter behaviour of the function
+	*
+	* @param {function} callback(err, result) the callback to call on completion or error
+	*
+	* @return {Object} This chainable object
+	*
+	* @example
+	* // Create a Widget
+	* monoxide.save({
+	* 	$collection: 'widgets',
+	* 	name: 'New widget name',
+	* }, function(err, widget) {
+	* 	console.log('Created widget is', widget);
+	* });
+	*/
+	self.create = function MonoxideQuery(q, options, callback) {
+		var self = this;
+		// Deal with arguments {{{
+		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+			// All ok
+		} else if (_.isObject(q) && _.isFunction(options)) {
+			callback = options;
+			options = {};
+		} else if (!_.isFunction(q)) {
+			callback = q;
+			q = {};
+			options = {};
+		} else if (_.isFunction(callback)) {
+			throw new Error('Callback parameter is mandatory');
+		} else {
+			throw new Error('Unknown function call pattern');
+		}
+		// }}}
+
+		var settings = _.defaults(options || {}, {
+		});
+
+		async()
+			.set('metaFields', [
+				'$collection', // Collection to query to find the original record
+			])
+			// Sanity checks {{{
+			.then(function(next) {
+				if (!q || _.isEmpty(q)) return next('No query given for save operation');
+				if (!q.$collection) return next('$collection must be specified for save operation');
+				next();
+			})
+			// }}}
+			// .connection {{{
+			.then('connection', function(next) {
+				if (!mongoose.connection) return next('No Mongoose connection open');
+				next(null, mongoose.connection);
+			})
+			// }}}
+			// .model {{{
+			.then('model', function(next) {
+				if (!q.$collection) return next('Collection not specified');
+				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
+				next(null, this.connection.base.models[q.$collection].schema);
+			})
+			// }}}
+			// Create record {{{
+			.then('newRec', function(next) {
+				this.connection.base.models[q.$collection].create(_.omit(q, this.metaFields), next);
 			})
 			// }}}
 			// End {{{
@@ -878,6 +970,7 @@ function Monoxide() {
 		count: true,
 		get: true,
 		query: true,
+		create: false,
 		save: false,
 		delete: false,
 	};
@@ -926,6 +1019,7 @@ function Monoxide() {
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.count=true] Allow GET + Count functionality
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.get=true] Allow single record retrieval by its ID via the GET method. If this is disabled an ID MUST be specified for any GET to be successful within req.params
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.query=true] Allow record querying via the GET method
+	* @param {boolean|monoxide.express.middlewareCallback} [settings.create=false] Allow the creation of records via the POST method
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.save=false] Allow saving of records via the POST method
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.delete=false] Allow deleting of records via the DELETE method
 	* @returns {function} callback(req, res, next) Express compatible middleware function
@@ -960,6 +1054,7 @@ function Monoxide() {
 				collection: settings.collection,
 			};
 
+			// Count {{{
 			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && _.isFunction(settings.count)) {
 				settings.count(req, res, function(err) {
 					if (err) return next(err);
@@ -967,6 +1062,8 @@ function Monoxide() {
 				});
 			} else if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
 				self.express.count(settings)(req, res, next);
+			// }}}
+			// Get {{{
 			} else if (settings.get && req.method == 'GET' && req.params.id && _.isFunction(settings.get)) {
 				req.monoxide.id = req.params.id;
 				settings.get(req, res, function(err) {
@@ -975,6 +1072,8 @@ function Monoxide() {
 				});
 			} else if (settings.get && req.method == 'GET' && req.params.id) {
 				self.express.get(settings)(req, res, next);
+			// }}}
+			// Query {{{
 			} else if (settings.query && req.method == 'GET' && _.isFunction(settings.query)) {
 				settings.query(req, res, function(err) {
 					if (err) return next(err);
@@ -982,14 +1081,28 @@ function Monoxide() {
 				});
 			} else if (settings.query && req.method == 'GET') {
 				self.express.query(settings)(req, res, next);
-			} else if (settings.save && req.method == 'POST' && _.isFunction(settings.save)) {
+			// }}}
+			// Save {{{
+			} else if (settings.save && req.method == 'POST' && req.params.id && _.isFunction(settings.save)) {
 				req.monoxide.id = req.params.id;
 				settings.save(req, res, function(err) {
 					if (err) return next(err);
 					self.express.save(settings)(req, res, next);
 				});
-			} else if (settings.save && req.method == 'POST') {
+			} else if (settings.save && req.method == 'POST' && req.params.id) {
 				self.express.save(settings)(req, res, next);
+			// }}}
+			// Create {{{
+			} else if (settings.create && req.method == 'POST' && _.isFunction(settings.create)) {
+				req.monoxide.id = req.params.id;
+				settings.create(req, res, function(err) {
+					if (err) return next(err);
+					self.express.create(settings)(req, res, next);
+				});
+			} else if (settings.create && req.method == 'POST') {
+				self.express.create(settings)(req, res, next);
+			// }}}
+			// Delete {{{
 			} else if (settings.delete && req.method == 'DELETE' && _.isFunction(settings.delete)) {
 				req.monoxide.id = req.params.id;
 				settings.delete(req, res, function(err) {
@@ -998,9 +1111,12 @@ function Monoxide() {
 				});
 			} else if (settings.delete && req.method == 'DELETE') {
 				self.express.delete(settings)(req, res, next);
+			// }}}
+			// Unknown {{{
 			} else {
 				res.status(404).end();
 			}
+			// }}}
 		};
 	};
 	// }}}
@@ -1089,7 +1205,7 @@ function Monoxide() {
 	* // Bind an express method to serve widgets
 	* app.get('/api/widgets', monoxide.express.query('widgets'));
 	*/
-	self.express.query = function MonoxideExpressGet(model, settings) {
+	self.express.query = function MonoxideExpressQuery(model, settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(model) && _.isObject(settings)) {
 			settings.collection = model;
@@ -1197,7 +1313,7 @@ function Monoxide() {
 
 	// .express.save(settings) {{{
 	/**
-	* Return an Express middleware binding for POST operations
+	* Return an Express middleware binding for POST/PATCH operations which update an existing record with new fields
 	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 	*
 	* @name monoxide.express.save
@@ -1251,6 +1367,62 @@ function Monoxide() {
 	};
 	// }}}
 
+	// .express.create(settings) {{{
+	/**
+	* Return an Express middleware binding for POST/PUT operations which create a new record
+	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
+	*
+	* @name monoxide.express.create
+	*
+	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
+	* @param {Object} [settings] Middleware settings
+	* @param {string} [settings.collection] The model name to bind to
+	* @returns {function} callback(req, res, next) Express compatible middleware function
+	*
+	* @example
+	* // Bind an express method to create widgets
+	* app.post('/api/widgets', monoxide.express.create('widgets'));
+	*/
+	self.express.create = function MonoxideExpressCreate(model, settings) {
+		// Deal with incomming settings object {{{
+		if (_.isString(model) && _.isObject(settings)) {
+			settings.collection = model;
+		} else if (_.isString(model)) {
+			settings = {collection: model};
+		} else if (_.isObject(model)) {
+			settings = model;
+		} else if (!settings) {
+			settings = {};
+		}
+
+		_.defaults(settings || {}, {
+			collection: null, // The collection to operate on
+			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
+		});
+
+		if (!settings.collection) throw new Error('No collection specified for monoxide.express.create(). Specify as a string or {collection: String}');
+		// }}}
+
+		return function(req, res, next) {
+			var q = _.clone(req.body);
+
+			q.$collection = settings.collection;
+
+			if (req.params.id) q.$id = req.params.id;
+
+			self.create(q, function(err, rows) {
+				if (settings.passThrough) { // Act as middleware
+					next(err, rows);
+				} else if (err) { // Act as endpoint and there was an error
+					res.status(400).end();
+				} else { // Act as endpoint and result is ok
+					res.send(rows).end();
+				}
+			});
+		};
+	};
+	// }}}
+
 	// .express.delete(settings) {{{
 	/**
 	* Return an Express middleware binding for DELETE operations
@@ -1267,7 +1439,7 @@ function Monoxide() {
 	* // Bind an express method to delete widgets
 	* app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 	*/
-	self.express.delete = function MonoxideExpressSave(model, settings) {
+	self.express.delete = function MonoxideExpressDelete(model, settings) {
 		// Deal with incomming settings object {{{
 		if (_.isString(model) && _.isObject(settings)) {
 			settings.collection = model;

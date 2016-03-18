@@ -25,13 +25,13 @@ describe('Monoxide + Express', function() {
 
 		app.get('/api/users', monoxide.express.query('users'));
 		app.get('/api/users/:id', monoxide.express.get('users'));
-		app.post('/api/users', monoxide.express.save('users'));
+		app.post('/api/users', monoxide.express.create('users'));
 		app.post('/api/users/:id', monoxide.express.save('users'));
 
 		app.get('/api/widgets', monoxide.express.query('widgets'));
 		app.get('/api/widgets/count', monoxide.express.count('widgets'));
 		app.get('/api/widgets/:id', monoxide.express.get('widgets'));
-		app.post('/api/widgets', monoxide.express.save('widgets'));
+		app.post('/api/widgets', monoxide.express.create('widgets'));
 		app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 		app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 
