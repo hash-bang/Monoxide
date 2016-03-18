@@ -406,6 +406,8 @@ function Monoxide() {
 				var row = this.row;
 				if (!q.$id) { // Create new record
 					this.connection.base.models[q.$collection].create(_.omit(q, this.metaFields), next);
+				} else if (!this.row) { // Trying to save over a non existtant record
+					next('Not found');
 				} else { // Update existing record
 					var saveFields = _(q)
 						.omit(this.metaFields) // Remove all meta fields
@@ -509,6 +511,7 @@ function Monoxide() {
 			// }}}
 			// Delete record {{{
 			.then('newRec', function(next) {
+				if (!this.row) return next('Not found');
 				this.row.remove(next);
 			})
 			// }}}
