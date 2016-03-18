@@ -765,6 +765,26 @@ function Monoxide() {
 		var mm = this;
 
 		mm.$collection = settings.$collection;
+		mm.$methods = {};
+
+		/**
+		* Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+		* This also sets $count=true in the queryBuilder
+		* @name monoxide.monoxideModel.find
+		* @see monoxide.queryBuilder.find
+		*
+		* @param {Object} [q] Optional filtering object
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder}
+		*/
+		mm.count = function(q, callback) {
+			return (new self.queryBuilder())
+				.find({
+					$collection: mm.$collection, // Set the collection from the model
+					$count: true,
+				})
+				.find(q, callback); // Then re-parse the find query into the new queryBuilder
+		};
 
 		/**
 		* Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
@@ -838,7 +858,7 @@ function Monoxide() {
 		* @param {Object} [q] Optional document contents
 		* @param {Object} [options] Optional options object which can alter behaviour of the function
 		* @param {function} [callback] Optional callback
-		* @return {monoxide.monoxideModel}
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
 		mm.create = function(q, options, callback) {
 			// Deal with arguments {{{
@@ -864,6 +884,31 @@ function Monoxide() {
 			return mm;
 		};
 
+
+		/**
+		* Add a method to a all documents returned from this model
+		* A method is a user defined function which extends the `monoxide.monoxideDocument` prototype
+		* @param {string} name The function name to add as a static method
+		* @param {function} func The function to add as a static method
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*/
+		mm.method = function(name, func) {
+			mm.$methods[name] = func;
+			return mm;
+		};
+
+
+		/**
+		* Add a static method to a model
+		* A static is a user defined function which extends the `monoxide.monoxideModel` prototype
+		* @param {string} name The function name to add as a static method
+		* @param {function} func The function to add as a static method
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*/
+		mm.static = function(name, func) {
+			mm[name] = func;
+			return mm;
+		};
 
 		return mm;
 	};

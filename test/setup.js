@@ -32,18 +32,28 @@ module.exports = {
 	// initSchemas {{{
 	initSchemas: function(finish) {
 		// Users {{{
-		var Users = monoxide.schema('users', {
-			name: String,
-			role: {type: String, enum: ['user', 'admin'], default: 'user'},
-			favourite: {type: 'pointer', ref: 'widgets'},
-			items: [{type: 'pointer', ref: 'widgets'}],
-			mostPurchased: [
-				{
-					number: {type: Number, default: 0},
-					item: {type: 'pointer', ref: 'widgets'},
-				}
-			],
-		});
+		var Users = monoxide
+			.schema('users', {
+				name: String,
+				role: {type: String, enum: ['user', 'admin'], default: 'user'},
+				favourite: {type: 'pointer', ref: 'widgets'},
+				items: [{type: 'pointer', ref: 'widgets'}],
+				mostPurchased: [
+					{
+						number: {type: Number, default: 0},
+						item: {type: 'pointer', ref: 'widgets'},
+					}
+				],
+			})
+			.method('splitNames', function() {
+				return /\s+/.split(this.name);
+			})
+			.static('countByType', function(type, next) {
+				Users.count({
+					$collection: 'users',
+					role: type,
+				}, next);
+			});
 		// }}}
 
 		// Widgets {{{
