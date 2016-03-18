@@ -32,4 +32,31 @@ describe('Monoxide - create', function() {
 			finish();
 		});
 	});
+
+	it('create save new user (monoxide.model method)', function(finish) {
+		monoxide.models.users.create({
+			name: 'New User2',
+			mostPurchased: [
+				{number: 80},
+				{number: 70},
+			],
+		}, function(err, user) {
+			expect(err).to.not.be.ok;
+			expect(user).to.be.an.object;
+
+			expect(user).to.have.property('name', 'New User2');
+			expect(user).to.have.property('role', 'user');
+			expect(user).to.have.property('favourite');
+			expect(user.favourite).to.be.a.string;
+			expect(user).to.have.property('mostPurchased');
+			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.have.length(2);
+			expect(user.mostPurchased[0]).to.have.property('number', 80);
+			expect(user.mostPurchased[0].item).to.be.undefined;
+			expect(user.mostPurchased[1]).to.have.property('number', 70);
+			expect(user.mostPurchased[1].item).to.be.undefined;
+
+			finish();
+		});
+	});
 });

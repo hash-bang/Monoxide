@@ -21,7 +21,7 @@ TODO
 - [ ] monoxide.express.middleware - field blocking
 - [ ] monoxide.express.middleware - `all` request filter
 - [ ] monoxide.schema.static()
-- [ ] monoxide.model().create
+- [x] monoxide.model().create
 - [ ] monoxide.model().findOne
 - [ ] monoxide.model().findOneByID
 - [ ] monoxide.document

@@ -781,10 +781,40 @@ function Monoxide() {
 				.find(q); // Then re-parse the find query into the new queryBuilder
 		};
 
-		if (settings.$mongoose) {
-			self.models[mm.$collection] = mm;
-			self.models[mm.$collection].$mongoose = settings.$mongoose;
-		}
+		/**
+		* Shortcut function to create a new record within a collection
+		* @name monoxide.monoxideModel.create
+		* @see monoxide.create
+		*
+		* @param {Object} [q] Optional document contents
+		* @param {Object} [options] Optional options object which can alter behaviour of the function
+		* @param {function} [callback] Optional callback
+		* @return {monoxide.monoxideModel}
+		*/
+		mm.create = function(q, options, callback) {
+			// Deal with arguments {{{
+			if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+				// All ok
+			} else if (_.isObject(q) && _.isFunction(options)) {
+				callback = options;
+				options = {};
+			} else if (_.isFunction(q)) {
+				callback = q;
+				q = {};
+				options = {};
+			} else if (!_.isFunction(callback)) {
+				throw new Error('Callback parameter must be function');
+			} else {
+				throw new Error('Unknown function call pattern');
+			}
+			// }}}
+
+			q.$collection = mm.$collection;
+
+			self.create(q, options, callback);
+			return mm;
+		};
+
 
 		return mm;
 	};
