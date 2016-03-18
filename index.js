@@ -775,11 +775,60 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder}
 		*/
-		mm.find = function(q) {
+		mm.find = function(q, callback) {
 			return (new self.queryBuilder())
 				.find({$collection: mm.$collection}) // Set the collection from the model
-				.find(q); // Then re-parse the find query into the new queryBuilder
+				.find(q, callback); // Then re-parse the find query into the new queryBuilder
 		};
+
+
+		/**
+		* Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+		* This also sets $one=true in the queryBuilder
+		* @name monoxide.monoxideModel.findOne
+		* @see monoxide.queryBuilder.find
+		*
+		* @param {Object} [q] Optional filtering object
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder}
+		*/
+		mm.findOne = function(q, callback) {
+			return (new self.queryBuilder())
+				.find({
+					$collection: mm.$collection, // Set the collection from the model
+					$one: true, // Return a single object
+				})
+				.find(q, callback); // Then re-parse the find query into the new queryBuilder
+		};
+
+
+		/**
+		* Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+		* This also sets $id=q in the queryBuilder
+		* @name monoxide.monoxideModel.findOneByID
+		* @see monoxide.queryBuilder.find
+		*
+		* @param {Object} [q] Optional filtering object
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder}
+		*/
+		mm.findOneByID = function(q, callback) {
+			// Deal with arguments {{{
+			if (_.isString(q)) {
+				// All ok
+			} else {
+				throw new Error('Unknown function call pattern');
+			}
+			// }}}
+
+			return (new self.queryBuilder())
+				.find({
+					$collection: mm.$collection, // Set the collection from the model
+					$id: q,
+				})
+				.find(q, callback); // Then re-parse the find query into the new queryBuilder
+		};
+
 
 		/**
 		* Shortcut function to create a new record within a collection

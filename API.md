@@ -31,6 +31,26 @@ app.get('/api/widgets/count', monoxide.express.get('widgets'));
 
 Returns **function** callback(req, res, next) Express compatible middleware function
 
+## monoxide.express.create
+
+Return an Express middleware binding for POST/PUT operations which create a new record
+Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
+
+**Parameters**
+
+-   `model` **[string]** The model name to bind to (this can also be specified as settings.collection)
+-   `settings` **[Object]** Middleware settings
+    -   `settings.collection` **[string]** The model name to bind to
+
+**Examples**
+
+```javascript
+// Bind an express method to create widgets
+app.post('/api/widgets', monoxide.express.create('widgets'));
+```
+
+Returns **function** callback(req, res, next) Express compatible middleware function
+
 ## monoxide.express.defaults
 
 Set the default settings used when calling other monoxide.express.middleware functions
@@ -117,6 +137,7 @@ See monoxide.express.defaults() to chanthe the default settings for this functio
     -   `settings.count` **[boolean or monoxide.express.middlewareCallback]** Allow GET + Count functionality (optional, default `true`)
     -   `settings.get` **[boolean or monoxide.express.middlewareCallback]** Allow single record retrieval by its ID via the GET method. If this is disabled an ID MUST be specified for any GET to be successful within req.params (optional, default `true`)
     -   `settings.query` **[boolean or monoxide.express.middlewareCallback]** Allow record querying via the GET method (optional, default `true`)
+    -   `settings.create` **[boolean or monoxide.express.middlewareCallback]** Allow the creation of records via the POST method (optional, default `false`)
     -   `settings.save` **[boolean or monoxide.express.middlewareCallback]** Allow saving of records via the POST method (optional, default `false`)
     -   `settings.delete` **[boolean or monoxide.express.middlewareCallback]** Allow deleting of records via the DELETE method (optional, default `false`)
 
@@ -157,7 +178,7 @@ Returns **function** callback(req, res, next) Express compatible middleware func
 
 ## monoxide.express.save
 
-Return an Express middleware binding for POST operations
+Return an Express middleware binding for POST/PATCH operations which update an existing record with new fields
 Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
 
 **Parameters**
@@ -200,6 +221,33 @@ monoxide.count({$collection: 'widgets'}, function(err, count) {
 // Count all admin Users
 monoxide.query({$collection: 'users', role: 'admin'}, function(err, count) {
 	console.log('Number of Admin Users:', count);
+});
+```
+
+Returns **Object** This chainable object
+
+# monoxide.create
+
+Create a new Mongo document and return it
+If you wish to save an existing document see the monoxide.save() function.
+
+**Parameters**
+
+-   `q` **Object** The object to process
+    -   `q.$collection` **string** The collection / model to query
+    -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
+-   `options` **[Object]** Optional options object which can alter behaviour of the function
+-   `callback` **function** (err, result) the callback to call on completion or error
+
+**Examples**
+
+```javascript
+// Create a Widget
+monoxide.save({
+	$collection: 'widgets',
+	name: 'New widget name',
+}, function(err, widget) {
+	console.log('Created widget is', widget);
 });
 ```
 
@@ -277,7 +325,8 @@ Returns **monoxide.queryBuilder**
 
 # monoxide.save
 
-Save a Mongo document by its ID
+Save an existing Mongo document by its ID
+If you wish to create a new document see the monoxide.create() function.
 This function will first attempt to retrieve the ID and if successful will save, if the document is not found this function will execute the callback with an error
 
 **Parameters**
@@ -292,8 +341,13 @@ This function will first attempt to retrieve the ID and if successful will save,
 **Examples**
 
 ```javascript
-// Save a Widgets
-monoxide.query({$collection: 'widgets', name: 'New name'}, function(err, res) {
+// Save a Widget
+monoxide.save({
+	$collection: 'widgets',
+	$id: 1234,
+	name: 'New name',
+}, function(err, widget) {
+	console.log('Saved widget is now', widget);
 });
 ```
 
@@ -501,9 +555,45 @@ Add sort criteria to an existing query
 
 Returns **monoxide.queryBuilder** This chainable object
 
+# monoxide.monoxideModel.create
+
+Shortcut function to create a new record within a collection
+
+**Parameters**
+
+-   `q` **[Object]** Optional document contents
+-   `options` **[Object]** Optional options object which can alter behaviour of the function
+-   `callback` **[function]** Optional callback
+
+Returns **monoxide.monoxideModel** 
+
 # monoxide.monoxideModel.find
 
 Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
+
+# monoxide.monoxideModel.findOne
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $one=true in the queryBuilder
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
+
+# monoxide.monoxideModel.findOneByID
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $id=q in the queryBuilder
 
 **Parameters**
 

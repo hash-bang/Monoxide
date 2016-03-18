@@ -5,14 +5,17 @@ var testSetup = require('./setup');
 describe('Monoxide - query builder', function() {
 	before(testSetup.init);
 
+	var users;
 	it('should query the users model', function(finish) {
 		monoxide.model('users')
 			.find()
 			.sort('name')
 			.populate('items')
 			.populate('mostPurchased.item')
-			.exec(function(err, users) {
+			.exec(function(err, res) {
 				expect(err).to.not.be.ok;
+
+				users = res;
 				expect(users).to.be.an.array;
 				expect(users).to.have.length(2);
 
@@ -59,6 +62,32 @@ describe('Monoxide - query builder', function() {
 
 				expect(widgets[1]).to.have.property('name', 'Widget crash');
 				expect(widgets[1]).to.have.property('color', 'blue');
+
+				finish();
+			});
+	});
+
+	it('should query the users model via findOne', function(finish) {
+		monoxide.models.users
+			.findOne({_id: users[0]._id})
+			.exec(function(err, user) {
+				expect(err).to.not.be.ok;
+				expect(user).to.be.an.object;
+
+				expect(user).to.have.property('name', users[0].name);
+
+				finish();
+			});
+	});
+
+	it('should query the users model via findOneByID', function(finish) {
+		monoxide.models.users
+			.findOneByID(users[0]._id.toString())
+			.exec(function(err, user) {
+				expect(err).to.not.be.ok;
+				expect(user).to.be.an.object;
+
+				expect(user).to.have.property('name', users[0].name);
 
 				finish();
 			});
