@@ -22,7 +22,7 @@ TODO
 - [ ] monoxide.express.middleware - `all` request filter
 - [ ] monoxide.schema.static()
 - [x] monoxide.model().create
-- [ ] monoxide.model().findOne
-- [ ] monoxide.model().findOneByID
+- [x] monoxide.model().findOne
+- [x] monoxide.model().findOneByID
 - [ ] monoxide.document
 - [ ] monoxide.document.save()
