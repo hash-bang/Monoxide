@@ -78,7 +78,8 @@ You can also pass more complex options structures by specifying an object:
 		get: true, // Allow retrieval by ID
 		query: true, // Allow retrieval of multiple records as a query
 		count: true, // Allow record counting via query
-		save: false, // Allow saving via POST / PATCH / PUT
+		create: false, // Alow record creation via POST / PUT
+		save: false, // Allow saving via POST / PATCH
 		delete: false, // Allow record deletion via DELETE
 
 		// ... other options here ... //
@@ -89,6 +90,7 @@ You can also secure the various methods by passing in middleware:
 
 	app.use('/api/users/:id?', monoxide.express.middleware('users', {
 		get: true, // Allow retrieval by ID
+		create: false, // Dont allow record creation
 		query: false, // Dont allow querying of users (direct ID addressing is ok though)
 		count: false, // Disable counting
 
@@ -126,7 +128,8 @@ You can also pick-and-choose the handlers to be used:
 	app.get('/api/users', monoxide.express.query('users'));
 	app.get('/api/users/count', monoxide.express.count('users'));
 	app.get('/api/users/:id', monoxide.express.get('users'));
-	app.post('/api/users', monoxide.express.save('users'));
+	app.post('/api/users', monoxide.express.create('users'));
+	app.post('/api/users/:id', monoxide.express.save('users'));
 	app.delete('/api/users/:id', monoxide.express.delete('users'));
 
 In the above the specified models are bound to their respective ReST end points (`GET /api/users` will return all users for example).
