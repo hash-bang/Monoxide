@@ -1,0 +1,22 @@
+{
+  "name": "monoxide-examples-basic",
+  "version": "0.0.0",
+  "description": "Basic Monoxide ReST server example",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "monoxide",
+    "example",
+    "rest"
+  ],
+  "author": "Matt Carter <m@ttcarter.com> (https://github.com/hash-bang)",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "latest",
+    "express": "latest",
+    "mongoose-scenario": "latest",
+    "monoxide": "latest"
+  }
+}
