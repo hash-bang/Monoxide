@@ -123,7 +123,7 @@ function Monoxide() {
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	* @param {boolean} [options.cacheFKs=true] Whether to cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
 	*
-	* @param {function} callback(err, result) the callback to call on completion or error
+	* @param {function} callback(err, result) the callback to call on completion or error. If $one is truthy this returns a single monoxide.monoxideDocument, if not it returns an array of them
 	*
 	* @return {Object} This chainable object
 	*
@@ -641,7 +641,7 @@ function Monoxide() {
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	* @return {monoxide.queryBuilder}
 	*/
-	self.queryBuilder = function(options) {
+	self.queryBuilder = function monoxideQueryBuilder(options) {
 		var settings = _.defaults(options || {}, {
 		});
 
@@ -748,7 +748,7 @@ function Monoxide() {
 	/**
 	* @class
 	*/
-	self.monoxideModel = function(options) {
+	self.monoxideModel = function monoxideModel(options) {
 		// Deal with arguments {{{
 		if (_.isString(options)) {
 			options = {$collection: options};
