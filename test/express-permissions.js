@@ -341,6 +341,51 @@ describe('Monoxide + Express permissions', function() {
 						.query({force: 'confirm'})
 						.end(function(err, res) {
 							expect(err).to.be.not.ok;
+							widgets.shift(); // Remove first item so future tests dont access the deleted widget
+
+							server.close();
+							finish();
+						});
+				});
+		});
+	});
+
+	it('should remap delete to update operation (default delete=function)', function(finish) {
+		var app = express();
+		app.use(expressLogger);
+		app.use(bodyParser.json());
+		app.set('log.indent', '      ');
+		monoxide.express.defaults({
+			delete: function(req, res, next) {
+				monoxide.save({
+					$collection: req.monoxide.collection,
+					$id: req.monoxide.id,
+					status: 'deleted',
+				}, function(err) {
+					if (err) return res.status(400).send(err).end();
+					res.send({});
+				});
+			},
+		});
+
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
+		}));
+
+		var server = app.listen(port, null, function(err) {
+			if (err) return finish(err);
+
+			// Perform delete (which should remap to update)
+			superagent.delete(url + '/api/widgets/' + widgets[0]._id)
+				.end(function(err, res) {
+					expect(err).to.be.not.ok;
+
+					// Re-get the record and check status==deleted
+					superagent.get(url + '/api/widgets/' + widgets[0]._id)
+						.end(function(err, res) {
+							expect(err).to.be.not.ok;
+							expect(res.body).to.be.an.object;
+							expect(res.body).to.have.property('_id', widgets[0]._id);
+							expect(res.body).to.have.property('status', 'deleted');
 
 							server.close();
 							finish();
