@@ -941,6 +941,10 @@ function Monoxide() {
 		// }}}
 
 		return function(req, res, next) {
+			req.monoxide = { // Setup object to pass params to callback functions
+				collection: settings.collection,
+			};
+
 			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && _.isFunction(settings.count)) {
 				settings.count(req, res, function(err) {
 					if (err) return next(err);
@@ -949,6 +953,7 @@ function Monoxide() {
 			} else if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
 				self.express.count(settings)(req, res, next);
 			} else if (settings.get && req.method == 'GET' && req.params.id && _.isFunction(settings.get)) {
+				req.monoxide.id = req.params.id;
 				settings.get(req, res, function(err) {
 					if (err) return next(err);
 					self.express.get(settings)(req, res, next);
@@ -963,6 +968,7 @@ function Monoxide() {
 			} else if (settings.query && req.method == 'GET') {
 				self.express.query(settings)(req, res, next);
 			} else if (settings.save && req.method == 'POST' && _.isFunction(settings.save)) {
+				req.monoxide.id = req.params.id;
 				settings.save(req, res, function(err) {
 					if (err) return next(err);
 					self.express.save(settings)(req, res, next);
@@ -970,6 +976,7 @@ function Monoxide() {
 			} else if (settings.save && req.method == 'POST') {
 				self.express.save(settings)(req, res, next);
 			} else if (settings.delete && req.method == 'DELETE' && _.isFunction(settings.delete)) {
+				req.monoxide.id = req.params.id;
 				settings.delete(req, res, function(err) {
 					if (err) return next(err);
 					self.express.delete(settings)(req, res, next);
