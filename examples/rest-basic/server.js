@@ -1,6 +1,6 @@
 var bodyParser = require('body-parser');
 var express = require('express');
-var monoxide = require('../..');
+var monoxide = require('monoxide');
 var scenario = require('mongoose-scenario');
 
 // Connect
