@@ -10,8 +10,10 @@ Monoxide attempts to provide nicer, chainable functionality on top of base Mongo
 
 1. [API documentation](API.md)
 2. [ReST server setup](#reset-server)
-3. [TODO list](TODO.md)
-4. [Future ideas](IDEAS.md)
+3. [Example setups](examples/)
+4. [Common recipes and design patterns](RECIPES.md)
+4. [TODO list](TODO.md)
+5. [Future ideas](IDEAS.md)
 
 
 Key differences from Mongoose:
