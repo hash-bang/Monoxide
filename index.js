@@ -771,6 +771,7 @@ function Monoxide() {
 
 		mm.$collection = settings.$collection;
 		mm.$methods = {};
+		mm.$virtuals = {};
 
 		/**
 		* Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
@@ -915,6 +916,41 @@ function Monoxide() {
 			return mm;
 		};
 
+
+		/**
+		* Define a virtual (a handler when a property gets set or read)
+		* @param {string|Object} name The virtual name to apply or the full virtual object (must pretain to the Object.defineProperty descriptor)
+		* @param {function} getCallback The get fnution to call when the virtual value is read
+		* @param {function} setCallback The set function to call when the virtual value changes
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*/
+		mm.virtual = function(name, getCallback, setCallback) {
+			// Deal with arguments {{{
+			var q = {};
+			if (_.isObject(name)) {
+				q = name;
+			} else if (_.isString(name) && _.isFunction(getCallback) && _.isFunction(setCallback)) {
+				q = {
+					get: getCallback,
+					set: setCallback,
+				};
+			} else if (_.isString(name) && _.isFunction(getCallback)) {
+				q = {
+					get: getCallback,
+				};
+			} else if (_.isString(name) && _.isEmpty(getCallback) && _.isFunction(setCallback)) {
+				q = {
+					set: setCallback,
+				};
+			} else {
+				throw new Error('Unknown function call pattern');
+			}
+			// }}}
+
+			mm.$virtuals[name] = q;
+			return mm;
+		};
+
 		return mm;
 	};
 	// }}}
@@ -930,6 +966,8 @@ function Monoxide() {
 	* @return {monoxide.monoxideDocument}
 	*/
 	self.monoxideDocument = function monoxideDocument(setup, data) {
+		var model = self.models[setup.$collection];
+
 		var proto = {
 			save: function(callback) {
 				var doc = this;
@@ -947,9 +985,18 @@ function Monoxide() {
 				self.save(fields, callback);
 			},
 		};
-		_.extend(proto, setup, self.models[setup.$collection].$methods);
 
+		_.extend(
+			proto, // INPUT: Basic prototype
+			setup, // Merge with the incomming prototype (should contain at least $collection)
+			model.$methods // Merge with model methods
+		);
+
+		// Create the base document
 		var doc = Object.create(proto);
+
+		// Setup Virtuals
+		Object.defineProperties(doc, model.$virtuals);
 
 		_.extend(doc, data);
 

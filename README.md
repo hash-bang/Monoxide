@@ -16,11 +16,14 @@ Monoxide attempts to provide nicer, chainable functionality on top of base Mongo
 5. [Future ideas](IDEAS.md)
 
 
-Key differences from Mongoose:
+Key differences from Mongoose / MongoDB-Core:
 
 * Provides an out-of-the-box [Express middleware](#rest-server)
 * Returns a nicer syntax for [specifying schemas](#schema-setup)
 * Sort + Populate functionality can now be specified as an array rather than only as space delimited strings
+* All documents are accessible as plain JavaScript objects
+* Virtuals are handled locally (not on the database)
+* Methods are handled locally (again not on the database)
 
 
 Comparisons to other frameworks

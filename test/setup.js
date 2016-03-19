@@ -37,6 +37,7 @@ module.exports = {
 			.schema('users', {
 				name: String,
 				role: {type: String, enum: ['user', 'admin'], default: 'user'},
+				_password: String,
 				favourite: {type: 'pointer', ref: 'widgets'},
 				items: [{type: 'pointer', ref: 'widgets'}],
 				mostPurchased: [
@@ -61,7 +62,17 @@ module.exports = {
 					$collection: 'users',
 					role: type,
 				}, next);
-			});
+			})
+			.virtual('password', function() { return 'RESTRICTED' }, function(pass) {
+				// Very crappy, yet predictable password hasher that removes all consonants
+				this._password = pass
+					.toLowerCase()
+					.replace(/[^aeiou]+/g, '');
+			})
+			.virtual('passwordStrength', function() {
+				// Returns the length of the (badly, see above) password which is an approximate indicator of strength
+				return (this._password.length || 0);
+			})
 		// }}}
 
 		// Widgets {{{
@@ -98,6 +109,7 @@ module.exports = {
 					role: 'user',
 					favourite: 'widget-crash',
 					items: ['widget-bang'],
+					_password: 'ue', // INPUT: flume
 					mostPurchased: [
 						{
 							number: 5,
@@ -118,6 +130,7 @@ module.exports = {
 					role: 'user',
 					favourite: 'widget-bang',
 					items: [],
+					_password: 'oeaeoeae', // INPUT: correct battery horse staple
 					mostPurchased: [
 						{
 							number: 1,

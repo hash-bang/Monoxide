@@ -37,4 +37,14 @@ describe('Monoxide - schema', function() {
 			finish();
 		});
 	});
+
+	it('should set via a virtual', function() {
+		users[0].password = 'helloworld'; // Password should be mangled into removing non-vowels
+		expect(users[0]._password).to.equal('eoo');
+	});
+
+	it('should get via a virtual', function() {
+		expect(users[0].password).to.equal('RESTRICTED');
+		expect(users[0].passwordStrength).to.equal(3);
+	});
 });
