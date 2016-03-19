@@ -434,6 +434,11 @@ function Monoxide() {
 				next(null, this.connection.base.models[q.$collection].schema);
 			})
 			// }}}
+			// Fire the 'save' hook {{{
+			.then(function(next) {
+				self.models[q.$collection].fire('save', next, q);
+			})
+			// }}}
 			// Peform the update {{{
 			.then('rawResponse', function(next) {
 				this.connection.base.models[q.$collection].update({_id: q.$id}, _.omit(q, this.metaFields), {multi: false}, next);
@@ -447,6 +452,11 @@ function Monoxide() {
 					$id: q.$id,
 					$one: true,
 				}, next);
+			})
+			// }}}
+			// Fire the 'postSave' hook {{{
+			.then(function(next) {
+				self.models[q.$collection].fire('postSave', next, q);
 			})
 			// }}}
 			// End {{{
@@ -976,6 +986,7 @@ function Monoxide() {
 		/**
 		* Execute all hooks for an event
 		* This function fires all hooks in parallel and expects all to resolve correctly via callback
+		* NOTE: Hooks are always fired with the callback as the first argument
 		* @param {string} name The name of the hook to invoke
 		* @param {function} callback The callback to invoke on success
 		* @param {...*} parameters Any other parameters to be passed to each hook
@@ -983,10 +994,12 @@ function Monoxide() {
 		mm.fire = function(name, callback) {
 			if (!mm.$hooks[name] || !mm.$hooks[name].length) return callback(); // No hooks attached anyway
 
+			// Calculate the args array we will pass to each hook
+			var args = _.values(arguments);
+			args.shift(); // We will set args[0] to the callback in each case anyway so we only need to shift 1
+
 			async()
 				.forEach(mm.$hooks[name], function(next, hook) {
-					var args = _.values(arguments);
-					args.shift();
 					args[0] = next;
 					hook.apply(mm, args);
 				})
