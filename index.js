@@ -264,12 +264,12 @@ function Monoxide() {
 					if (err) return next(err);
 
 					if (q.$one) {
-						next(null, new monoxideDocument({$collection: q.$collection}, res));
+						next(null, new self.monoxideDocument({$collection: q.$collection}, res));
 					} else if (q.$count) {
 						next(null, res);
 					} else {
 						next(null, res.map(function(doc) {
-							return new monoxideDocument({$collection: q.$collection}, doc.toObject());
+							return new self.monoxideDocument({$collection: q.$collection}, doc.toObject());
 						}));
 					}
 				});
