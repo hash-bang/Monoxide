@@ -225,6 +225,7 @@ function Monoxide() {
 
 				//console.log('FIELDS', fields);
 				//console.log('POSTPOPFIELDS', self.filterPostPopulate);
+
 				if (q.$count) {
 					next(null, this.connection.base.models[q.$collection].count(fields));
 				} else if (q.$one) {
@@ -256,6 +257,11 @@ function Monoxide() {
 				}
 				// }}}
 				next();
+			})
+			// }}}
+			// Fire hooks {{{
+			.then(function(next) {
+				self.models[q.$collection].fire('query', next, q);
 			})
 			// }}}
 			// Execute and capture return {{{
@@ -772,6 +778,7 @@ function Monoxide() {
 		mm.$collection = settings.$collection;
 		mm.$methods = {};
 		mm.$virtuals = {};
+		mm.$hooks = {};
 
 		/**
 		* Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
@@ -949,6 +956,41 @@ function Monoxide() {
 
 			mm.$virtuals[name] = q;
 			return mm;
+		};
+
+
+		/**
+		* Attach a hook to a model
+		* A hook is exactly the same as a eventEmitter.on() event but must return a callback
+		* Multiple hooks can be attached and all will be called in parallel on certain events such as 'save'
+		* All hooks must return non-errors to proceed with the operation
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*/
+		mm.hook = function(eventName, callback) {
+			if (!mm.$hooks[eventName]) mm.$hooks[eventName] = [];
+			mm.$hooks[eventName].push(callback);
+			return mm;
+		};
+
+
+		/**
+		* Execute all hooks for an event
+		* This function fires all hooks in parallel and expects all to resolve correctly via callback
+		* @param {string} name The name of the hook to invoke
+		* @param {function} callback The callback to invoke on success
+		* @param {...*} parameters Any other parameters to be passed to each hook
+		*/
+		mm.fire = function(name, callback) {
+			if (!mm.$hooks[name] || !mm.$hooks[name].length) return callback(); // No hooks attached anyway
+
+			async()
+				.forEach(mm.$hooks[name], function(next, hook) {
+					var args = _.values(arguments);
+					args.shift();
+					args[0] = next;
+					hook.apply(mm, args);
+				})
+				.end(callback);
 		};
 
 		return mm;
