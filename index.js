@@ -924,7 +924,8 @@ function Monoxide() {
 	* Returns a single instance of a Monoxide document
 	* @class
 	* @name monoxide.monoxideDocument
-	* @param {Object} setup The prototype fields (corresponds to $collection)
+	* @param {Object} setup The prototype fields. Everything in this object is extended into the prototype
+	* @param {string} setup.$collection The collection this document belongs to
 	* @param {Object} data The initial data
 	* @return {monoxide.monoxideDocument}
 	*/
@@ -945,9 +946,8 @@ function Monoxide() {
 
 				self.save(fields, callback);
 			},
-			$monoxide: true,
 		};
-		_.extend(proto, setup);
+		_.extend(proto, setup, self.models[setup.$collection].$methods);
 
 		var doc = Object.create(proto);
 

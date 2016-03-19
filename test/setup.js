@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var async = require('async-chainable');
 var expect = require('chai').expect;
 var monoxide = require('..');
@@ -46,7 +47,14 @@ module.exports = {
 				],
 			})
 			.method('splitNames', function() {
-				return /\s+/.split(this.name);
+				return this.name.split(/\s+/);
+			})
+			.method('randomWait', function(next) {
+				// Test function to wait a random amount of MS then return the name
+				var doc = this;
+				setTimeout(function() {
+					next(null, doc.name);
+				}, _.random(0, 100));
 			})
 			.static('countByType', function(type, next) {
 				Users.count({
