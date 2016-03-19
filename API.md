@@ -237,7 +237,8 @@ If you wish to save an existing document see the monoxide.save() function.
     -   `q.$collection` **string** The collection / model to query
     -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
--   `callback` **function** (err, result) the callback to call on completion or error
+-   `function`  (err,result)] Optional callback to call on completion or error
+-   `callback`  
 
 **Examples**
 
@@ -264,7 +265,8 @@ This function will first attempt to retrieve the ID and if successful will delet
     -   `q.$collection` **string** The collection / model to query
     -   `q.$id` **string** The ID of the document to delete
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
--   `callback` **function** (err, result) the callback to call on completion or error
+-   `function`  (err,result)] Optional callback to call on completion or error
+-   `callback`  
 
 **Examples**
 
@@ -349,7 +351,8 @@ If the existing document ID is not found this function will execute the callback
     -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
     -   `options.refetch` **[boolean]** Whether to refetch the record after update, false returns `null` in the callback (optional, default `true`)
--   `callback` **function** (err, result) the callback to call on completion or error
+-   `function`  (err,result)] Optional callback to call on completion or error
+-   `callback`  
 
 **Examples**
 
@@ -392,12 +395,13 @@ var Widgets = monoxide.schema('widgets', {
 // Example schema for a user
 var Users = monoxide.schema('users', {
 	name: String,
-	role: {type: String, enum: ['user', 'admin'], default: 'user'},
+	role: {type: 'string', enum: ['user', 'admin'], default: 'user'},
 	favourite: {type: 'pointer', ref: 'widgets'},
 	items: [{type: 'pointer', ref: 'widgets'}],
+	settings: {type: 'any'},
 	mostPurchased: [
 		{
-			number: {type: Number, default: 0},
+			number: {type: 'number', default: 0},
 			item: {type: 'pointer', ref: 'widgets'},
 		}
 	],
@@ -423,6 +427,32 @@ Returns **Object** A dictionary of foreign keys for the schema (each key will be
 **Parameters**
 
 -   `options`  
+
+# fire
+
+Execute all hooks for an event
+This function fires all hooks in parallel and expects all to resolve correctly via callback
+NOTE: Hooks are always fired with the callback as the first argument
+
+**Parameters**
+
+-   `name` **string** The name of the hook to invoke
+-   `callback` **function** The callback to invoke on success
+-   `parameters` **...Any** Any other parameters to be passed to each hook
+
+# hook
+
+Attach a hook to a model
+A hook is exactly the same as a eventEmitter.on() event but must return a callback
+Multiple hooks can be attached and all will be called in parallel on certain events such as 'save'
+All hooks must return non-errors to proceed with the operation
+
+**Parameters**
+
+-   `eventName`  
+-   `callback`  
+
+Returns **monoxide.monoxideModel** The chainable monoxideModel
 
 # method
 
@@ -504,6 +534,18 @@ A static is a user defined function which extends the `monoxide.monoxideModel` p
 
 -   `name` **string** The function name to add as a static method
 -   `func` **function** The function to add as a static method
+
+Returns **monoxide.monoxideModel** The chainable monoxideModel
+
+# virtual
+
+Define a virtual (a handler when a property gets set or read)
+
+**Parameters**
+
+-   `name` **string or Object** The virtual name to apply or the full virtual object (must pretain to the Object.defineProperty descriptor)
+-   `getCallback` **function** The get fnution to call when the virtual value is read
+-   `setCallback` **function** The set function to call when the virtual value changes
 
 Returns **monoxide.monoxideModel** The chainable monoxideModel
 

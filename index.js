@@ -371,7 +371,7 @@ function Monoxide() {
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	* @param {boolean} [options.refetch=true] Whether to refetch the record after update, false returns `null` in the callback
 	*
-	* @param {function} callback(err, result) the callback to call on completion or error
+	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
 	* @return {Object} This chainable object
 	*
@@ -461,6 +461,7 @@ function Monoxide() {
 			// }}}
 			// End {{{
 			.end(function(err) {
+				if (!_.isFunction(callback)) return; // Do nothing
 				if (err) return callback(err);
 				return callback(null, this.newRec);
 			});
@@ -483,7 +484,7 @@ function Monoxide() {
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	*
-	* @param {function} callback(err, result) the callback to call on completion or error
+	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
 	* @return {Object} This chainable object
 	*
@@ -549,6 +550,7 @@ function Monoxide() {
 			// }}}
 			// End {{{
 			.end(function(err) {
+				if (!_.isFunction(callback)) return; // Do nothing
 				if (err) return callback(err);
 				return callback(null, this.newRec);
 			});
@@ -571,7 +573,7 @@ function Monoxide() {
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	*
-	* @param {function} callback(err, result) the callback to call on completion or error
+	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
 	* @return {Object} This chainable object
 	*
@@ -645,6 +647,7 @@ function Monoxide() {
 			// }}}
 			// End {{{
 			.end(function(err) {
+				if (!_.isFunction(callback)) return; // Do nothing
 				if (err) return callback(err);
 				return callback(null, this.newRec);
 			});
@@ -885,17 +888,17 @@ function Monoxide() {
 		*/
 		mm.create = function(q, options, callback) {
 			// Deal with arguments {{{
-			if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+			if (_.isObject(q) && _.isObject(options)) {
 				// All ok
 			} else if (_.isObject(q) && _.isFunction(options)) {
 				callback = options;
 				options = {};
+			} else if (_.isObject(q)) {
+				// Also ok
 			} else if (_.isFunction(q)) {
 				callback = q;
 				q = {};
 				options = {};
-			} else if (!_.isFunction(callback)) {
-				throw new Error('Callback parameter must be function');
 			} else {
 				throw new Error('Unknown function call pattern');
 			}
