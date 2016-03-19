@@ -1763,4 +1763,4 @@ function Monoxide() {
 
 util.inherits(Monoxide, events.EventEmitter);
 
-module.exports = Monoxide();
+module.exports = new Monoxide();
