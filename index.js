@@ -1046,12 +1046,13 @@ function Monoxide() {
 	* // Example schema for a user
 	* var Users = monoxide.schema('users', {
 	* 	name: String,
-	* 	role: {type: String, enum: ['user', 'admin'], default: 'user'},
+	* 	role: {type: 'string', enum: ['user', 'admin'], default: 'user'},
 	* 	favourite: {type: 'pointer', ref: 'widgets'},
 	* 	items: [{type: 'pointer', ref: 'widgets'}],
+	* 	settings: {type: 'any'},
 	* 	mostPurchased: [
 	* 		{
-	* 			number: {type: Number, default: 0},
+	* 			number: {type: 'number', default: 0},
 	* 			item: {type: 'pointer', ref: 'widgets'},
 	* 		}
 	* 	],
@@ -1061,13 +1062,34 @@ function Monoxide() {
 		if (!_.isString(model) || !_.isObject(spec)) throw new Error('Schema construction requires a model ID + schema object');
 
 		var schema = new mongoose.Schema(_.deepMapValues(spec, function(value, path) {
-			if ( // Rewrite types to support 'oid' / 'objectId' / 'objectID' types
-				_.endsWith(path, '.type') &&
-				_.includes(['oid', 'pointer', 'objectId', 'objectID', 'ObjectID'], value)
-			) {
-				return mongoose.Schema.ObjectId;
+			if (!_.endsWith(path, '.type')) return value; // Ignore not type rewrites
+			if (!_.isString(value)) return value; // Only rewrite string values
+
+			switch (value.toLowerCase()) {
+				case 'oid':
+				case 'pointer':
+				case 'objectid':
+					return mongoose.Schema.ObjectId;
+				case 'string':
+					return mongoose.Schema.Types.String;
+				case 'number':
+					return mongoose.Schema.Types.Number;
+				case 'boolean':
+				case 'bool':
+					return mongoose.Schema.Types.Boolean;
+				case 'array':
+					return mongoose.Schema.Types.Array;
+				case 'date':
+					return mongoose.Schema.Types.Date;
+				case 'object':
+				case 'mixed':
+				case 'any':
+					return mongoose.Schema.Types.Mixed;
+				case 'buffer':
+					return mongoose.Schema.Types.Buffer;
+				default:
+					throw new Error('Unknown Monoxide data type: ' + value.toLowerCase());
 			}
-			return value;
 		}));
 
 		// Add to model storage

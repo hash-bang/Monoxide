@@ -79,8 +79,8 @@ module.exports = {
 		var Widgets = monoxide.schema('widgets', {
 			name: String,
 			content: String,
-			status: {type: String, enum: ['active', 'deleted'], default: 'active'},
-			color: {type: String, enum: ['red', 'green', 'blue', 'yellow'], default: 'blue', index: true},
+			status: {type: 'string', enum: ['active', 'deleted'], default: 'active'},
+			color: {type: 'string', enum: ['red', 'green', 'blue', 'yellow'], default: 'blue', index: true},
 		});
 		// }}}
 
