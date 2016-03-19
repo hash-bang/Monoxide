@@ -27,7 +27,7 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .get([q], [id], callback) {{{
+	// .get(q, [id], callback) {{{
 	/**
 	* Retrieve a single record from a model via its ID
 	* This function will ONLY retrieve via the ID field, all other fields are ignored
@@ -107,7 +107,7 @@ function Monoxide() {
 	* Query Mongo directly with the Monoxide query syntax
 	*
 	* @name monoxide.query
-	* @memberof monoxide
+	* @fires query
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
@@ -355,13 +355,15 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .save([item], options, callback) {{{
+	// .save(item, [options], [callback]) {{{
 	/**
 	* Save an existing Mongo document by its ID
 	* If you wish to create a new document see the monoxide.create() function.
 	* If the existing document ID is not found this function will execute the callback with an error
 	*
 	* @name monoxide.save
+	* @fires save
+	* @fires postSave
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
@@ -471,7 +473,107 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .create([item], options, callback) {{{
+	// .update(q, [options], [callback]) {{{
+	/**
+	* Update multiple documents
+	*
+	* @name monoxide.update
+	* @fires update
+	*
+	* @param {Object} q The object to query by
+	* @param {string} q.$collection The collection / model to query
+	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as filter data
+	*
+	* @param {Object} qUpdate The object to update into the found documents
+	* @param {...*} [qUpdate.field] Data to save into every record found by `q`
+	*
+	* @param {Object} [options] Optional options object which can alter behaviour of the function
+	*
+	* @param {function} [callback(err,result)] Optional callback to call on completion or error
+	*
+	* @return {Object} This chainable object
+	*
+	* @example
+	* // Set all widgets to active
+	* monoxide.update({
+	* 	$collection: 'widgets',
+	* 	status: 'active',
+	* });
+	*/
+	self.update = function MonoxideUpdate(q, qUpdate, options, callback) {
+		var self = this;
+		// Deal with arguments {{{
+		if (_.isObject(q) && _.isObject(qUpdate) && _.isObject(options) && _.isFunction(callback)) {
+			// All ok
+		} else if (_.isString(q) && _.isObject(qUpdate) && _.isObject(options) && _.isFunction(options)) {
+			q = {$collection: q};
+			callback = options;
+			options = {};
+		} else if (_.isObject(q) && _.isObject(qUpdate) && _.isFunction(options)) {
+			callback = options;
+			options = {};
+		} else if (_.isString(q) && _.isObject(qUpdate) && _.isFunction(options)) {
+			q = {$collection: q};
+			callback = options;
+			options = {};
+		} else if (_.isFunction(callback)) {
+			throw new Error('Callback parameter is mandatory');
+		} else {
+			throw new Error('Unknown function call pattern');
+		}
+		// }}}
+
+		var settings = _.defaults(options || {}, {
+			refetch: true, // Fetch and return the record when updated (false returns null)
+		});
+
+		async()
+			.set('metaFields', [
+				'$collection', // Collection to query to find the original record
+			])
+			// Sanity checks {{{
+			.then(function(next) {
+				if (!q || _.isEmpty(q)) return next('No query given for save operation');
+				if (!q.$collection) return next('$collection must be specified for save operation');
+				next();
+			})
+			// }}}
+			// .connection {{{
+			.then('connection', function(next) {
+				if (!mongoose.connection) return next('No Mongoose connection open');
+				next(null, mongoose.connection);
+			})
+			// }}}
+			// .model {{{
+			.then('model', function(next) {
+				if (!q.$collection) return next('Collection not specified');
+				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
+				next(null, this.connection.base.models[q.$collection].schema);
+			})
+			// }}}
+			// Fire the 'update' hook {{{
+			.then(function(next) {
+				self.models[q.$collection].fire('update', next, q);
+			})
+			// }}}
+			// Peform the update {{{
+			.then('rawResponse', function(next) {
+				this.connection.base.models[q.$collection].update(_.omit(q, this.metaFields), _.omit(qUpdate, this.metaFields), {multi: true}, next);
+			})
+			// }}}
+			// End {{{
+			.end(function(err) {
+				if (!_.isFunction(callback)) return; // Do nothing
+				if (err) return callback(err);
+				return callback(null, this.newRec);
+			});
+			// }}}
+
+			return self;
+	};
+	// }}}
+
+	// .create(item, [options], [callback]) {{{
 	/**
 	* Create a new Mongo document and return it
 	* If you wish to save an existing document see the monoxide.save() function.
@@ -560,7 +662,7 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .delete([item], options, callback) {{{
+	// .delete(item, [options], [callback]) {{{
 	/**
 	* Delete a Mongo document by its ID
 	* This function will first attempt to retrieve the ID and if successful will delete it, if the document is not found this function will execute the callback with an error

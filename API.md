@@ -410,6 +410,32 @@ var Users = monoxide.schema('users', {
 
 Returns **Object** The monoxide model of the generated schema
 
+# monoxide.update
+
+Update multiple documents
+
+**Parameters**
+
+-   `q` **Object** The object to process
+    -   `q.$collection` **string** The collection / model to query
+    -   `q.$id` **string** The ID of the document to save
+    -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
+-   `options` **[Object]** Optional options object which can alter behaviour of the function
+-   `function`  (err,result)] Optional callback to call on completion or error
+-   `callback`  
+
+**Examples**
+
+```javascript
+// Set all widgets to active
+monoxide.update({
+	$collection: 'widgets',
+	status: 'active',
+});
+```
+
+Returns **Object** This chainable object
+
 # monoxide.utilities.extractFKs
 
 Extract all FKs in dotted path notation from a Mongoose model
@@ -481,6 +507,7 @@ Returns **monoxide.monoxideModel** The chainable monoxideModel
 # monoxide.monoxideModel.find
 
 Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $count=true in the queryBuilder
 
 **Parameters**
 
@@ -492,7 +519,6 @@ Returns **monoxide.queryBuilder**
 # monoxide.monoxideModel.find
 
 Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
-This also sets $count=true in the queryBuilder
 
 **Parameters**
 
