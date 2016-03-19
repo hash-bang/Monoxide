@@ -1004,11 +1004,43 @@ function Monoxide() {
 			} else {
 				throw new Error('Unknown function call pattern');
 			}
-			// }}}
 
 			q.$collection = mm.$collection;
+			// }}}
 
 			self.create(q, options, callback);
+			return mm;
+		};
+
+
+		/**
+		* Shortcut to invoke update on a given model
+		* @name monoxide.monoxideMode.update
+		* @see monoxide.update
+		* @param {Object} q The filter to query by
+		* @param {Object} qUpdate The object to update into the found documents
+		* @param {Object} [options] Optional options object which can alter behaviour of the function
+		* @param {function} [callback(err,result)] Optional callback to call on completion or error
+		* @return {Object} This chainable object
+		*/
+		mm.update = function(q, qUpdate, options, callback) {
+			// Deal with arguments {{{
+			if (_.isObject(q) && _.isObject(qUpdate) && _.isObject(options)) {
+				// All ok
+			} else if (_.isObject(q) && _.isObject(qUpdate) && _.isFunction(options)) {
+				callback = options;
+				options = {};
+			} else if (_.isObject(q) && _.isObject(qUpdate)) {
+				callback = null;
+				options = {};
+			} else {
+				throw new Error('Unknown function call pattern');
+			}
+
+			q.$collection = mm.$collection;
+			// }}}
+
+			self.update(q, qUpdate, options, callback);
 			return mm;
 		};
 
