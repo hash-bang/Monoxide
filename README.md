@@ -24,11 +24,14 @@ Key differences from Mongoose / MongoDB-Core:
 * All documents are accessible as plain JavaScript objects
 * Virtuals are handled locally (not on the database)
 * Methods are handled locally (again not on the database)
+* Hooks (i.e. Mongoose `pre`, `post` calls) actually work as they should. Hooks like all the above are local and not on the database
 
 
-Comparisons to other frameworks
+Features:
 
+* Much clearner and more 'JavaScripty' syntax
 * The [ReST server](#rest-server) provides various callback middleware layers to perform various restriction lockdowns - e.g. selectively provide queries or only delete records if the user is an admin.
+* Hooks that actually work! Trap save, query, create and other events correctly - have the option to reject them at the callback level
 
 
 See the [ideas list](ideas.md) for future ideas.
@@ -36,22 +39,40 @@ See the [ideas list](ideas.md) for future ideas.
 
 Schema Setup
 ============
-Monoxide supports setting the `type` property via a string instead of using pointers to types within the `mongoose.Types` structure.
+Monoxide supports setting the `type` property via a string instead of using pointers to types within the `mongoose.Types` structure. Its also really easy to add methods, statics and virtuals using chainable syntax.
 
-	var Users = monoxide.schema('users', {
-		name: String,
-		role: {type: String, enum: ['user', 'admin'], default: 'user'},
-		favourite: {type: 'pointer', ref: 'widgets'},
-		items: [{type: 'pointer', ref: 'widgets'}],
-		mostPurchased: [{
-			number: {type: Number, default: 0},
-			item: {type: 'pointer', ref: 'widgets'},
-		}],
-	});
+	var Users = monoxide
+		.schema('users', {
+			name: String,
+			role: {type: String, enum: ['user', 'admin'], default: 'user'},
+			favourite: {type: 'pointer', ref: 'widgets'},
+			items: [{type: 'pointer', ref: 'widgets'}],
+			mostPurchased: [{
+				number: {type: 'number', default: 0},
+				item: {type: 'pointer', ref: 'widgets'},
+			}],
+		})
+		.static('countByType', function(type, next) { // Adds User.countByType(TYPE, callback) as a model method
+			Users.count({
+				$collection: 'users',
+				role: type,
+			}, next);
+		})
+		.method('splitNames', function() { // Adds UserDocument.splitNames() as a method
+			return this.name.split(/\s+/);
+		})
+		.virtual('password', function() { return 'RESTRICTED' }, function(pass) { // Adds a password handling virtual
+			// Replace this with your own impressive password hashing kung-fu
+			this._password = pass;
+		})
+		.hook('save', function(next, doc) { // Adds a hook for when a document is saved (must fire callback to accept changes)
+			console.log('User', doc._id, 'has been modified');
+			next();
+		})
 
 Note that the awkward `mongoose.Schema.ObjectId` type is replaced with the nicer `'pointer'` type specified as a string. All other types can be similarly specified (e.g. `"number"`, `"string"` etc.).
 
-Schemas are also automatically compiled and returned as an object from `monoxide.schema` without any need to perform additional actions on the schema before its usable.
+Schemas are also automatically compiled and returned as an object from `monoxide.schema` without any need to perform additional actions on the schema before its usable. Functions that declare additional operations such as virtuals, statics, methods, hooks etc can be added and removed at any time without recompiling the object.
 
 
 
