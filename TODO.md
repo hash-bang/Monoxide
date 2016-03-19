@@ -20,9 +20,10 @@ TODO
 - [ ] Late bound `$populate` functionality
 - [ ] monoxide.express.middleware - field blocking
 - [ ] monoxide.express.middleware - `all` request filter
-- [ ] monoxide.schema.static()
+- [x] monoxide.schema.static()
 - [x] monoxide.model().create
 - [x] monoxide.model().findOne
 - [x] monoxide.model().findOneByID
-- [ ] monoxide.document
-- [ ] monoxide.document.save()
+- [x] monoxide.document
+- [x] monoxide.document.save()
+- [ ] monoxide.document.hook('save', cb)
