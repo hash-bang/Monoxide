@@ -313,6 +313,18 @@ This function is identical to accessing the model directly via `monoxide.models[
 
 Returns **Object** The monoxide model of the generated schema
 
+# monoxide.monoxideDocument
+
+Returns a single instance of a Monoxide document
+
+**Parameters**
+
+-   `setup` **Object** The prototype fields. Everything in this object is extended into the prototype
+    -   `setup.$collection` **string** The collection this document belongs to
+-   `data` **Object** The initial data
+
+Returns **monoxide.monoxideDocument** 
+
 # monoxide.queryBuilder
 
 Returns data from a Monoxide model
@@ -327,7 +339,7 @@ Returns **monoxide.queryBuilder**
 
 Save an existing Mongo document by its ID
 If you wish to create a new document see the monoxide.create() function.
-This function will first attempt to retrieve the ID and if successful will save, if the document is not found this function will execute the callback with an error
+If the existing document ID is not found this function will execute the callback with an error
 
 **Parameters**
 
@@ -336,6 +348,7 @@ This function will first attempt to retrieve the ID and if successful will save,
     -   `q.$id` **string** The ID of the document to save
     -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
+    -   `options.refetch` **[boolean]** Whether to refetch the record after update, false returns `null` in the callback (optional, default `true`)
 -   `callback` **function** (err, result) the callback to call on completion or error
 
 **Examples**
@@ -410,6 +423,89 @@ Returns **Object** A dictionary of foreign keys for the schema (each key will be
 **Parameters**
 
 -   `options`  
+
+# method
+
+Add a method to a all documents returned from this model
+A method is a user defined function which extends the `monoxide.monoxideDocument` prototype
+
+**Parameters**
+
+-   `name` **string** The function name to add as a static method
+-   `func` **function** The function to add as a static method
+
+Returns **monoxide.monoxideModel** The chainable monoxideModel
+
+# monoxide.monoxideModel.create
+
+Shortcut function to create a new record within a collection
+
+**Parameters**
+
+-   `q` **[Object]** Optional document contents
+-   `options` **[Object]** Optional options object which can alter behaviour of the function
+-   `callback` **[function]** Optional callback
+
+Returns **monoxide.monoxideModel** The chainable monoxideModel
+
+# monoxide.monoxideModel.find
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
+
+# monoxide.monoxideModel.find
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $count=true in the queryBuilder
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
+
+# monoxide.monoxideModel.findOne
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $one=true in the queryBuilder
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
+
+# monoxide.monoxideModel.findOneByID
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $id=q in the queryBuilder
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
+
+# static
+
+Add a static method to a model
+A static is a user defined function which extends the `monoxide.monoxideModel` prototype
+
+**Parameters**
+
+-   `name` **string** The function name to add as a static method
+-   `func` **function** The function to add as a static method
+
+Returns **monoxide.monoxideModel** The chainable monoxideModel
 
 # Monoxide
 
@@ -492,7 +588,7 @@ Query Mongo directly with the Monoxide query syntax
     -   `q.$limit` **[number]** Limit the return to this many rows
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
     -   `options.cacheFKs` **[boolean]** Whether to cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure (optional, default `true`)
--   `callback` **function** (err, result) the callback to call on completion or error
+-   `callback` **function** (err, result) the callback to call on completion or error. If $one is truthy this returns a single monoxide.monoxideDocument, if not it returns an array of them
 
 **Examples**
 
@@ -554,50 +650,3 @@ Add sort criteria to an existing query
 -   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
 
 Returns **monoxide.queryBuilder** This chainable object
-
-# monoxide.monoxideModel.create
-
-Shortcut function to create a new record within a collection
-
-**Parameters**
-
--   `q` **[Object]** Optional document contents
--   `options` **[Object]** Optional options object which can alter behaviour of the function
--   `callback` **[function]** Optional callback
-
-Returns **monoxide.monoxideModel** 
-
-# monoxide.monoxideModel.find
-
-Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
-
-**Parameters**
-
--   `q` **[Object]** Optional filtering object
--   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
-
-Returns **monoxide.queryBuilder** 
-
-# monoxide.monoxideModel.findOne
-
-Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
-This also sets $one=true in the queryBuilder
-
-**Parameters**
-
--   `q` **[Object]** Optional filtering object
--   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
-
-Returns **monoxide.queryBuilder** 
-
-# monoxide.monoxideModel.findOneByID
-
-Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
-This also sets $id=q in the queryBuilder
-
-**Parameters**
-
--   `q` **[Object]** Optional filtering object
--   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
-
-Returns **monoxide.queryBuilder** 
