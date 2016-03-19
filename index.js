@@ -821,6 +821,38 @@ function Monoxide() {
 		};
 		// }}}
 
+		// qb.limit(q, cb) {{{
+		/**
+		* Add limit criteria to an existing query
+		* @name monoxide.queryBuilder.limit
+		* @memberof monoxide.queryBuilder
+		* @param {number} q Limit records to this number
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder} This chainable object
+		*/
+		qb.limit = function(q, callback) {
+			qb.query.$limit = q;
+			if (_.isFunction(q)) return qb.exec(callback);
+			return qb;
+		};
+		// }}}
+
+		// qb.skip(q, cb) {{{
+		/**
+		* Add skip criteria to an existing query
+		* @name monoxide.queryBuilder.skip
+		* @memberof monoxide.queryBuilder
+		* @param {number} q Skip this number of records
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder} This chainable object
+		*/
+		qb.skip = function(q, callback) {
+			qb.query.$skip = q;
+			if (_.isFunction(q)) return qb.exec(callback);
+			return qb;
+		};
+		// }}}
+
 		// qb.populate(q, cb) {{{
 		/**
 		* Add population criteria to an existing query
