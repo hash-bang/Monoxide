@@ -21,7 +21,7 @@ function Monoxide() {
 	* @return {monoxide} The Monoxide chainable object
 	*/
 	self.connect = function(uri, callback) {
-		mongoose.connect('mongodb://localhost/monoxide-test', callback);
+		mongoose.connect(uri, callback);
 		self.connection = mongoose.connection;
 		return self;
 	};
