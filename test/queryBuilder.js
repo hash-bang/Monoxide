@@ -67,6 +67,18 @@ describe('Monoxide - query builder', function() {
 			});
 	});
 
+
+	it('should query the widgets model (find + callback)', function(finish) {
+		monoxide.models.widgets.find({color: 'blue'}, function(err, widgets) {
+			expect(err).to.not.be.ok;
+			expect(widgets).to.be.an.array;
+			expect(widgets).to.have.length(2);
+
+			finish();
+		});
+	});
+
+
 	it('should query the users model via findOne', function(finish) {
 		monoxide.models.users
 			.findOne({_id: users[0]._id})
@@ -74,11 +86,25 @@ describe('Monoxide - query builder', function() {
 				expect(err).to.not.be.ok;
 				expect(user).to.be.an.object;
 
+				expect(user._id).to.deep.equal(users[0]._id);
 				expect(user).to.have.property('name', users[0].name);
 
 				finish();
 			});
 	});
+
+	it('should query the users model via findOne + callback', function(finish) {
+		monoxide.models.users.findOne({_id: users[0]._id}, function(err, user) {
+			expect(err).to.not.be.ok;
+			expect(user).to.be.an.object;
+
+			expect(user._id).to.deep.equal(users[0]._id);
+			expect(user).to.have.property('name', users[0].name);
+
+			finish();
+		});
+	});
+
 
 	it('should query the users model via findOneByID', function(finish) {
 		monoxide.models.users

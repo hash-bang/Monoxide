@@ -780,13 +780,14 @@ function Monoxide() {
 		* Add a filtering function to an existing query
 		* @name monoxide.queryBuilder.find
 		* @memberof monoxide.queryBuilder
-		* @param {Object} [q] Optional filtering object
+		* @param {Object|function} [q] Optional filtering object or callback (in which case we act as exec())
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
 		qb.find = function(q, callback) {
 			if (_.isObject(q)) _.merge(qb.query, q);
-			if (_.isFunction(q)) return qb.exec(callback);
+			if (_.isFunction(q)) return qb.exec(q);
+			if (_.isFunction(callback)) return qb.exec(callback);
 			return qb;
 		};
 		// }}}
@@ -816,7 +817,7 @@ function Monoxide() {
 			} else {
 				throw new Error('Sort parameter type is unsupported');
 			}
-			if (_.isFunction(q)) return qb.exec(callback);
+			if (_.isFunction(callback)) return qb.exec(callback);
 			return qb;
 		};
 		// }}}
@@ -832,7 +833,7 @@ function Monoxide() {
 		*/
 		qb.limit = function(q, callback) {
 			qb.query.$limit = q;
-			if (_.isFunction(q)) return qb.exec(callback);
+			if (_.isFunction(callback)) return qb.exec(callback);
 			return qb;
 		};
 		// }}}
@@ -848,7 +849,7 @@ function Monoxide() {
 		*/
 		qb.skip = function(q, callback) {
 			qb.query.$skip = q;
-			if (_.isFunction(q)) return qb.exec(callback);
+			if (_.isFunction(callback)) return qb.exec(callback);
 			return qb;
 		};
 		// }}}
@@ -878,7 +879,7 @@ function Monoxide() {
 			} else {
 				throw new Error('Populate parameter type is unsupported');
 			}
-			if (_.isFunction(q)) return qb.exec(callback);
+			if (_.isFunction(callback)) return qb.exec(callback);
 			return qb;
 		};
 		// }}}
