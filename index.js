@@ -1190,6 +1190,25 @@ function Monoxide() {
 
 
 		/**
+		* Return whether a model has a specific hook
+		* If an array is passed the result is whether the model has none or all of the specified hooks
+		* @param {string|array} hooks The hook(s) to query
+		* @return {boolean} Whether the hook(s) is present
+		*/
+		mm.hasHook = function(hooks) {
+			if (_.isString(hooks)) {
+				return (mm.$hooks[hooks] && mm.$hooks[hooks].length);
+			} else if (_.isArray(hooks)) {
+				return hooks.every(function(hook) {
+					return (mm.$hooks[hook] && mm.$hooks[hook].length);
+				});
+			} else {
+				throw new Error('Unknown function call pattern');
+			}
+		};
+
+
+		/**
 		* Execute all hooks for an event
 		* This function fires all hooks in parallel and expects all to resolve correctly via callback
 		* NOTE: Hooks are always fired with the callback as the first argument
