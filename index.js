@@ -112,6 +112,7 @@ function Monoxide() {
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {string} [q.$id] If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
+	* @param {(string|string[]|object[])} [q.$select] Field selection criteria to apply
 	* @param {(string|string[]|object[])} [q.$sort] Sorting criteria to apply
 	* @param {(string|string[]|object[])} [q.$populate] Population criteria to apply
 	* @param {boolean} [q.$one=false] Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
@@ -169,6 +170,7 @@ function Monoxide() {
 			.set('metaFields', [
 				'$collection', // Collection to query
 				'$id', // If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
+				'$select', // Field selection criteria to apply
 				'$sort', // Sorting criteria to apply
 				'$populate', // Population criteria to apply
 				'$one', // Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
@@ -242,7 +244,21 @@ function Monoxide() {
 				if (q.$limit) this.query.limit(q.$limit);
 				if (q.$skip) this.query.skip(q.$skip);
 
-				// q.sort {{{
+				// q.$select {{{
+				if (q.$select) {
+					if (_.isArray(q.$select)) {
+						var query = this.query;
+						q.$select.forEach(function(s) {
+							query.select(s);
+						});
+					} else if (_.isString(q.$select) || _.isObject(q.$select)) {
+						this.query.select(q.$select);
+					} else {
+						throw new Error('Invalid select type: ' + (typeof q.$select));
+					}
+				}
+				// }}}
+				// q.$sort {{{
 				if (q.$sort) {
 					if (_.isArray(q.$sort)) {
 						var query = this.query;
@@ -252,7 +268,7 @@ function Monoxide() {
 					} else if (_.isString(q.$sort) || _.isObject(q.$sort)) {
 						this.query.sort(q.$sort);
 					} else {
-						throw new Error('Invalid sort type: ' + typeof q.$sort);
+						throw new Error('Invalid sort type: ' + (typeof q.$sort));
 					}
 				}
 				// }}}
