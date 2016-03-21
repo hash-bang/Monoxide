@@ -1263,6 +1263,15 @@ function Monoxide() {
 				}));
 
 				self.save(fields, callback);
+				return doc;
+			},
+			remove: function(callback) {
+				var doc = this;
+				self.delete({
+					$collection: doc.$collection,
+					$id: doc._id,
+				}, callback);
+				return doc;
 			},
 		};
 
