@@ -663,7 +663,27 @@ function Monoxide() {
 			// }}}
 			// Create record {{{
 			.then('newRec', function(next) {
-				this.connection.base.models[q.$collection].create(_.omit(q, this.metaFields), next);
+				if (!self.models[q.$collection].hasHook(['create', 'postCreate']) && !self.models[q.$collection].hasVirtuals()) { // Can just splat the JSON object to create it
+					this.connection.base.models[q.$collection].create(_.omit(q, this.metaFields), next);
+				} else { // Have to make a temporary object - fire all hooks and virtuals to create
+					var newDocument = new self.monoxideDocument({$collection: q.$collection}, {});
+					_.merge(newDocument, _.omit(q, this.metaFields)); // Set new fields (these should fire all virtual handlers)
+					async()
+						.then(function(next) {
+							self.models[q.$collection].fire('create', next, newDocument);
+						})
+						.then('newRec2', function(next) {
+							// Actually make the document
+							self.connection.base.models[q.$collection].create(newDocument, next);
+						})
+						.then(function(next) {
+							self.models[q.$collection].fire('postCreate', next, newDocument);
+						})
+						.end(function(err) {
+							if (err) return next(err);
+							next(null, this.newRec2);
+						})
+				}
 			})
 			// }}}
 			// End {{{
@@ -1190,6 +1210,15 @@ function Monoxide() {
 
 
 		/**
+		* Return whether a model has virtuals
+		* @return {boolean} Whether any virtuals are present
+		*/
+		mm.hasVirtuals = function() {
+			return (Object.keys(mm.$virtuals).length > 0);
+		};
+
+
+		/**
 		* Attach a hook to a model
 		* A hook is exactly the same as a eventEmitter.on() event but must return a callback
 		* Multiple hooks can be attached and all will be called in parallel on certain events such as 'save'
@@ -1206,11 +1235,13 @@ function Monoxide() {
 		/**
 		* Return whether a model has a specific hook
 		* If an array is passed the result is whether the model has none or all of the specified hooks
-		* @param {string|array} hooks The hook(s) to query
+		* @param {string|array|undefined|null} hooks The hook(s) to query, if undefined or null this returns if any hooks are present
 		* @return {boolean} Whether the hook(s) is present
 		*/
 		mm.hasHook = function(hooks) {
-			if (_.isString(hooks)) {
+			if (_.isEmpty(hooks)) {
+				return !_.isEmpty(mm.$hooks);
+			} else if (_.isString(hooks)) {
 				return (mm.$hooks[hooks] && mm.$hooks[hooks].length);
 			} else if (_.isArray(hooks)) {
 				return hooks.every(function(hook) {

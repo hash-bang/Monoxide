@@ -13,12 +13,14 @@ describe('Monoxide - create', function() {
 				{number: 50},
 				{number: 60},
 			],
+			password: 'wonderful',
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
 
 			expect(user).to.have.property('name', 'New User');
 			expect(user).to.have.property('role', 'user');
+			expect(user).to.have.property('_password', 'oeu');
 			expect(user).to.have.property('favourite');
 			expect(user.favourite).to.be.a.string;
 			expect(user).to.have.property('mostPurchased');
@@ -40,12 +42,14 @@ describe('Monoxide - create', function() {
 				{number: 80},
 				{number: 70},
 			],
+			password: 'shark', // Should return {_password: 'a'}
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
 
 			expect(user).to.have.property('name', 'New User2');
 			expect(user).to.have.property('role', 'user');
+			expect(user).to.have.property('_password', 'a');
 			expect(user).to.have.property('favourite');
 			expect(user.favourite).to.be.a.string;
 			expect(user).to.have.property('mostPurchased');
