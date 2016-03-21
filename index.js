@@ -1115,6 +1115,20 @@ function Monoxide() {
 
 
 		/**
+		* Shortcut function to remove a number of rows based on a query
+		* @name monoxide.monoxideModel.remove
+		* @see monoxide.delete
+		*
+		* @param {Object} [q] Optional filtering object
+		* @param {function} [callback] Optional callback
+		* @return {monoxide}
+		*/
+		mm.remove = function(q, callback) {
+			return self.delete(_.merge(q, {$collection: mm.$collection, $multiple: true}), callback);
+		};
+
+
+		/**
 		* Add a method to a all documents returned from this model
 		* A method is a user defined function which extends the `monoxide.monoxideDocument` prototype
 		* @param {string} name The function name to add as a static method
