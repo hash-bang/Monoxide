@@ -681,13 +681,15 @@ function Monoxide() {
 	// .delete(item, [options], [callback]) {{{
 	/**
 	* Delete a Mongo document by its ID
-	* This function will first attempt to retrieve the ID and if successful will delete it, if the document is not found this function will execute the callback with an error
+	* This function has two behaviours - it will, by default, only delete a single record by its ID. If `q.$multiple` is true it will delete by query.
+	* If `q.$multiple` is false and the document is not found (by `q.$id`) this function will execute the callback with an error
 	*
 	* @name monoxide.delete
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
-	* @param {string} q.$id The ID of the document to delete
+	* @param {string} [q.$id] The ID of the document to delete (if you wish to do a remove based on query set q.$query=true)
+	* @param {boolean} [q.$multiple] Allow deletion of multiple records by query
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	*
@@ -727,12 +729,13 @@ function Monoxide() {
 			.set('metaFields', [
 				'$id', // Mandatory field to specify while record to update
 				'$collection', // Collection to query to find the original record
+				'$multiple', // Whether to allow deletion by query
 			])
 			// Sanity checks {{{
 			.then(function(next) {
 				if (!q || _.isEmpty(q)) return next('No query given for delete operation');
 				if (!q.$collection) return next('$collection must be specified for delete operation');
-				if (!q.$id) return next('ID must be speciied during delete operation');
+				if (!q.$id && !q.$multiple) return next('$id or $multiple must be speciied during delete operation');
 				next();
 			})
 			// }}}
@@ -749,18 +752,27 @@ function Monoxide() {
 				next(null, this.connection.base.models[q.$collection].schema);
 			})
 			// }}}
-			// Find the row by its ID - call to self.query() {{{
-			.then('row', function(next) {
-				self.query({
-					$id: q.$id,
-					$collection: q.$collection,
-				}, next);
-			})
-			// }}}
-			// Delete record {{{
-			.then('newRec', function(next) {
-				if (!this.row) return next('Not found');
-				this.row.remove(next);
+			// Delete logic {{{
+			.then(function(next) {
+				if (q.$multiple) { // Multiple delete operation
+					self.query(_.merge(_.omit(q, this.metaFields), {$collection: q.$collection, $select: 'id'}), function(err, rows) {
+						async()
+							.forEach(rows, function(next, row) {
+								self.delete({$collection: q.$collection, $id: row._id}, next);
+							})
+							.end(next);
+					});
+				} else { // Single item delete
+					// Check that the hook returns ok
+					self.models[q.$collection].fire('delete', function(err) {
+						// Now actually delete the item
+						self.connection.base.models[q.$collection].remove({_id: q.$id}, function(err) {
+							if (err) return next(err);
+							// Delete was sucessful - call event then move next
+							self.models[q.$collection].fire('postDelete', next, {_id: q.$id});
+						});
+					}, {_id: q.$id});
+				}
 			})
 			// }}}
 			// End {{{
@@ -1013,6 +1025,8 @@ function Monoxide() {
 			// Deal with arguments {{{
 			if (_.isString(q)) {
 				// All ok
+			} else if (_.isObject(q) && q.toString().length) { // Input is an object but we can convert it to something useful
+				q = q.toString();
 			} else {
 				throw new Error('Unknown function call pattern');
 			}
@@ -1025,6 +1039,12 @@ function Monoxide() {
 				})
 				.find(q, callback); // Then re-parse the find query into the new queryBuilder
 		};
+
+		/**
+		* Alias of findOneByID
+		* @see monoxide.queryBuilder.find
+		*/
+		mm.findOneById = mm.findOneByID;
 
 
 		/**
