@@ -23,6 +23,9 @@ function Monoxide() {
 	self.connect = function(uri, callback) {
 		mongoose.connect(uri, callback);
 		self.connection = mongoose.connection;
+		// Replace the default Mongoose model set with Monoxide's
+		// FIXME
+		// self.connection.base.models = self.models;
 		return self;
 	};
 	// }}}
@@ -1724,6 +1727,7 @@ function Monoxide() {
 			collection: null, // The collection to operate on
 			queryRemaps: { // Remap incomming values on left to keys on right
 				populate: '$populate',
+				select: '$select',
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
@@ -1794,6 +1798,7 @@ function Monoxide() {
 				skip: '$skip',
 				sort: '$sort',
 				populate: '$populate',
+				select: '$select',
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});

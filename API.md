@@ -257,13 +257,15 @@ Returns **Object** This chainable object
 # monoxide.delete
 
 Delete a Mongo document by its ID
-This function will first attempt to retrieve the ID and if successful will delete it, if the document is not found this function will execute the callback with an error
+This function has two behaviours - it will, by default, only delete a single record by its ID. If `q.$multiple` is true it will delete by query.
+If `q.$multiple` is false and the document is not found (by `q.$id`) this function will execute the callback with an error
 
 **Parameters**
 
 -   `q` **Object** The object to process
     -   `q.$collection` **string** The collection / model to query
-    -   `q.$id` **string** The ID of the document to delete
+    -   `q.$id` **[string]** The ID of the document to delete (if you wish to do a remove based on query set q.$query=true)
+    -   `q.$multiple` **[boolean]** Allow deletion of multiple records by query
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
 -   `function`  (err,result)] Optional callback to call on completion or error
 -   `callback`  
@@ -326,6 +328,44 @@ Returns a single instance of a Monoxide document
 -   `data` **Object** The initial data
 
 Returns **monoxide.monoxideDocument** 
+
+# monoxide.query
+
+Query Mongo directly with the Monoxide query syntax
+
+**Parameters**
+
+-   `q` **Object** The object to process
+    -   `q.$id` **[string]** If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
+    -   `q.$select` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Field selection criteria to apply
+    -   `q.$sort` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Sorting criteria to apply
+    -   `q.$populate` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Population criteria to apply
+    -   `q.$collection` **string** The collection / model to query
+    -   `q.$limit` **[number]** Limit the return to this many rows
+    -   `q.$skip` **[number]** Offset return by this number of rows
+    -   `q.filter` **[...Any]** Any other field (not beginning with '$') is treated as filtering criteria
+    -   `q.$one` **[boolean]** Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array (optional, default `false`)
+-   `options` **[Object]** Optional options object which can alter behaviour of the function
+    -   `options.cacheFKs` **[boolean]** Whether to cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure (optional, default `true`)
+-   `callback` **function** (err, result) the callback to call on completion or error. If $one is truthy this returns a single monoxide.monoxideDocument, if not it returns an array of them
+
+**Examples**
+
+```javascript
+// Return all Widgets, sorted by name
+monoxide.query({$collection: 'widgets', $sort: 'name'}, function(err, res) {
+	console.log('Widgets:', res);
+});
+```
+
+```javascript
+// Filter Users to only return admins while also populating their country
+monoxide.query({$collection: 'users', $populate: 'country', role: 'admin'}, function(err, res) {
+	console.log('Admin users:', res);
+});
+```
+
+Returns **Object** This chainable object
 
 # monoxide.queryBuilder
 
@@ -416,10 +456,11 @@ Update multiple documents
 
 **Parameters**
 
--   `q` **Object** The object to process
+-   `q` **Object** The object to query by
     -   `q.$collection` **string** The collection / model to query
-    -   `q.$id` **string** The ID of the document to save
-    -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
+    -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as filter data
+-   `qUpdate` **Object** The object to update into the found documents
+    -   `qUpdate.field` **[...Any]** Data to save into every record found by `q`
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
 -   `function`  (err,result)] Optional callback to call on completion or error
 -   `callback`  
@@ -454,6 +495,10 @@ Returns **Object** A dictionary of foreign keys for the schema (each key will be
 
 -   `options`  
 
+# findOneById
+
+Alias of findOneByID
+
 # fire
 
 Execute all hooks for an event
@@ -465,6 +510,23 @@ NOTE: Hooks are always fired with the callback as the first argument
 -   `name` **string** The name of the hook to invoke
 -   `callback` **function** The callback to invoke on success
 -   `parameters` **...Any** Any other parameters to be passed to each hook
+
+# hasHook
+
+Return whether a model has a specific hook
+If an array is passed the result is whether the model has none or all of the specified hooks
+
+**Parameters**
+
+-   `hooks` **string or array or undefined or ** The hook(s) to query, if undefined or null this returns if any hooks are present
+
+Returns **boolean** Whether the hook(s) is present
+
+# hasVirtuals
+
+Return whether a model has virtuals
+
+Returns **boolean** Whether any virtuals are present
 
 # hook
 
@@ -492,6 +554,20 @@ A method is a user defined function which extends the `monoxide.monoxideDocument
 
 Returns **monoxide.monoxideModel** The chainable monoxideModel
 
+# monoxide.monoxideMode.update
+
+Shortcut to invoke update on a given model
+
+**Parameters**
+
+-   `q` **Object** The filter to query by
+-   `qUpdate` **Object** The object to update into the found documents
+-   `options` **[Object]** Optional options object which can alter behaviour of the function
+-   `function`  (err,result)] Optional callback to call on completion or error
+-   `callback`  
+
+Returns **Object** This chainable object
+
 # monoxide.monoxideModel.create
 
 Shortcut function to create a new record within a collection
@@ -507,7 +583,6 @@ Returns **monoxide.monoxideModel** The chainable monoxideModel
 # monoxide.monoxideModel.find
 
 Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
-This also sets $count=true in the queryBuilder
 
 **Parameters**
 
@@ -519,6 +594,7 @@ Returns **monoxide.queryBuilder**
 # monoxide.monoxideModel.find
 
 Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $count=true in the queryBuilder
 
 **Parameters**
 
@@ -550,6 +626,17 @@ This also sets $id=q in the queryBuilder
 -   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
 
 Returns **monoxide.queryBuilder** 
+
+# monoxide.monoxideModel.remove
+
+Shortcut function to remove a number of rows based on a query
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback
+
+Returns **monoxide** 
 
 # static
 
@@ -639,43 +726,6 @@ monoxide.get({$collection: 'widgets', $id: '56e2421f475c1ef4135a1d58'}, function
 
 Returns **Object** This chainable object
 
-# monoxide.query
-
-Query Mongo directly with the Monoxide query syntax
-
-**Parameters**
-
--   `q` **Object** The object to process
-    -   `q.$id` **[string]** If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
-    -   `q.$sort` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Sorting criteria to apply
-    -   `q.$populate` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Population criteria to apply
-    -   `q.$one` **[boolean]** Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array (optional, default `false`)
-    -   `q.$collection` **string** The collection / model to query
-    -   `q.$skip` **[number]** Offset return by this number of rows
-    -   `q.filter` **[...Any]** Any other field (not beginning with '$') is treated as filtering criteria
-    -   `q.$limit` **[number]** Limit the return to this many rows
--   `options` **[Object]** Optional options object which can alter behaviour of the function
-    -   `options.cacheFKs` **[boolean]** Whether to cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure (optional, default `true`)
--   `callback` **function** (err, result) the callback to call on completion or error. If $one is truthy this returns a single monoxide.monoxideDocument, if not it returns an array of them
-
-**Examples**
-
-```javascript
-// Return all Widgets, sorted by name
-monoxide.query({$collection: 'widgets', $sort: 'name'}, function(err, res) {
-	console.log('Widgets:', res);
-});
-```
-
-```javascript
-// Filter Users to only return admins while also populating their country
-monoxide.query({$collection: 'users', $populate: 'country', role: 'admin'}, function(err, res) {
-	console.log('Admin users:', res);
-});
-```
-
-Returns **Object** This chainable object
-
 # monoxide.queryBuilder.exec
 
 Execute the query and return the error and any results
@@ -692,7 +742,18 @@ Add a filtering function to an existing query
 
 **Parameters**
 
--   `q` **[Object]** Optional filtering object
+-   `q` **[Object or function]** Optional filtering object or callback (in which case we act as exec())
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** This chainable object
+
+# monoxide.queryBuilder.limit
+
+Add limit criteria to an existing query
+
+**Parameters**
+
+-   `q` **number** Limit records to this number
 -   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
 
 Returns **monoxide.queryBuilder** This chainable object
@@ -704,6 +765,17 @@ Add population criteria to an existing query
 **Parameters**
 
 -   `q` **[Array or string]** Population criteria, for strings or arrays of strings use the field name
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** This chainable object
+
+# monoxide.queryBuilder.skip
+
+Add skip criteria to an existing query
+
+**Parameters**
+
+-   `q` **number** Skip this number of records
 -   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
 
 Returns **monoxide.queryBuilder** This chainable object
