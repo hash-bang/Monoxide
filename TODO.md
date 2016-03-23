@@ -26,4 +26,5 @@ TODO
 - [x] monoxide.model().findOneByID
 - [x] monoxide.document
 - [x] monoxide.document.save()
-- [ ] monoxide.document.hook('save', cb)
+- [x] monoxide.document.hook('save', cb)
+- [ ] Auto reconnection

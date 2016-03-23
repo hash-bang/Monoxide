@@ -447,22 +447,24 @@ function Monoxide() {
 				next(null, mongoose.connection);
 			})
 			// }}}
-			// .model {{{
-			.then('model', function(next) {
+			// .collection {{{
+			.then('collection', function(next) {
 				if (!q.$collection) return next('Collection not specified');
 				if (!q.$id) return next('ID not specified');
-				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
-				next(null, this.connection.base.models[q.$collection].schema);
+
+				var col = this.connection.collection(q.$collection);
+				if (!col) return next('Invalid collection');
+				next(null, col);
 			})
 			// }}}
-			// Fire the 'save' hook {{{
+			// Fire the 'save' hook on the model {{{
 			.then(function(next) {
 				self.models[q.$collection].fire('save', next, q);
 			})
 			// }}}
 			// Peform the update {{{
 			.then('rawResponse', function(next) {
-				this.connection.base.models[q.$collection].update({_id: q.$id}, _.omit(q, this.metaFields), {multi: false}, next);
+				this.collection.updateOne({_id: q.$id}, {$set: _.omit(q, this.metaFields)}, next);
 			})
 			// }}}
 			// Refetch the record {{{
@@ -1304,9 +1306,8 @@ function Monoxide() {
 					$id: doc._id,
 				};
 				_.extend(fields, _.pickBy(doc, function(v, k) {
-					if (!doc.hasOwnProperty(k)) return false;
-					if (k != 'name') return false;
 					// FIXME: Selectively pick only changed fields
+					if (!doc.hasOwnProperty(k)) return false;
 					return true;
 				}));
 

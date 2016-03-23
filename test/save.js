@@ -49,6 +49,10 @@ describe('Monoxide - save', function() {
 
 	it('should save a user (via model)', function(finish) {
 		users[0].name = 'Edited User2';
+		users[0].mostPurchased = [
+			{number: 12},
+			{number: 15},
+		];
 		users[0].save(function(err, user) {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
