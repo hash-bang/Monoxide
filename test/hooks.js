@@ -32,12 +32,12 @@ describe('Monoxide - hooks', function() {
 			})
 			.hook('save', function(next, doc) {
 				// We should only ever operate on user[0]
-				expect(doc._id).to.equal(users[0].$id);
+				expect(doc._id).to.equal(users[0]._id);
 				firedHooks.save++;
 				next();
 			})
 			.hook('postSave', function(next, doc) {
-				expect(doc._id).to.equal(users[0].$id);
+				expect(doc._id).to.equal(users[0]._id);
 				firedHooks.postSave++;
 				next();
 			})

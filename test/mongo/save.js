@@ -57,7 +57,7 @@ describe('Mongo - save tests', function() {
 
 	it('should update the now saved user', function(finish) {
 		var col = monoxide.connection.collection('users');
-		col.updateOne({
+		col.findOneAndUpdate({
 			_id: users[0]._id,
 		}, {
 			$set: {
@@ -73,7 +73,10 @@ describe('Mongo - save tests', function() {
 					},
 				],
 			},
-		}, finish);
+		}, function(err, res) {
+			console.log('DONE WITH', err, res);
+			finish();
+		});
 	});
 
 	it('should re-get the user record', function(finish) {
