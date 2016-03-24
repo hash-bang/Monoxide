@@ -391,6 +391,8 @@ function Monoxide() {
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	* @param {boolean} [options.refetch=true] Whether to refetch the record after update, false returns `null` in the callback
+	* @param {boolean} [options.errNoUpdate=false] Raise an error if no documents were actually updated
+	* @param {boolean} [options.returnUpdated=true] If true returns the updated document, if false it returns the document that was replaced
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -427,6 +429,8 @@ function Monoxide() {
 
 		var settings = _.defaults(options || {}, {
 			refetch: true, // Fetch and return the record when updated (false returns null)
+			errNoUpdate: false,
+			returnUpdated: true,
 		});
 
 		async()
@@ -441,18 +445,13 @@ function Monoxide() {
 				next();
 			})
 			// }}}
-			// .connection {{{
-			.then('connection', function(next) {
-				if (!mongoose.connection) return next('No Mongoose connection open');
-				next(null, mongoose.connection);
-			})
-			// }}}
 			// .collection {{{
 			.then('collection', function(next) {
+				if (!self.connection) return next('No connection open');
 				if (!q.$collection) return next('Collection not specified');
 				if (!q.$id) return next('ID not specified');
 
-				var col = this.connection.collection(q.$collection);
+				var col = self.connection.db.collection(q.$collection);
 				if (!col) return next('Invalid collection');
 				next(null, col);
 			})
@@ -463,18 +462,13 @@ function Monoxide() {
 			})
 			// }}}
 			// Peform the update {{{
-			.then('rawResponse', function(next) {
-				this.collection.updateOne({_id: q.$id}, {$set: _.omit(q, this.metaFields)}, next);
-			})
-			// }}}
-			// Refetch the record {{{
 			.then('newRec', function(next) {
-				if (!settings.refetch) return next(null, null);
-				self.query({
-					$collection: q.$collection,
-					$id: q.$id,
-					$one: true,
-				}, next);
+				this.collection.findOneAndUpdate({_id: self.utilities.objectID(q.$id)}, {$set: _.omit(q, this.metaFields)}, {returnOriginal: !settings.returnUpdated}, function(err, res) {
+					// This would only really happen if the record has gone away since we started updating
+					if (settings.errNoUpdate && !res.nModified) return next('No documents updated');
+					if (!settings.refetch) return next(null, null);
+					next(null, new self.monoxideDocument({$collection: q.$collection}, res.value));
+				});
 			})
 			// }}}
 			// Fire the 'postSave' hook {{{
@@ -2117,6 +2111,18 @@ function Monoxide() {
 
 		return FKs;
 	}
+	// }}}
+
+	// .utilities.objectID(string) {{{
+	/**
+	* Construct and return a MongoDB-Core compatible ObjectID object
+	* This is mainly used within functions that need to convert a string ID into an object
+	* @param {string} str The string to convert into an ObjectID
+	* @return {Object} A MongoDB-Core compatible ObjectID object instance
+	*/
+	self.utilities.objectID = function(str) {
+		return new mongoose.Types.ObjectId(str);
+	};
 	// }}}
 	// }}}
 
