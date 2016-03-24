@@ -4,6 +4,7 @@ var testSetup = require('./setup');
 
 describe('Monoxide - count', function() {
 	before(testSetup.init);
+	after(testSetup.teardown);
 
 	it('should count the users model', function(finish) {
 		monoxide.count('users', function(err, count) {

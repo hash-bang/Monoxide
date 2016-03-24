@@ -16,6 +16,7 @@ var url = 'http://localhost:' + port;
 
 describe('Monoxide + Express', function() {
 	before(testSetup.init);
+	after(testSetup.teardown);
 
 	// Express routes installation {{{
 	before(function(finish) {

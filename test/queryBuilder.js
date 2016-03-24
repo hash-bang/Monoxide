@@ -4,6 +4,7 @@ var testSetup = require('./setup');
 
 describe('Monoxide - query builder', function() {
 	before(testSetup.init);
+	after(testSetup.teardown);
 
 	var users;
 	it('should query the users model', function(finish) {

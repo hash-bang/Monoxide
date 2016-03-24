@@ -4,29 +4,44 @@ var expect = require('chai').expect;
 var monoxide = require('..');
 var scenario = require('mongoose-scenario');
 
-var hasSetup = false;
+// The Database URI to use for tests
+var mongoURI = 'mongodb://localhost/monoxide-test';
+
+// Setting this to FALSE will disable the database teardown (i.e. not erase the Schema + DB when done)
+// This is useful for debugging but only with single scripts as each test script will expect a fresh database
+var allowTeardown = true;
 
 module.exports = {
 	// init {{{
 	init: function(finish) {
 		var self = module.exports;
-		if (hasSetup) return finish();
 
 		async()
 			.then(self.initConnection)
 			.then(self.initSchemas)
 			.then(self.initScenarios)
-			.end(function(err) {
-				if (err) return finish(err);
-				hasSetup = true;
-				finish();
-			});
+			.end(finish);
+	},
+	// }}}
+
+	// teardown {{{
+	teardown: function(finish) {
+		var self = module.exports;
+		if (!allowTeardown) {
+			console.log('Skipping teardown');
+			return finish();
+		}
+
+		async()
+			.then(self.teardownSchemas)
+			.then(self.teardownConnection)
+			.end(finish);
 	},
 	// }}}
 
 	// initConnection {{{
 	initConnection: function(finish) {
-		monoxide.connect('mongodb://localhost/monoxide-test', finish);
+		monoxide.connect(mongoURI, finish);
 	},
 	// }}}
 
@@ -201,6 +216,30 @@ module.exports = {
 			expect(err).to.be.not.ok;
 			finish();
 		});
+	},
+	// }}}
+
+	// teardownConnection {{{
+	teardownConnection: function(finish) {
+		monoxide.connection.close(finish);
+	},
+	// }}}
+
+	// teardownSchemas {{{
+	teardownSchemas: function(finish) {
+		async()
+			.set('models', ['users', 'widgets', 'groups'])
+			.forEach('models', function(next, id) {
+				monoxide.connection.db.dropCollection(id, next);
+			})
+			.forEach('models', function(next, id) { // Remove the model from Mongoose's schema cache otherwise it complains we are creating it twice
+				delete monoxide.connection.models[id];
+				next();
+			})
+			.then(function(next) {
+				monoxide.connection.db.dropDatabase(next);
+			})
+			.end(finish);
 	},
 	// }}}
 };

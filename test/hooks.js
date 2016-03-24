@@ -4,6 +4,7 @@ var testSetup = require('./setup');
 
 describe('Monoxide - hooks', function() {
 	before(testSetup.init);
+	after(testSetup.teardown);
 
 	var users;
 	it('should get a list of existing users', function(finish) {

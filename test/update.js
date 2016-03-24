@@ -4,6 +4,7 @@ var testSetup = require('./setup');
 
 describe('Monoxide - update', function() {
 	before(testSetup.init);
+	after(testSetup.teardown);
 
 	it('should delete all widgets', function(finish) {
 		monoxide.update('widgets', {

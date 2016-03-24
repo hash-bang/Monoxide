@@ -13,6 +13,7 @@ var url = 'http://localhost:' + port;
 
 describe('Monoxide + Express permissions', function() {
 	before(testSetup.init);
+	after(testSetup.teardown);
 
 	var widgets;
 	it('should query all widgets normally', function(finish) {

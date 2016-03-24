@@ -4,6 +4,7 @@ var testSetup = require('./setup');
 
 describe('Monoxide - delete', function() {
 	before(testSetup.init);
+	after(testSetup.teardown);
 
 	var widgets;
 	it('should get a list of existing widgets', function(finish) {

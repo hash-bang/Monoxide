@@ -5,6 +5,7 @@ var testSetup = require('./setup');
 
 describe('Monoxide - get', function() {
 	before(testSetup.init);
+	after(testSetup.teardown);
 
 	var users, widgets, groups;
 

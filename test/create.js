@@ -4,6 +4,7 @@ var testSetup = require('./setup');
 
 describe('Monoxide - create', function() {
 	before(testSetup.init);
+	after(testSetup.teardown);
 
 	it('create save new user', function(finish) {
 		monoxide.create({
