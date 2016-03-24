@@ -43,8 +43,7 @@ describe('Monoxide + Express permissions', function() {
 					widgets = res.body;
 					expect(widgets).to.be.an.array;
 					expect(widgets).to.have.length(3);
-					server.close();
-					finish();
+					server.close(finish);
 				});
 		});
 	});
@@ -68,8 +67,7 @@ describe('Monoxide + Express permissions', function() {
 					expect(err).to.be.ok;
 					expect(res.body).to.be.empty;
 
-					server.close();
-					finish();
+					server.close(finish);
 				});
 		});
 	});
@@ -101,8 +99,7 @@ describe('Monoxide + Express permissions', function() {
 							expect(res.body).to.be.an.object;
 							expect(res.body).to.have.property('_id');
 
-							server.close();
-							finish();
+							server.close(finish);
 						});
 				});
 		});
@@ -126,8 +123,7 @@ describe('Monoxide + Express permissions', function() {
 					expect(err).to.be.ok;
 					expect(res.body).to.be.empty;
 
-					server.close();
-					finish();
+					server.close(finish);
 				});
 		});
 	});
@@ -163,8 +159,7 @@ describe('Monoxide + Express permissions', function() {
 							expect(res.body).to.be.an.array;
 							expect(res.body).to.have.length(2);
 
-							server.close();
-							finish();
+							server.close(finish);
 						});
 				});
 		});
@@ -188,8 +183,7 @@ describe('Monoxide + Express permissions', function() {
 					expect(err).to.be.ok;
 					expect(res.body).to.be.empty;
 
-					server.close();
-					finish();
+					server.close(finish);
 				});
 		});
 	});
@@ -222,8 +216,7 @@ describe('Monoxide + Express permissions', function() {
 							expect(res.body).to.be.an.object;
 							expect(res.body).to.have.property('count', 2);
 
-							server.close();
-							finish();
+							server.close(finish);
 						});
 				});
 		});
@@ -248,8 +241,7 @@ describe('Monoxide + Express permissions', function() {
 					expect(err).to.be.ok;
 					expect(res.body).to.be.empty;
 
-					server.close();
-					finish();
+					server.close(finish);
 				});
 		});
 	});
@@ -285,8 +277,7 @@ describe('Monoxide + Express permissions', function() {
 							expect(res.body).to.have.property('_id', widgets[0]._id);
 							expect(res.body).to.have.property('color', 'yellow');
 
-							server.close();
-							finish();
+							server.close(finish);
 						});
 				});
 		});
@@ -310,8 +301,7 @@ describe('Monoxide + Express permissions', function() {
 					expect(err).to.be.ok;
 					expect(res.body).to.be.empty;
 
-					server.close();
-					finish();
+					server.close(finish);
 				});
 		});
 	});
@@ -344,8 +334,7 @@ describe('Monoxide + Express permissions', function() {
 							expect(err).to.be.not.ok;
 							widgets.shift(); // Remove first item so future tests dont access the deleted widget
 
-							server.close();
-							finish();
+							server.close(finish);
 						});
 				});
 		});
@@ -388,8 +377,7 @@ describe('Monoxide + Express permissions', function() {
 							expect(res.body).to.have.property('_id', widgets[0]._id);
 							expect(res.body).to.have.property('status', 'deleted');
 
-							server.close();
-							finish();
+							server.close(finish);
 						});
 				});
 		});

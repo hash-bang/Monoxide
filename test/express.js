@@ -18,7 +18,7 @@ describe('Monoxide + Express', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 
-	// Express routes installation {{{
+	// Express Setup {{{
 	before(function(finish) {
 		app.use(expressLogger);
 		app.use(bodyParser.json());
@@ -43,6 +43,10 @@ describe('Monoxide + Express', function() {
 			mlog.log('Server listening on ' + url);
 			finish();
 		});
+	});
+
+	after(function(finish) {
+		server.close(finish);
 	});
 	// }}}
 
