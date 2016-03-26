@@ -391,6 +391,8 @@ If the existing document ID is not found this function will execute the callback
     -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
     -   `options.refetch` **[boolean]** Whether to refetch the record after update, false returns `null` in the callback (optional, default `true`)
+    -   `options.errNoUpdate` **[boolean]** Raise an error if no documents were actually updated (optional, default `false`)
+    -   `options.returnUpdated` **[boolean]** If true returns the updated document, if false it returns the document that was replaced (optional, default `true`)
 -   `function`  (err,result)] Optional callback to call on completion or error
 -   `callback`  
 
@@ -488,6 +490,52 @@ Extract all FKs in dotted path notation from a Mongoose model
 -   `base` **Object** Base object to append flat paths to (internal use only)
 
 Returns **Object** A dictionary of foreign keys for the schema (each key will be the info of the object)
+
+# objectID
+
+Construct and return a MongoDB-Core compatible ObjectID object
+This is mainly used within functions that need to convert a string ID into an object
+
+**Parameters**
+
+-   `str` **string** The string to convert into an ObjectID
+
+Returns **Object** A MongoDB-Core compatible ObjectID object instance
+
+# runMiddleware
+
+Run optional middleware
+
+Middleware can be:
+
+    - A function(req, res, next)
+
+-   An array of functions(req, res, next) - Functions will be called in sequence, all functions must call the next method
+-   A string - If specified (and `obj` is also specified) the middleware to use will be looked up as a key of the object. This is useful if you need to invoke similar methods on different entry points (e.g. monoxide.express.middleware('widgets', {save: function(req, res, next) { // Check something // }, create: 'save'}) - where the `create` method invokes the same middleware as `save)
+
+**Parameters**
+
+-   `req`  
+-   `res`  
+-   `middleware` ** or function or array** The optional middleware to run this can be a function, an array of functions or a string
+-   `callback` **function** The callback to invoke when completed. This may not be called
+-   `obj` **object** The parent object to look up inherited functions from (if middleware is a string)
+
+**Examples**
+
+```javascript
+// Set up a Monoxide express middleware to check user logins on each save or create operaion
+app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
+	create: function(req, res, next) {
+	if (req.user && req.user._id) {
+			next();
+		} else {
+			res.status(403).send('You are not logged in').end();
+	}
+},
+	save: 'create', // Point to the same checks as the `create` middleware
+}));
+```
 
 # monoxideModel
 

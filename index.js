@@ -1624,59 +1624,54 @@ function Monoxide() {
 
 			// Count {{{
 			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && _.isFunction(settings.count)) {
-				settings.count(req, res, function(err) {
-					if (err) return next(err);
+				self.utilities.runMiddleware(req, res, settings.count, function() {
 					self.express.count(settings)(req, res, next);
-				});
+				}, settings);
 			} else if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
 				self.express.count(settings)(req, res, next);
 			// }}}
 			// Get {{{
-			} else if (settings.get && req.method == 'GET' && req.params.id && _.isFunction(settings.get)) {
+			} else if (settings.get && req.method == 'GET' && req.params.id && !_.isBoolean(settings.get)) {
 				req.monoxide.id = req.params.id;
-				settings.get(req, res, function(err) {
-					if (err) return next(err);
+				self.utilities.runMiddleware(req, res, settings.get, function() {
 					self.express.get(settings)(req, res, next);
-				});
+				}, settings);
 			} else if (settings.get && req.method == 'GET' && req.params.id) {
 				self.express.get(settings)(req, res, next);
 			// }}}
 			// Query {{{
-			} else if (settings.query && req.method == 'GET' && _.isFunction(settings.query)) {
-				settings.query(req, res, function(err) {
-					if (err) return next(err);
+			} else if (settings.query && req.method == 'GET' && !_.isBoolean(settings.query)) {
+				self.utilities.runMiddleware(req, res, settings.query, function() {
 					self.express.query(settings)(req, res, next);
-				});
+				}, settings);
 			} else if (settings.query && req.method == 'GET') {
 				self.express.query(settings)(req, res, next);
 			// }}}
 			// Save {{{
-			} else if (settings.save && req.method == 'POST' && req.params.id && _.isFunction(settings.save)) {
+			} else if (settings.save && req.method == 'POST' && req.params.id && !_.isBoolean(settings.save)) {
 				req.monoxide.id = req.params.id;
-				settings.save(req, res, function(err) {
-					if (err) return next(err);
+				self.utilities.runMiddleware(req, res, settings.save, function() {
 					self.express.save(settings)(req, res, next);
-				});
+				}, settings);
 			} else if (settings.save && req.method == 'POST' && req.params.id) {
 				self.express.save(settings)(req, res, next);
 			// }}}
 			// Create {{{
-			} else if (settings.create && req.method == 'POST' && _.isFunction(settings.create)) {
+			} else if (settings.create && req.method == 'POST' && !_.isBoolean(settings.create)) {
 				req.monoxide.id = req.params.id;
-				settings.create(req, res, function(err) {
+				self.utilities.runMiddleware(req, res, settings.create, function() {
 					if (err) return next(err);
 					self.express.create(settings)(req, res, next);
-				});
+				}, settings);
 			} else if (settings.create && req.method == 'POST') {
 				self.express.create(settings)(req, res, next);
 			// }}}
 			// Delete {{{
-			} else if (settings.delete && req.method == 'DELETE' && _.isFunction(settings.delete)) {
+			} else if (settings.delete && req.method == 'DELETE' && !_.isBoolean(settings.delete)) {
 				req.monoxide.id = req.params.id;
-				settings.delete(req, res, function(err) {
-					if (err) return next(err);
+				self.utilities.runMiddleware(req, res, settings.delete, function() {
 					self.express.delete(settings)(req, res, next);
-				});
+				}, settings);
 			} else if (settings.delete && req.method == 'DELETE') {
 				self.express.delete(settings)(req, res, next);
 			// }}}
@@ -2122,6 +2117,64 @@ function Monoxide() {
 	*/
 	self.utilities.objectID = function(str) {
 		return new mongoose.Types.ObjectId(str);
+	};
+	// }}}
+
+	// .utilities.runMiddleware(middleware) {{{
+	/**
+	* Run optional middleware
+	*
+	* Middleware can be:
+	* 	- A function(req, res, next)
+	*	- An array of functions(req, res, next) - Functions will be called in sequence, all functions must call the next method
+	*	- A string - If specified (and `obj` is also specified) the middleware to use will be looked up as a key of the object. This is useful if you need to invoke similar methods on different entry points (e.g. monoxide.express.middleware('widgets', {save: function(req, res, next) { // Check something // }, create: 'save'}) - where the `create` method invokes the same middleware as `save)
+	*
+	* @param {null|function|array} middleware The optional middleware to run this can be a function, an array of functions or a string
+	* @param {function} callback The callback to invoke when completed. This may not be called
+	* @param {object} obj The parent object to look up inherited functions from (if middleware is a string)
+	*
+	* @example
+	* // Set up a Monoxide express middleware to check user logins on each save or create operaion
+	* app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
+	* 	create: function(req, res, next) {
+	*		if (req.user && req.user._id) {
+	* 			next();
+	* 		} else {
+	* 			res.status(403).send('You are not logged in').end();
+	*		}
+	*	},
+	* 	save: 'create', // Point to the same checks as the `create` middleware
+	* }));
+
+	*/
+	self.utilities.runMiddleware = function(req, res, middleware, callback, obj) {
+		var thisContext = this;
+		var runnable; // The middleware ARRAY to run
+
+		if (_.isBoolean(middleware) && !middleware) { // Boolean=false - deny!
+			res.status(403).end();
+		} else if (_.isUndefined(middleware) || _.isNull(middleware)) { // Nothing to do anyway
+			return callback();
+		} else if (_.isFunction(middleware)) {
+			runnable = [middleware];
+		} else if (_.isArray(middleware)) {
+			runnable = middleware;
+		} else if (_.isString(middleware) && _.has(obj, middleware)) {
+			return self.utilities.runMiddleware(_.get(obj, middleware), callback, obj); // Defer to the pointer
+		}
+
+		async()
+			.limit(1)
+			.forEach(runnable, function(nextMiddleware, middlewareFunc, index) {
+				middlewareFunc.apply(thisContext, [req, res, nextMiddleware]);
+			})
+			.end(function(err) {
+				if (err) {
+					res.status(403).send(err.toString()).end();
+				} else {
+					callback();
+				}
+			});
 	};
 	// }}}
 	// }}}

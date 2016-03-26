@@ -105,6 +105,82 @@ describe('Monoxide + Express permissions', function() {
 		});
 	});
 
+	it('should be denied query by ID selectively (get=array of functions)', function(finish) {
+		var app = express();
+		var calledMiddleware = [];
+		app.use(expressLogger);
+		app.use(bodyParser.json());
+		app.set('log.indent', '      ');
+
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
+			get: [
+				function(req, res, next) {
+					calledMiddleware.push('m1');
+					if (req.query.foo == 'foo!') return next();
+
+					// Handle error ourselves
+					res.status(404).send('Hidden page!').end();
+				},
+
+				function(req, res, next) {
+					calledMiddleware.push('m2');
+					if (req.query.bar == 'bar!') return next();
+
+					// Use middleware to handle error
+					next('Access denied');
+				},
+
+				function(req, res, next) {
+					calledMiddleware.push('m3');
+					if (req.query.baz == 'baz!') return next();
+
+					// Throw another error
+					res.status(500).send('Fake server error').end();
+				},
+			],
+		}));
+
+		var server = app.listen(port, null, function(err) {
+			if (err) return finish(err);
+
+			// Should throw 404
+			calledMiddleware = [];
+			superagent.get(url + '/api/widgets/' + widgets[0]._id).end(function(err, res) {
+				expect(calledMiddleware).to.deep.equal(['m1']);
+				expect(err).to.be.ok;
+				expect(res.statusCode).to.be.equal(404);
+
+				// Should throw 403
+				calledMiddleware = [];
+				superagent.get(url + '/api/widgets/' + widgets[0]._id + '?foo=foo!').end(function(err, res) {
+					expect(calledMiddleware).to.deep.equal(['m1','m2']);
+					expect(err).to.be.ok;
+					expect(res.statusCode).to.be.equal(403);
+
+					// Should throw 500
+					calledMiddleware = [];
+					superagent.get(url + '/api/widgets/' + widgets[0]._id + '?foo=foo!&bar=bar!').end(function(err, res) {
+						expect(calledMiddleware).to.deep.equal(['m1','m2','m3']);
+						expect(err).to.be.ok;
+						expect(res.statusCode).to.be.equal(500);
+
+						// Should be ok
+						calledMiddleware = [];
+						superagent.get(url + '/api/widgets/' + widgets[1]._id + '?foo=foo!&bar=bar!&baz=baz!').end(function(err, res) {
+							expect(calledMiddleware).to.deep.equal(['m1','m2','m3']);
+							expect(err).to.be.not.ok;
+							expect(res.statusCode).to.be.equal(200);
+							expect(res.body).to.be.an.object;
+							expect(res.body).to.have.property('_id');
+
+							server.close(finish);
+						});
+					});
+				});
+			});
+		});
+	});
+
 	it('should be denied query (query=false)', function(finish) {
 		var app = express();
 		app.use(expressLogger);
