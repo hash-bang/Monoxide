@@ -839,6 +839,36 @@ function Monoxide() {
 		};
 		// }}}
 
+		// qb.select(q, cb) {{{
+		/**
+		* Add select criteria to an existing query
+		* @name monoxide.queryBuilder.select
+		* @memberof monoxide.queryBuilder
+		* @param {Object|Array|string} [q] Select criteria, for strings or arrays of strings use the field name optionally prefixed with '-' for omission. For Objects use `{field: 1|-1}`
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder} This chainable object
+		*/
+		qb.select = function(q, callback) {
+			if (_.isString(q)) {
+				if (qb.query.$select) {
+					qb.query.$select.push(q);
+				} else {
+					qb.query.$select = [q];
+				}
+			} else if (_.isArray(q)) {
+				if (qb.query.$select) {
+					qb.query.$select.push.apply(this, q);
+				} else {
+					qb.query.$select = q;
+				}
+			} else {
+				throw new Error('Sort parameter type is unsupported');
+			}
+			if (_.isFunction(callback)) return qb.exec(callback);
+			return qb;
+		};
+		// }}}
+
 		// qb.sort(q, cb) {{{
 		/**
 		* Add sort criteria to an existing query

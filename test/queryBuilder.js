@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var expect = require('chai').expect;
 var monoxide = require('..');
 var testSetup = require('./setup');
@@ -77,6 +78,22 @@ describe('Monoxide - query builder', function() {
 
 			finish();
 		});
+	});
+
+
+	it('should query the widgets model (w/select)', function(finish) {
+		monoxide.models.widgets.find({color: 'blue'})
+			.select(['_id', 'color'])
+			.exec(function(err, widgets) {
+				expect(err).to.not.be.ok;
+
+				expect(widgets).to.be.an.array;
+				expect(widgets).to.have.length(2);
+
+				expect(_.keys(widgets[0])).to.deep.equal(['_id', 'color']);
+
+				finish();
+			});
 	});
 
 
