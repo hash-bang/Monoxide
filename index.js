@@ -1360,6 +1360,18 @@ function Monoxide() {
 		// Setup Virtuals
 		Object.defineProperties(doc, model.$virtuals);
 
+
+		// Sanitize data to remove all ObjectID crap
+		var FKs = self.models[setup.$collection]._knownFKs || self.utilities.extractFKs(self.connection.base.models[setup.$collection].schema);
+		_.forEach(FKs, function(pathSpec, path) {
+			if (pathSpec.type == 'objectId') {
+				var pathData = _.get(data, path);
+				if (pathData instanceof mongoose.Types.ObjectId) { // It is a pointer thats NOT been populated
+					_.set(data, path, pathData.toString());
+				}
+			}
+		});
+
 		_.extend(doc, data);
 
 		return doc;
@@ -2120,8 +2132,8 @@ function Monoxide() {
 		if (!base) base = FKs;
 
 		_.forEach(schema.paths, function(path, id) {
-			if (id == 'id' || id == '_id') {
-				// Pass
+			if (id == 'id' || id == '_id') { // Main document ID
+				FKs[prefix + id] = {type: 'objectId'};
 			} else if (path.instance && path.instance == 'ObjectID') {
 				FKs[prefix + id] = {type: 'objectId'};
 			} else if (path.caster && path.caster.instance == 'ObjectID') { // Array of ObjectIDs

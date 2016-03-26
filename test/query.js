@@ -14,6 +14,8 @@ describe('Monoxide - query', function() {
 			expect(err).to.not.be.ok;
 			expect(users).to.be.an.array;
 
+			expect(users[0]).to.have.property('_id');
+			expect(users[0]._id).to.be.a.string;
 			expect(users[0]).to.have.property('name', 'Jane Quark');
 			expect(users[0]).to.have.property('role', 'user');
 			expect(users[0]).to.have.property('favourite');
@@ -26,6 +28,8 @@ describe('Monoxide - query', function() {
 			expect(users[0].mostPurchased[1]).to.have.property('number', 2);
 			expect(users[0].mostPurchased[1].item).to.be.a.string;
 
+			expect(users[1]).to.have.property('_id');
+			expect(users[1]._id).to.be.a.string;
 			expect(users[1]).to.have.property('name', 'Joe Random');
 			expect(users[1]).to.have.property('role', 'user');
 			expect(users[1]).to.have.property('favourite');

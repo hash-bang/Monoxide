@@ -25,6 +25,7 @@ Key differences from Mongoose / MongoDB-Core:
 * Virtuals are handled locally (not on the database)
 * Methods are handled locally (again not on the database)
 * Hooks (i.e. Mongoose `pre`, `post` calls) actually work as they should. Hooks like all the above are local and not on the database
+* All pointers (or `mongoose.Types.ObjectId` as Mongoose refers to them) are **strings**. Comparison is simple string comparison, there is no need to call `.toString()` on each object.
 
 
 Features:
