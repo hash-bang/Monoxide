@@ -2190,7 +2190,7 @@ function Monoxide() {
 		} else if (_.isArray(middleware)) {
 			runnable = middleware;
 		} else if (_.isString(middleware) && _.has(obj, middleware)) {
-			return self.utilities.runMiddleware(_.get(obj, middleware), callback, obj); // Defer to the pointer
+			return self.utilities.runMiddleware(req, res, _.get(obj, middleware), callback, obj); // Defer to the pointer
 		}
 
 		async()

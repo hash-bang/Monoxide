@@ -181,6 +181,45 @@ describe('Monoxide + Express permissions', function() {
 		});
 	});
 
+	it('should be denied query by ID selectively (get=string pointer)', function(finish) {
+		var app = express();
+		app.use(expressLogger);
+		app.use(bodyParser.json());
+		app.set('log.indent', '      ');
+
+		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
+			get: 'query',
+			query: [
+				function(req, res, next) {
+					if (req.query.foo != 'foo!') return next('foo query must be specified');
+					next();
+				},
+			],
+		}));
+
+		var server = app.listen(port, null, function(err) {
+			if (err) return finish(err);
+
+			// Should throw 403
+			calledMiddleware = [];
+			superagent.get(url + '/api/widgets/' + widgets[0]._id).end(function(err, res) {
+				expect(err).to.be.ok;
+				expect(res.statusCode).to.be.equal(403);
+
+				// Should be ok
+				calledMiddleware = [];
+				superagent.get(url + '/api/widgets/' + widgets[1]._id + '?foo=foo!').end(function(err, res) {
+					expect(err).to.be.not.ok;
+					expect(res.statusCode).to.be.equal(200);
+					expect(res.body).to.be.an.object;
+					expect(res.body).to.have.property('_id');
+
+					server.close(finish);
+				});
+			});
+		});
+	});
+
 	it('should be denied query (query=false)', function(finish) {
 		var app = express();
 		app.use(expressLogger);
