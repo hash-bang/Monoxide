@@ -169,6 +169,7 @@ function Monoxide() {
 		var settings = _.defaults(options || {}, {
 			cacheFKs: true, // Cache model Foreign Keys (used for populates) or compute them every time
 			applySchema: true, // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
+			errNotFound: true, // During $id / $one operations raise an error if the record is not found
 		});
 
 		if (!_.isEmpty(q.$select)) settings.applySchema = false; // Trun off schema application when using $select as we wont be grabbing the full object
@@ -293,7 +294,15 @@ function Monoxide() {
 					if (err) return next(err);
 
 					if (q.$one) {
-						next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: settings.applySchema}, res));
+						if (_.isEmpty(res)) {
+							if (settings.errNotFound) {
+								next('Not found');
+							} else {
+								next(null, null);
+							}
+						} else {
+							next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: settings.applySchema}, res));
+						}
 					} else if (q.$count) {
 						next(null, res);
 					} else {
