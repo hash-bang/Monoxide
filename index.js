@@ -1543,7 +1543,7 @@ function Monoxide() {
 		// Add to model storage
 		self.models[model] = new self.monoxideModel({
 			$collection: model,
-			$mongoose: mongoose.model(model, schema),
+			$mongoose: mongoose.model(model.toLowerCase(), schema), // FIXME: When we implement our own schema def system we can remove the toLowerCase() component that Mongoose insists on using
 		});
 
 		return self.models[model];
