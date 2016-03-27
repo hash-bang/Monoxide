@@ -464,6 +464,7 @@ function Monoxide() {
 			// Peform the update {{{
 			.then('newRec', function(next) {
 				this.collection.findOneAndUpdate({_id: self.utilities.objectID(q.$id)}, {$set: _.omit(q, this.metaFields)}, {returnOriginal: !settings.returnUpdated}, function(err, res) {
+					if (err) return next(err);
 					// This would only really happen if the record has gone away since we started updating
 					if (settings.errNoUpdate && !res.nModified) return next('No documents updated');
 					if (!settings.refetch) return next(null, null);
