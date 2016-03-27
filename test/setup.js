@@ -61,6 +61,10 @@ module.exports = {
 						item: {type: 'pointer', ref: 'widgets'},
 					}
 				],
+				settings: {
+					lang: {type: String, enum: ['en', 'es', 'fr'], default: 'en'},
+					greeting: String,
+				},
 			})
 			.method('splitNames', function() {
 				return this.name.split(/\s+/);

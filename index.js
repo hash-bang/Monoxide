@@ -2161,6 +2161,7 @@ function Monoxide() {
 	/**
 	* Construct and return a MongoDB-Core compatible ObjectID object
 	* This is mainly used within functions that need to convert a string ID into an object
+	* @name monoxide.utilities.objectID
 	* @param {string} str The string to convert into an ObjectID
 	* @return {Object} A MongoDB-Core compatible ObjectID object instance
 	*/

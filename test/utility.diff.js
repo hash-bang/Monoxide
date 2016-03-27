@@ -56,16 +56,20 @@ describe('Monoxide - utility.diff', function() {
 			expect(users).to.be.an.array;
 			expect(users).to.have.length(2);
 
-			var originalUser = _.clone(users[0]);
-			var newUser = users[0];
+			var originalUser = users[0].toObject();
+			var newUser = users[0].toObject();
 
 			newUser.role = 'admin';
+			newUser.settings = {lang: 'fr', greeting: 'Hello'};
 
 			var patch = monoxide.utilities.diff(originalUser, newUser);
 
 			expect(patch).to.not.have.property('_id');
 			expect(patch).to.have.property('role', 'admin');
-			expect(_(patch).keys().sort().value()).to.deep.equal(['role']);
+			expect(patch).to.have.property('settings');
+			expect(patch.settings).to.have.property('lang', 'fr');
+			expect(patch.settings).to.have.property('greeting', 'Hello');
+			expect(_(patch).keys().sort().value()).to.deep.equal(['role', 'settings']);
 
 			finish();
 		});
