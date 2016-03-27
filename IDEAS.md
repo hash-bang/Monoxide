@@ -102,7 +102,7 @@ Mongo requires that the schema be created before the object is created but the s
 
 One way is to create the schema using the new `define()` functionality:
 
-	mongrol.define('user', {
+	monoxide.define('user', {
 		id: mongoose.Schema.ObjectId,
 		email: {type: String, required: true, index: {unique: true}},
 		passhash: {type: String},
@@ -120,7 +120,7 @@ One way is to create the schema using the new `define()` functionality:
 Or fields can be defined individually in a chain using `define()` + `field()`:
 
 	monoxide.define('user')
-		.field('id', mongrol.types.id)
+		.field('id', monoxide.types.id)
 		.field('email', monoxide.types.string)
 		.field('passhash', monoxide.types.string)
 		.field('passsalt', monoxide.types.string)
@@ -249,6 +249,36 @@ Does not work. The reason is that Mongo expects all selectors to be written in d
 Monoxide builds on the [DWIM](https://en.wikipedia.org/wiki/DWIM) philosophy where certain functionality is handled by Monoxide to get the expected results.
 
 Monoxide supports *both* of these formats allowing you to be as explicit as you require in your selection functions. Monoxide will rewrite complex array selects (see first example) into dotted notation before passing the aggregate query onto the Mongo driver.
+
+
+Document rebuild on schema change
+---------------------------------
+Documents in Mongoose are saved against the schema *at the time of creation* and not on each load.
+
+If for example yo uhad the following schema:
+
+	mongoose.define('user', {
+		id: mongoose.Schema.ObjectId,
+		email: {type: String, required: true, index: {unique: true}},
+		passhash: {type: String},
+		passsalt: {type: String},
+		name: {type: String},
+	});
+
+... and then at some later point added the `role` field with a suitable default:
+
+	mongoose.define('user', {
+		id: mongoose.Schema.ObjectId,
+		email: {type: String, required: true, index: {unique: true}},
+		passhash: {type: String},
+		passsalt: {type: String},
+		name: {type: String},
+		role: {type: String, enum: ['user', 'admin'], default: 'user', index: true},
+	});
+
+Mongoose will only apply the new specification for `role` **after** the change has been made. Any existing `user` documents will **not** get the `role` field applied, nor the default value.
+
+**IMPLEMENTED:** Monoxide fixes this issue by applying schemas on each query. If your schema changes the retrieved document has the defaults or additional fields applied as needed. Deleted fields are not removed.
 
 
 
