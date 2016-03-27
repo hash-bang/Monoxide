@@ -39,7 +39,6 @@ describe('Monoxide - utility.diff', function() {
 		expect(patch.widgets).to.be.an.array;
 		expect(patch.widgets).to.have.length(1);
 		expect(patch.widgets[0]).to.be.equal(4);
-		expect(patch).to.have.property('dooDads', undefined);
 		expect(patch).to.have.property('fooBars');
 		expect(patch.fooBars).to.have.property('bazzes');
 		expect(patch.fooBars.bazzes).to.have.property('quz', 777);
