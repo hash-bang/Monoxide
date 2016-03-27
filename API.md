@@ -237,6 +237,7 @@ If you wish to save an existing document see the monoxide.save() function.
     -   `q.$collection` **string** The collection / model to query
     -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
+    -   `options.refetch` **[boolean]** Return the newly create record (optional, default `true`)
 -   `function`  (err,result)] Optional callback to call on completion or error
 -   `callback`  
 
@@ -340,13 +341,14 @@ Query Mongo directly with the Monoxide query syntax
     -   `q.$select` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Field selection criteria to apply
     -   `q.$sort` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Sorting criteria to apply
     -   `q.$populate` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Population criteria to apply
+    -   `q.$one` **[boolean]** Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array (optional, default `false`)
     -   `q.$collection` **string** The collection / model to query
-    -   `q.$limit` **[number]** Limit the return to this many rows
     -   `q.$skip` **[number]** Offset return by this number of rows
     -   `q.filter` **[...Any]** Any other field (not beginning with '$') is treated as filtering criteria
-    -   `q.$one` **[boolean]** Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array (optional, default `false`)
+    -   `q.$limit` **[number]** Limit the return to this many rows
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
-    -   `options.cacheFKs` **[boolean]** Whether to cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure (optional, default `true`)
+    -   `options.cacheFKs` **[boolean]** Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure (optional, default `true`)
+    -   `options.applySchema` **[boolean]** Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record (optional, default `true`)
 -   `callback` **function** (err, result) the callback to call on completion or error. If $one is truthy this returns a single monoxide.monoxideDocument, if not it returns an array of them
 
 **Examples**
@@ -464,6 +466,7 @@ Update multiple documents
 -   `qUpdate` **Object** The object to update into the found documents
     -   `qUpdate.field` **[...Any]** Data to save into every record found by `q`
 -   `options` **[Object]** Optional options object which can alter behaviour of the function
+    -   `options.refetch` **[boolean]** Return the newly updated record (optional, default `true`)
 -   `function`  (err,result)] Optional callback to call on completion or error
 -   `callback`  
 
@@ -479,6 +482,36 @@ monoxide.update({
 
 Returns **Object** This chainable object
 
+# monoxide.utilities.diff
+
+Diff two monoxide.monoxideDocument objects and return the changes as an object
+This change object is suitable for passing directly into monoxide.save()
+While originally intended only for comparing monoxide.monoxideDocument objects this function can be used to compare any type of object
+NOTE: If you are comparing MonoxideDocuments call `.toObject()` before passing the object in to strip it of its noise
+
+**Parameters**
+
+-   `originalDoc` **Object** The original source document to compare to
+-   `newDoc` **Object** The new document with possible changes
+
+**Examples**
+
+```javascript
+// Get the patch of two documents
+monoxide.query({$collection: 'widgets', $id: '123'}, function(err, res) {
+	var docA = res.toObject();
+	var docB = res.toObject();
+
+// Change some fields
+	docB.title = 'Hello world';
+
+	var patch = monoxide.utilities.diff(docA, docB);
+	// => should only return {title: 'Hello World'}
+});
+```
+
+Returns **Object** The patch object
+
 # monoxide.utilities.extractFKs
 
 Extract all FKs in dotted path notation from a Mongoose model
@@ -491,7 +524,7 @@ Extract all FKs in dotted path notation from a Mongoose model
 
 Returns **Object** A dictionary of foreign keys for the schema (each key will be the info of the object)
 
-# objectID
+# monoxide.utilities.objectID
 
 Construct and return a MongoDB-Core compatible ObjectID object
 This is mainly used within functions that need to convert a string ID into an object
@@ -813,6 +846,17 @@ Add population criteria to an existing query
 **Parameters**
 
 -   `q` **[Array or string]** Population criteria, for strings or arrays of strings use the field name
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** This chainable object
+
+# monoxide.queryBuilder.select
+
+Add select criteria to an existing query
+
+**Parameters**
+
+-   `q` **[Object or Array or string]** Select criteria, for strings or arrays of strings use the field name optionally prefixed with '-' for omission. For Objects use `{field: 1|-1}`
 -   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
 
 Returns **monoxide.queryBuilder** This chainable object
