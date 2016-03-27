@@ -65,7 +65,7 @@ describe('Monoxide - create', function() {
 		});
 	});
 
-	it.only('should create omitted fields with defaults', function(finish) {
+	it('should create omitted fields with defaults', function(finish) {
 		monoxide.models.users.create({
 			name: 'New User3',
 		}, function(err, user) {

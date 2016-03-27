@@ -115,7 +115,7 @@ function Monoxide() {
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {string} [q.$id] If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
-	* @param {(string|string[]|object[])} [q.$select] Field selection criteria to apply
+	* @param {(string|string[]|object[])} [q.$select] Field selection criteria to apply (implies options.applySchema=false as we will be dealing with a partial schema)
 	* @param {(string|string[]|object[])} [q.$sort] Sorting criteria to apply
 	* @param {(string|string[]|object[])} [q.$populate] Population criteria to apply
 	* @param {boolean} [q.$one=false] Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
@@ -170,6 +170,8 @@ function Monoxide() {
 			cacheFKs: true, // Cache model Foreign Keys (used for populates) or compute them every time
 			applySchema: true, // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
 		});
+
+		if (!_.isEmpty(q.$select)) settings.applySchema = false; // Trun off schema application when using $select as we wont be grabbing the full object
 
 		async()
 			.set('metaFields', [
