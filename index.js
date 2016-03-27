@@ -1347,6 +1347,12 @@ function Monoxide() {
 				}, callback);
 				return doc;
 			},
+			toObject: function() {
+				var doc = this;
+				return _.omitBy(doc, function(v, k) {
+					return (!doc.hasOwnProperty(k) || _.startsWith(k, '$'));
+				});
+			},
 		};
 
 		_.extend(
