@@ -125,7 +125,8 @@ function Monoxide() {
 	* @param {...*} [q.filter] Any other field (not beginning with '$') is treated as filtering criteria
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
-	* @param {boolean} [options.cacheFKs=true] Whether to cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
+	* @param {boolean} [options.cacheFKs=true] Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
+	* @param {boolean} [options.applySchema=true] Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record
 	*
 	* @param {function} callback(err, result) the callback to call on completion or error. If $one is truthy this returns a single monoxide.monoxideDocument, if not it returns an array of them
 	*
@@ -166,7 +167,8 @@ function Monoxide() {
 		// }}}
 
 		var settings = _.defaults(options || {}, {
-			cacheFKs: true, // Whether to cache model Foreign Keys (used for populates) or compute them every time
+			cacheFKs: true, // Cache model Foreign Keys (used for populates) or compute them every time
+			applySchema: true, // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
 		});
 
 		async()
@@ -289,12 +291,12 @@ function Monoxide() {
 					if (err) return next(err);
 
 					if (q.$one) {
-						next(null, new self.monoxideDocument({$collection: q.$collection}, res));
+						next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: settings.applySchema}, res));
 					} else if (q.$count) {
 						next(null, res);
 					} else {
 						next(null, res.map(function(doc) {
-							return new self.monoxideDocument({$collection: q.$collection}, doc.toObject());
+							return new self.monoxideDocument({$collection: q.$collection, $applySchema: settings.applySchema}, doc.toObject());
 						}));
 					}
 				});
@@ -1348,6 +1350,7 @@ function Monoxide() {
 		var model = self.models[setup.$collection];
 
 		var proto = {
+			$MONOXIDE: true,
 			save: function(callback) {
 				var doc = this;
 				var fields = {
@@ -1377,6 +1380,7 @@ function Monoxide() {
 					return (doc.hasOwnProperty(k) && !_.startsWith(k, '$')) ? v : undefined;
 				});
 			},
+			$applySchema: true,
 		};
 
 		_.extend(
@@ -1406,6 +1410,20 @@ function Monoxide() {
 		});
 
 		_.extend(doc, data);
+
+		// Apply schema
+		if (setup.$applySchema) {
+			_.forEach(self.connection.base.models[setup.$collection].schema.paths, function(pathSpec, path) {
+				var docValue = _.get(doc, path);
+				if (_.isUndefined(docValue)) {
+					if (pathSpec.options.default) { // Item is blank but SHOULD have a default
+						_.set(doc, path, pathSpec.options.default);
+					} else {
+						_.set(doc, path, undefined);
+					}
+				}
+			});
+		}
 
 		return doc;
 	};

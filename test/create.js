@@ -64,4 +64,27 @@ describe('Monoxide - create', function() {
 			finish();
 		});
 	});
+
+	it.only('should create omitted fields with defaults', function(finish) {
+		monoxide.models.users.create({
+			name: 'New User3',
+		}, function(err, user) {
+			expect(err).to.not.be.ok;
+			expect(user).to.be.an.object;
+
+			expect(user).to.have.property('name', 'New User3');
+			expect(user).to.have.property('role', 'user');
+			expect(user).to.have.property('favourite');
+			expect(user.favourite).to.be.a.string;
+			expect(user).to.have.property('mostPurchased');
+			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.have.length(0);
+			expect(user).to.have.property('settings');
+			expect(user.settings).to.be.an.object;
+			expect(user.settings).to.have.property('lang', 'en');
+			expect(user.settings).to.have.property('greeting');
+
+			finish();
+		});
+	});
 });
