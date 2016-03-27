@@ -695,7 +695,7 @@ function Monoxide() {
 				if (!self.connection) return next('No connection open');
 				if (!q.$collection) return next('Collection not specified');
 
-				var col = self.connection.db.collection(q.$collection);
+				var col = self.connection.db.collection(q.$collection.toLowerCase());
 				if (!col) return next('Invalid collection');
 				next(null, col);
 			})
