@@ -462,14 +462,22 @@ function Monoxide() {
 			})
 			// }}}
 			// Peform the update {{{
+			.then('oldRec', function(next) { // Retrieve the original record
+				self.query({$collection: q.$collection, $id: q.$id}, next);
+			})
 			.then('newRec', function(next) {
-				this.collection.findOneAndUpdate({_id: self.utilities.objectID(q.$id)}, {$set: _.omit(q, this.metaFields)}, {returnOriginal: !settings.returnUpdated}, function(err, res) {
-					if (err) return next(err);
-					// This would only really happen if the record has gone away since we started updating
-					if (settings.errNoUpdate && !res.nModified) return next('No documents updated');
-					if (!settings.refetch) return next(null, null);
-					next(null, new self.monoxideDocument({$collection: q.$collection}, res.value));
-				});
+				this.collection.findOneAndUpdate(
+					{ _id: self.utilities.objectID(q.$id) }, // What we are writing to
+					{ $set: self.utilities.diff(this.oldRec.toObject(), _.omit(q, this.metaFields)) }, // What we are saving
+					{ returnOriginal: !settings.returnUpdated }, // Options passed to Mongo
+					function(err, res) {
+						if (err) return next(err);
+						// This would only really happen if the record has gone away since we started updating
+						if (settings.errNoUpdate && !res.nModified) return next('No documents updated');
+						if (!settings.refetch) return next(null, null);
+						next(null, new self.monoxideDocument({$collection: q.$collection}, res.value));
+					}
+				);
 			})
 			// }}}
 			// Fire the 'postSave' hook {{{
@@ -1350,7 +1358,7 @@ function Monoxide() {
 			toObject: function() {
 				var doc = this;
 				return _.cloneWith(doc, function(v, k) {
-					return (doc.hasOwnProperty(k) && !_.startsWith(k, '$'));
+					return (doc.hasOwnProperty(k) && !_.startsWith(k, '$')) ? v : undefined;
 				});
 			},
 		};
@@ -1367,6 +1375,8 @@ function Monoxide() {
 		// Setup Virtuals
 		Object.defineProperties(doc, model.$virtuals);
 
+		// Convert data to a simple array if its weird Mongoose fluff
+		if (data instanceof mongoose.Document) data = data.toObject();
 
 		// Sanitize data to remove all ObjectID crap
 		var FKs = self.models[setup.$collection]._knownFKs || self.utilities.extractFKs(self.connection.base.models[setup.$collection].schema);
@@ -2232,12 +2242,29 @@ function Monoxide() {
 	/**
 	* Diff two monoxide.monoxideDocument objects and return the changes as an object
 	* This change object is suitable for passing directly into monoxide.save()
+	* While originally intended only for comparing monoxide.monoxideDocument objects this function can be used to compare any type of object
+	* NOTE: If you are comparing MonoxideDocuments call `.toObject()` before passing the object in to strip it of its noise
+	*
 	* @name monoxide.utilities.diff
 	* @see monoxide.save
 	* @see monoxide.update
-	* @param {monoxide.monoxideDocument} originalDoc The original source document to compare to
-	* @param {monoxide.monoxideDocument} newDoc The new document with possible changes
+	*
+	* @param {Object} originalDoc The original source document to compare to
+	* @param {Object} newDoc The new document with possible changes
 	* @return {Object} The patch object
+	*
+	* @example
+	* // Get the patch of two documents
+	* monoxide.query({$collection: 'widgets', $id: '123'}, function(err, res) {
+	* 	var docA = res.toObject();
+	* 	var docB = res.toObject();
+	*
+	*	// Change some fields
+	* 	docB.title = 'Hello world';
+	*
+	* 	var patch = monoxide.utilities.diff(docA, docB);
+	* 	// => should only return {title: 'Hello World'}
+	* });
 	*/
 	self.utilities.diff = function(originalDoc, newDoc) {
 		var deepDiff = require('deep-diff');
@@ -2251,8 +2278,6 @@ function Monoxide() {
 				// so we let deepDiff do its thing then copy the new structure across into patch
 				deepDiff.applyChange(originalDoc, newDoc, diff);
 				_.set(patch, diff.path, _.get(newDoc, diff.path));
-			} else {
-				_.set(patch, diff.path, undefined);
 			}
 		});
 
