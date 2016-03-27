@@ -470,9 +470,21 @@ function Monoxide() {
 				self.query({$collection: q.$collection, $id: q.$id}, next);
 			})
 			.then('newRec', function(next) {
+				var patch = self.utilities.diff(this.oldRec.toObject(), _.omit(q, this.metaFields));
+
+				// Nothing to patch {{{
+				if (_.isEmpty(patch)) {
+					if (settings.errNoUpdate) {
+						return next('Nothing to update');
+					} else {
+						return next(null, this.oldRec);
+					}
+				}
+				// }}}
+
 				this.collection.findOneAndUpdate(
 					{ _id: self.utilities.objectID(q.$id) }, // What we are writing to
-					{ $set: self.utilities.diff(this.oldRec.toObject(), _.omit(q, this.metaFields)) }, // What we are saving
+					{ $set: patch }, // What we are saving
 					{ returnOriginal: !settings.returnUpdated }, // Options passed to Mongo
 					function(err, res) {
 						if (err) return next(err);
