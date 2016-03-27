@@ -1349,8 +1349,8 @@ function Monoxide() {
 			},
 			toObject: function() {
 				var doc = this;
-				return _.omitBy(doc, function(v, k) {
-					return (!doc.hasOwnProperty(k) || _.startsWith(k, '$'));
+				return _.cloneWith(doc, function(v, k) {
+					return (doc.hasOwnProperty(k) && !_.startsWith(k, '$'));
 				});
 			},
 		};
