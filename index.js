@@ -195,8 +195,8 @@ function Monoxide() {
 			// .model {{{
 			.then('model', function(next) {
 				if (!q.$collection) return next('Collection not specified');
-				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
-				next(null, this.connection.base.models[q.$collection].schema);
+				if (!_.has(this.connection, 'base.models.' + q.$collection.toLowerCase())) return next('Invalid collection');
+				next(null, this.connection.base.models[q.$collection.toLowerCase()].schema);
 			})
 			// }}}
 			// .modelFKs - Determine foreign keys {{{
@@ -237,11 +237,11 @@ function Monoxide() {
 				//console.log('POSTPOPFIELDS', self.filterPostPopulate);
 
 				if (q.$count) {
-					next(null, this.connection.base.models[q.$collection].count(fields));
+					next(null, this.connection.base.models[q.$collection.toLowerCase()].count(fields));
 				} else if (q.$one) {
-					next(null, this.connection.base.models[q.$collection].findOne(fields));
+					next(null, this.connection.base.models[q.$collection.toLowerCase()].findOne(fields));
 				} else {
-					next(null, this.connection.base.models[q.$collection].find(fields));
+					next(null, this.connection.base.models[q.$collection.toLowerCase()].find(fields));
 				}
 			})
 			// }}}
@@ -597,8 +597,8 @@ function Monoxide() {
 			// .model {{{
 			.then('model', function(next) {
 				if (!q.$collection) return next('Collection not specified');
-				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
-				next(null, this.connection.base.models[q.$collection].schema);
+				if (!_.has(this.connection, 'base.models.' + q.$collection.toLowerCase())) return next('Invalid collection');
+				next(null, this.connection.base.models[q.$collection.toLowerCase()].schema);
 			})
 			// }}}
 			// Fire the 'update' hook {{{
@@ -608,7 +608,7 @@ function Monoxide() {
 			// }}}
 			// Peform the update {{{
 			.then('rawResponse', function(next) {
-				this.connection.base.models[q.$collection].update(_.omit(q, this.metaFields), _.omit(qUpdate, this.metaFields), {multi: true}, next);
+				this.connection.base.models[q.$collection.toLowerCase()].update(_.omit(q, this.metaFields), _.omit(qUpdate, this.metaFields), {multi: true}, next);
 			})
 			// }}}
 			// End {{{
@@ -817,8 +817,8 @@ function Monoxide() {
 			// .model {{{
 			.then('model', function(next) {
 				if (!q.$collection) return next('Collection not specified');
-				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
-				next(null, this.connection.base.models[q.$collection].schema);
+				if (!_.has(this.connection, 'base.models.' + q.$collection.toLowerCase())) return next('Invalid collection');
+				next(null, this.connection.base.models[q.$collection.toLowerCase()].schema);
 			})
 			// }}}
 			// Delete logic {{{
@@ -835,7 +835,7 @@ function Monoxide() {
 					// Check that the hook returns ok
 					self.models[q.$collection].fire('delete', function(err) {
 						// Now actually delete the item
-						self.connection.base.models[q.$collection].remove({_id: q.$id}, function(err) {
+						self.connection.base.models[q.$collection.toLowerCase()].remove({_id: q.$id}, function(err) {
 							if (err) return next(err);
 							// Delete was sucessful - call event then move next
 							self.models[q.$collection].fire('postDelete', next, {_id: q.$id});
@@ -1422,7 +1422,7 @@ function Monoxide() {
 		if (data instanceof mongoose.Document) data = data.toObject();
 
 		// Sanitize data to remove all ObjectID crap
-		var FKs = self.models[setup.$collection]._knownFKs || self.utilities.extractFKs(self.connection.base.models[setup.$collection].schema);
+		var FKs = self.models[setup.$collection]._knownFKs || self.utilities.extractFKs(self.connection.base.models[setup.$collection.toLowerCase()].schema);
 		_.forEach(FKs, function(pathSpec, path) {
 			if (pathSpec.type == 'objectId') {
 				var pathData = _.get(data, path);
@@ -1436,7 +1436,7 @@ function Monoxide() {
 
 		// Apply schema
 		if (setup.$applySchema) {
-			_.forEach(self.connection.base.models[setup.$collection].schema.paths, function(pathSpec, path) {
+			_.forEach(self.connection.base.models[setup.$collection.toLowerCase()].schema.paths, function(pathSpec, path) {
 				var docValue = _.get(doc, path);
 				if (_.isUndefined(docValue)) {
 					if (pathSpec.options.default) { // Item is blank but SHOULD have a default
@@ -1543,7 +1543,7 @@ function Monoxide() {
 		// Add to model storage
 		self.models[model] = new self.monoxideModel({
 			$collection: model,
-			$mongoose: mongoose.model(model.toLowerCase(), schema), // FIXME: When we implement our own schema def system we can remove the toLowerCase() component that Mongoose insists on using
+			$mongoose: mongoose.model(model.toLowerCase(), schema), // FIXME: When we implement our own schema def system we can remove the toLowerCase() component that Mongoose insists on using. We can also remove all of the other toLowerCase() calls when we're trying to find the Mongoose schema
 		});
 
 		return self.models[model];
@@ -1623,8 +1623,8 @@ function Monoxide() {
 			// .model {{{
 			.then('model', function(next) {
 				if (!q.$collection) return next('Collection not specified');
-				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
-				next(null, this.connection.collection(q.$collection));
+				if (!_.has(this.connection, 'base.models.' + q.$collection.toLowerCase())) return next('Invalid collection');
+				next(null, this.connection.collection(q.$collection.toLowerCase()));
 			})
 			// }}}
 			// Execute and capture return {{{
