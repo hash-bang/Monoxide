@@ -2226,6 +2226,37 @@ function Monoxide() {
 			});
 	};
 	// }}}
+
+	// .utilities.diff(originalDoc, newDoc) {{{
+	/**
+	* Diff two monoxide.monoxideDocument objects and return the changes as an object
+	* This change object is suitable for passing directly into monoxide.save()
+	* @name monoxide.utilities.diff
+	* @see monoxide.save
+	* @see monoxide.update
+	* @param {monoxide.monoxideDocument} originalDoc The original source document to compare to
+	* @param {monoxide.monoxideDocument} newDoc The new document with possible changes
+	* @return {Object} The patch object
+	*/
+	self.utilities.diff = function(originalDoc, newDoc) {
+		var deepDiff = require('deep-diff');
+		var patch = {};
+
+		deepDiff.observableDiff(originalDoc, newDoc, function(diff) {
+			if (diff.kind == 'N' || diff.kind == 'E') {
+				_.set(patch, diff.path, diff.rhs);
+			} else if (diff.kind == 'A') { // Array alterations
+				// deepDiff will only apply changes onto newDoc - we can't just apply them to the empty patch object
+				// so we let deepDiff do its thing then copy the new structure across into patch
+				deepDiff.applyChange(originalDoc, newDoc, diff);
+				_.set(patch, diff.path, _.get(newDoc, diff.path));
+			} else {
+				_.set(patch, diff.path, undefined);
+			}
+		});
+
+		return patch;
+	};
 	// }}}
 
 	return self;
