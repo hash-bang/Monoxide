@@ -512,6 +512,7 @@ function Monoxide() {
 	* @param {...*} [qUpdate.field] Data to save into every record found by `q`
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
+	* @param {boolean} [options.refetch=true] Return the newly updated record
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -609,6 +610,7 @@ function Monoxide() {
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
+	* @param {boolean} [options.refetch=true] Return the newly create record
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -643,6 +645,7 @@ function Monoxide() {
 		// }}}
 
 		var settings = _.defaults(options || {}, {
+			refetch: true, // Fetch and return the record when created (false returns null)
 		});
 
 		async()
@@ -662,17 +665,21 @@ function Monoxide() {
 				next(null, mongoose.connection);
 			})
 			// }}}
-			// .model {{{
-			.then('model', function(next) {
+			// .collection {{{
+			.then('collection', function(next) {
+				if (!self.connection) return next('No connection open');
 				if (!q.$collection) return next('Collection not specified');
-				if (!_.has(this.connection, 'base.models.' + q.$collection)) return next('Invalid collection');
-				next(null, this.connection.base.models[q.$collection].schema);
+
+				var col = self.connection.db.collection(q.$collection);
+				if (!col) return next('Invalid collection');
+				next(null, col);
 			})
 			// }}}
 			// Create record {{{
-			.then('newRec', function(next) {
+			.then('rawResponse', function(next) {
+				var collection = this.collection;
 				if (!self.models[q.$collection].hasHook(['create', 'postCreate']) && !self.models[q.$collection].hasVirtuals()) { // Can just splat the JSON object to create it
-					this.connection.base.models[q.$collection].create(_.omit(q, this.metaFields), next);
+					collection.insertOne(_.omit(q, this.metaFields), next);
 				} else { // Have to make a temporary object - fire all hooks and virtuals to create
 					var newDocument = new self.monoxideDocument({$collection: q.$collection}, {});
 					_.merge(newDocument, _.omit(q, this.metaFields)); // Set new fields (these should fire all virtual handlers)
@@ -682,7 +689,7 @@ function Monoxide() {
 						})
 						.then('newRec2', function(next) {
 							// Actually make the document
-							self.connection.base.models[q.$collection].create(newDocument, next);
+							collection.insertOne(newDocument.toObject(), next);
 						})
 						.then(function(next) {
 							self.models[q.$collection].fire('postCreate', next, newDocument);
@@ -692,6 +699,15 @@ function Monoxide() {
 							next(null, this.newRec2);
 						})
 				}
+			})
+			// }}}
+			// Refetch record {{{
+			.then('newRec', function(next) {
+				if (!settings.refetch) return next(null, null);
+				self.query({
+					$collection: q.$collection,
+					$id: this.rawResponse.insertedId,
+				}, next);
 			})
 			// }}}
 			// End {{{
