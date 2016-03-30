@@ -1341,22 +1341,34 @@ function Monoxide() {
 		* @param {...*} parameters Any other parameters to be passed to each hook
 		*/
 		mm.fire = function(name, callback) {
-			if (!mm.$hooks[name] || !mm.$hooks[name].length) return callback(); // No hooks attached anyway
+			if (mm.listenerCount(name)) { // There is at least one event handler attached
+				var eventArgs = _.values(arguments);
+				eventArgs.splice(1, 1); // Remove the 'callback' arg as events cant respond to it anyway
+				mm.emit.apply(mm, eventArgs);
+			}
+
+			if (!mm.$hooks[name] || !mm.$hooks[name].length) return callback();
 
 			// Calculate the args array we will pass to each hook
-			var args = _.values(arguments);
-			args.shift(); // We will set args[0] to the callback in each case anyway so we only need to shift 1
+			var hookArgs = _.values(arguments);
+			hookArgs.shift(); // We will set args[0] to the callback in each case anyway so we only need to shift 1
+
+			var eventArgs = _.values(arguments);
+			eventArgs.splice(1, 1); // Remove the 'callback' arg as events cant respond to it anyway
 
 			async()
 				.forEach(mm.$hooks[name], function(next, hook) {
-					args[0] = next;
-					hook.apply(mm, args);
+					// Fire hooks by this name
+					hookArgs[0] = next;
+					hook.apply(mm, hookArgs);
 				})
 				.end(callback);
 		};
 
 		return mm;
 	};
+	util.inherits(self.monoxideModel, events.EventEmitter);
+
 	// }}}
 
 	// .monoxideDocument([setup]) - monoxide document instance {{{

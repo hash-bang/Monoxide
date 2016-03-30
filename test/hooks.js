@@ -20,43 +20,58 @@ describe('Monoxide - hooks', function() {
 	});
 
 	var firedHooks = {
-		query: 0,
-		save: 0,
-		postSave: 0,
+		queryHook: 0,
+		queryEvent: 0,
+		saveHook: 0,
+		saveEvent: 0,
+		postSaveHook: 0,
+		postSaveEvent: 0,
 	};
 	it('should attach a hooks to users', function() {
 		monoxide.models.users
 			.hook('query', function(next) {
-				firedHooks.query++;
+				firedHooks.queryHook++;
 				next();
+			})
+			.on('query', function(next) {
+				firedHooks.queryEvent++;
 			})
 			.hook('save', function(next, doc) {
 				// We should only ever operate on user[0]
 				expect(doc._id).to.equal(users[0]._id);
-				firedHooks.save++;
+				firedHooks.saveHook++;
 				next();
+			})
+			.on('save', function(next) {
+				firedHooks.saveEvent++;
 			})
 			.hook('postSave', function(next, doc) {
 				expect(doc._id).to.equal(users[0]._id);
-				firedHooks.postSave++;
+				firedHooks.postSaveHook++;
 				next();
+			})
+			.on('postSave', function(next) {
+				firedHooks.postSaveEvent++;
 			})
 	});
 
-	it('should fire hooks on query', function(finish) {
+	it('should fire hooks + events on query', function(finish) {
 		monoxide.query({
 			$collection: 'users',
 			$sort: 'name',
 		}, function(err, res) {
-			expect(firedHooks.query).to.equal(1);
+			expect(firedHooks.queryHook).to.equal(1);
+			expect(firedHooks.queryEvent).to.equal(1);
 			finish();
 		});
 	});
 
 	it('should fire hooks on save + postSave', function(finish) {
 		users[0].save(function(err, res) {
-			expect(firedHooks.save).to.equal(1);
-			expect(firedHooks.postSave).to.equal(1);
+			expect(firedHooks.saveHook).to.equal(1);
+			expect(firedHooks.saveEvent).to.equal(1);
+			expect(firedHooks.postSaveHook).to.equal(1);
+			expect(firedHooks.postSaveEvent).to.equal(1);
 			finish();
 		});
 	});
