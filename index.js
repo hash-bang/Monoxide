@@ -1411,9 +1411,11 @@ function Monoxide() {
 			},
 			toObject: function() {
 				var doc = this;
-				return _.cloneWith(doc, function(v, k) {
-					return (doc.hasOwnProperty(k) && !_.startsWith(k, '$')) ? v : undefined;
+				var newDoc = {};
+				_.forEach(this, function(v, k) {
+					if (doc.hasOwnProperty(k) && !_.startsWith(k, '$')) newDoc[k] = _.clone(v);
 				});
+				return newDoc;
 			},
 			$applySchema: true,
 		};
