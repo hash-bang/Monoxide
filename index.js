@@ -701,29 +701,17 @@ function Monoxide() {
 			})
 			// }}}
 			// Create record {{{
+			.then('createDoc', function(next) { // Compute the document we will create
+				next(null, new self.monoxideDocument({$collection: q.$collection}, _.omit(q, this.metaFields)));
+			})
+			.then(function(next) {
+				self.models[q.$collection].fire('create', next, this.createDoc);
+			})
 			.then('rawResponse', function(next) {
-				var collection = this.collection;
-				if (!self.models[q.$collection].hasHook(['create', 'postCreate']) && !self.models[q.$collection].hasVirtuals()) { // Can just splat the JSON object to create it
-					collection.insertOne(_.omit(q, this.metaFields), next);
-				} else { // Have to make a temporary object - fire all hooks and virtuals to create
-					var newDocument = new self.monoxideDocument({$collection: q.$collection}, {});
-					_.merge(newDocument, _.omit(q, this.metaFields)); // Set new fields (these should fire all virtual handlers)
-					async()
-						.then(function(next) {
-							self.models[q.$collection].fire('create', next, newDocument);
-						})
-						.then('newRec2', function(next) {
-							// Actually make the document
-							collection.insertOne(newDocument.toObject(), next);
-						})
-						.then(function(next) {
-							self.models[q.$collection].fire('postCreate', next, newDocument);
-						})
-						.end(function(err) {
-							if (err) return next(err);
-							next(null, this.newRec2);
-						})
-				}
+				this.collection.insertOne(this.createDoc.toObject(), next);
+			})
+			.then(function(next) {
+				self.models[q.$collection].fire('postCreate', next, this.createDoc);
 			})
 			// }}}
 			// Refetch record {{{
