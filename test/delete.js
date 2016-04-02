@@ -26,16 +26,31 @@ describe('Monoxide - delete', function() {
 			$id: widgets[0]._id,
 		}, function(err) {
 			expect(err).to.be.not.ok;
-			widgets.shift();
-			finish();
+
+			monoxide.query({
+				$collection: 'widgets',
+				$id: widgets[0]._id,
+			}, function(err, remaining) {
+				expect(err).to.be.ok;
+				expect(remaining).to.be.not.ok;
+
+				widgets.shift();
+				finish();
+			});
 		});
 	});
 
 	it('should delete a single item (via model)', function(finish) {
 		widgets[0].remove(function(err, doc) {
 			expect(err).to.be.not.ok;
-			widgets.shift();
-			finish();
+
+			monoxide.models.widgets.findOne({_id: widgets[0]._id}, function(err, remaining) {
+				expect(err).to.be.ok;
+				expect(remaining).to.be.not.ok;
+
+				widgets.shift();
+				finish();
+			});
 		});
 	});
 
@@ -45,14 +60,25 @@ describe('Monoxide - delete', function() {
 			$multiple: true,
 		}, function(err) {
 			expect(err).to.be.not.ok;
-			finish();
+
+
+			monoxide.models.widgets.count(function(err, count) {
+				expect(err).to.be.not.ok;
+				expect(count).to.be.equal(0);
+				finish();
+			});
 		});
 	});
 
 	it('should delete a multiple items (via model)', function(finish) {
 		monoxide.models.widgets.remove({}, function(err) {
 			expect(err).to.be.not.ok;
-			finish();
+
+			monoxide.models.widgets.count(function(err, count) {
+				expect(err).to.be.not.ok;
+				expect(count).to.be.equal(0);
+				finish();
+			});
 		});
 	});
 });
