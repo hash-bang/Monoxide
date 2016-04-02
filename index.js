@@ -23,9 +23,6 @@ function Monoxide() {
 	self.connect = function(uri, callback) {
 		mongoose.connect(uri, callback);
 		self.connection = mongoose.connection;
-		// Replace the default Mongoose model set with Monoxide's
-		// FIXME
-		// self.connection.base.models = self.models;
 		return self;
 	};
 	// }}}
@@ -127,6 +124,7 @@ function Monoxide() {
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	* @param {boolean} [options.cacheFKs=true] Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
 	* @param {boolean} [options.applySchema=true] Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record
+	* @param {boolean} [options.errNotFound] Raise an error if a specifically requested document is not found (requires $id)
 	*
 	* @param {function} callback(err, result) the callback to call on completion or error. If $one is truthy this returns a single monoxide.monoxideDocument, if not it returns an array of them
 	*
@@ -749,6 +747,7 @@ function Monoxide() {
 	* @param {boolean} [q.$multiple] Allow deletion of multiple records by query
 	*
 	* @param {Object} [options] Optional options object which can alter behaviour of the function
+	* @param {boolean} [options.errNotFound] Raise an error if a specifically requested document is not found (requires $id)
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -780,6 +779,7 @@ function Monoxide() {
 		// }}}
 
 		var settings = _.defaults(options || {}, {
+			errNotFound: true, // During raise an error if $id is specified but not found to delete
 		});
 
 		async()
@@ -825,6 +825,7 @@ function Monoxide() {
 						// Now actually delete the item
 						self.connection.base.models[q.$collection.toLowerCase()].remove({_id: q.$id}, function(err) {
 							if (err) return next(err);
+							if (settings.errNotFound && !res.result.ok) return next('Not found');
 							// Delete was sucessful - call event then move next
 							self.models[q.$collection].fire('postDelete', next, {_id: q.$id});
 						});
@@ -2197,7 +2198,7 @@ function Monoxide() {
 	*
 	* @name monoxide.utilities.extractFKs
 	*
-	* @param {Object} schema The schema object to examine (usually connection.base.models[model].schema
+	* @param {Object} schema The schema object to examine (usually monoxide.models[model].$mongooseModel.schema)
 	* @param {string} prefix existing Path prefix to use (internal use only)
 	* @param {Object} base Base object to append flat paths to (internal use only)
 	* @return {Object} A dictionary of foreign keys for the schema (each key will be the info of the object)
