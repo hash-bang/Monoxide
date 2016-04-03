@@ -1404,12 +1404,12 @@ function Monoxide() {
 		_.extend(doc, data);
 
 		// Apply schema
-		if (setup.$applySchema) {
+		if (doc.$applySchema) {
 			_.forEach(model.$mongooseModel.schema.paths, function(pathSpec, path) {
-				var docValue = _.get(doc, path);
+				var docValue = _.get(doc, path, undefined);
 				if (_.isUndefined(docValue)) {
-					if (pathSpec.options.default) { // Item is blank but SHOULD have a default
-						_.set(doc, path, pathSpec.options.default);
+					if (pathSpec.defaultValue) { // Item is blank but SHOULD have a default
+						_.set(doc, path, _.isFunction(pathSpec.defaultValue) ? pathSpec.defaultValue() : pathSpec.defaultValue);
 					} else {
 						_.set(doc, path, undefined);
 					}
