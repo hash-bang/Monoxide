@@ -24,7 +24,7 @@ describe('Monoxide - monoxideDocument (isModified handlers)', function() {
 			expect(modified).to.have.length(1);
 			expect(modified[0]).to.be.equal('name');
 
-			// expect(user.isModified('name')).to.be.ok;
+			expect(user.isModified('name')).to.be.ok;
 
 			finish();
 		});
@@ -94,6 +94,7 @@ describe('Monoxide - monoxideDocument (isModified handlers)', function() {
 			var modified = user.isModified();
 			expect(modified).to.be.ok;
 			expect(modified).to.be.an.array;
+			expect(modified).to.have.length(1);
 			expect(modified[0]).to.be.equal('mostPurchased');
 
 			expect(user.isModified('mostPurchased')).to.be.true;
@@ -119,6 +120,7 @@ describe('Monoxide - monoxideDocument (isModified handlers)', function() {
 			var modified = user.isModified();
 			expect(modified).to.be.ok;
 			expect(modified).to.be.an.array;
+			expect(modified).to.have.length(1);
 			expect(modified[0]).to.be.equal('settings');
 
 			expect(user.isModified('settings')).to.be.true;

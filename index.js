@@ -1312,7 +1312,7 @@ function Monoxide() {
 					return true;
 				} else {
 					var modified = [];
-					traverse(this).forEach(function(v) {
+					traverse(this).map(function(v) { // NOTE - We're using traverse().map() here as traverse().forEach() actually mutates the array if we tell it not to recurse with this.remove(true) (needed to stop recursion into complex objects if the parent has been changed)
 						if (!this.path.length) return; // Root node
 						if (
 							_.startsWith(this.key, '$') ||
@@ -1320,7 +1320,10 @@ function Monoxide() {
 							(v instanceof mongoose.Types.ObjectId)
 						) return this.remove(true); // Don't scan down hidden elements
 
-						if (doc.isModified(this.path)) modified.push(this.path.join('.'));
+						if (doc.isModified(this.path)) {
+							if (_.isObject(v)) this.remove(true);
+							modified.push(this.path.join('.'));
+						}
 					});
 					return modified;
 				}
