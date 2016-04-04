@@ -1,6 +1,6 @@
 {
   "name": "monoxide",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "A less poisonous way to work with Mongo",
   "main": "index.js",
   "repository": {
@@ -25,7 +25,8 @@
     "lodash": "^4.3.0",
     "lodash-deep": "^2.0.0",
     "mocha-logger": "^1.0.2",
-    "mongoose": "^4.4.3"
+    "mongoose": "^4.4.3",
+    "traverse": "^0.6.6"
   },
   "devDependencies": {
     "body-parser": "^1.15.0",

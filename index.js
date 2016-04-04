@@ -3,6 +3,7 @@ var _ = require('lodash')
 var async = require('async-chainable');
 var events = require('events');
 var mongoose = require('mongoose');
+var traverse = require('traverse');
 var util = require('util');
 
 /**
@@ -1372,6 +1373,34 @@ function Monoxide() {
 				});
 				return newDoc;
 			},
+			isModified: function(path) {
+				var doc = this;
+				if (path) {
+					var v = _.get(doc, path);
+					var pathJoined = _.isArray(path) ? path.join('.') : path;
+					if (v instanceof mongoose.Types.ObjectId) {
+						return doc.$originalValues[pathJoined] ? doc.$originalValues[pathJoined].toString() != v.toString() : false;
+					} else if (_.isObject(v)) { // If its an object (or an array) examine the $clean propertly
+						return !v.$clean;
+					} else {
+						return doc.$originalValues[pathJoined] != v;
+					}
+					return true;
+				} else {
+					var modified = [];
+					traverse(this).forEach(function(v) {
+						if (!this.path.length) return; // Root node
+						if (
+							_.startsWith(this.key, '$') ||
+							this.key == '_id' ||
+							(v instanceof mongoose.Types.ObjectId)
+						) return this.remove(true); // Don't scan down hidden elements
+
+						if (doc.isModified(this.path)) modified.push(this.path.join('.'));
+					});
+					return modified;
+				}
+			},
 			$applySchema: true,
 		};
 
@@ -1416,6 +1445,23 @@ function Monoxide() {
 				}
 			});
 		}
+
+		// Break object into component parts and apply the '$clean' marker to arrays and objects
+		Object.defineProperty(doc, '$originalValues', {
+			enumerable: false,
+			value: {},
+		});
+		traverse(doc).forEach(function(v) {
+			// If its an object (or array) glue the `$clean` property to it to detect writes
+			if (_.isObject(v)) {
+				Object.defineProperty(v, '$clean', {
+					enumerable: false,
+					value: true,
+				});
+			} else { // For everything else - stash the original value in this.parent.$originalValues
+				doc.$originalValues[this.path.join('.')] = v;
+			}
+		});
 
 		return doc;
 	};
