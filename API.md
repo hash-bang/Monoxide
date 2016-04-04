@@ -1,3 +1,176 @@
+# $mongoModel
+
+The raw MongoDB-Core model
+
+# $mongooseModel
+
+The raw Mongoose model
+
+# findOneById
+
+Alias of findOneByID
+
+# fire
+
+Execute all hooks for an event
+This function fires all hooks in parallel and expects all to resolve correctly via callback
+NOTE: Hooks are always fired with the callback as the first argument
+
+**Parameters**
+
+-   `name` **string** The name of the hook to invoke
+-   `callback` **function** The callback to invoke on success
+-   `parameters` **...Any** Any other parameters to be passed to each hook
+
+# hasHook
+
+Return whether a model has a specific hook
+If an array is passed the result is whether the model has none or all of the specified hooks
+
+**Parameters**
+
+-   `hooks` **string or array or undefined or ** The hook(s) to query, if undefined or null this returns if any hooks are present
+
+Returns **boolean** Whether the hook(s) is present
+
+# hasVirtuals
+
+Return whether a model has virtuals
+
+Returns **boolean** Whether any virtuals are present
+
+# hook
+
+Attach a hook to a model
+A hook is exactly the same as a eventEmitter.on() event but must return a callback
+Multiple hooks can be attached and all will be called in parallel on certain events such as 'save'
+All hooks must return non-errors to proceed with the operation
+
+**Parameters**
+
+-   `eventName`  
+-   `callback`  
+
+Returns **monoxide.monoxideModel** The chainable monoxideModel
+
+# method
+
+Add a method to a all documents returned from this model
+A method is a user defined function which extends the `monoxide.monoxideDocument` prototype
+
+**Parameters**
+
+-   `name` **string** The function name to add as a static method
+-   `func` **function** The function to add as a static method
+
+Returns **monoxide.monoxideModel** The chainable monoxideModel
+
+# monoxide.monoxideMode.update
+
+Shortcut to invoke update on a given model
+
+**Parameters**
+
+-   `q` **Object** The filter to query by
+-   `qUpdate` **Object** The object to update into the found documents
+-   `function`  (err,result)] Optional callback to call on completion or error
+-   `callback`  
+
+Returns **Object** This chainable object
+
+# monoxide.monoxideModel.create
+
+Shortcut function to create a new record within a collection
+
+**Parameters**
+
+-   `q` **[Object]** Optional document contents
+-   `callback` **[function]** Optional callback
+
+Returns **monoxide.monoxideModel** The chainable monoxideModel
+
+# monoxide.monoxideModel.find
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $count=true in the queryBuilder
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
+
+# monoxide.monoxideModel.find
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
+
+# monoxide.monoxideModel.findOne
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $one=true in the queryBuilder
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
+
+# monoxide.monoxideModel.findOneByID
+
+Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $id=q in the queryBuilder
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
+
+Returns **monoxide.queryBuilder** 
+
+# monoxide.monoxideModel.remove
+
+Shortcut function to remove a number of rows based on a query
+
+**Parameters**
+
+-   `q` **[Object]** Optional filtering object
+-   `callback` **[function]** Optional callback
+
+Returns **monoxide** 
+
+# static
+
+Add a static method to a model
+A static is a user defined function which extends the `monoxide.monoxideModel` prototype
+
+**Parameters**
+
+-   `name` **string** The function name to add as a static method
+-   `func` **function** The function to add as a static method
+
+Returns **monoxide.monoxideModel** The chainable monoxideModel
+
+# virtual
+
+Define a virtual (a handler when a property gets set or read)
+
+**Parameters**
+
+-   `name` **string or Object** The virtual name to apply or the full virtual object (must pretain to the Object.defineProperty descriptor)
+-   `getCallback` **function** The get fnution to call when the virtual value is read
+-   `setCallback` **function** The set function to call when the virtual value changes
+
+Returns **monoxide.monoxideModel** The chainable monoxideModel
+
 # connect
 
 Connect to a Mongo database
@@ -205,7 +378,6 @@ Similar to query() but only return the count of possible results rather than the
 -   `q` **Object** The object to process
     -   `q.$collection` **string** The collection / model to query
     -   `q.filter` **[...Any]** Any other field (not beginning with '$') is treated as filtering criteria
--   `options` **[Object]** Optional options object which can alter behaviour of the function
 -   `callback` **function** (err,count) the callback to call on completion or error
 
 **Examples**
@@ -236,8 +408,7 @@ If you wish to save an existing document see the monoxide.save() function.
 -   `q` **Object** The object to process
     -   `q.$collection` **string** The collection / model to query
     -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
--   `options` **[Object]** Optional options object which can alter behaviour of the function
-    -   `options.refetch` **[boolean]** Return the newly create record (optional, default `true`)
+-   `options.$refetch` **[boolean]** Return the newly create record (optional, default `true`)
 -   `function`  (err,result)] Optional callback to call on completion or error
 -   `callback`  
 
@@ -267,7 +438,7 @@ If `q.$multiple` is false and the document is not found (by `q.$id`) this functi
     -   `q.$collection` **string** The collection / model to query
     -   `q.$id` **[string]** The ID of the document to delete (if you wish to do a remove based on query set q.$query=true)
     -   `q.$multiple` **[boolean]** Allow deletion of multiple records by query
--   `options` **[Object]** Optional options object which can alter behaviour of the function
+    -   `q.$errNotFound` **[boolean]** Raise an error if a specifically requested document is not found (requires $id)
 -   `function`  (err,result)] Optional callback to call on completion or error
 -   `callback`  
 
@@ -338,17 +509,17 @@ Query Mongo directly with the Monoxide query syntax
 
 -   `q` **Object** The object to process
     -   `q.$id` **[string]** If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
-    -   `q.$select` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Field selection criteria to apply
+    -   `q.$select` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Field selection criteria to apply (implies q.$applySchema=false as we will be dealing with a partial schema)
     -   `q.$sort` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Sorting criteria to apply
     -   `q.$populate` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Population criteria to apply
     -   `q.$one` **[boolean]** Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array (optional, default `false`)
     -   `q.$collection` **string** The collection / model to query
     -   `q.$skip` **[number]** Offset return by this number of rows
+    -   `q.$cacheFKs` **[boolean]** Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure (optional, default `true`)
+    -   `q.$applySchema` **[boolean]** Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record (optional, default `true`)
+    -   `q.$errNotFound` **[boolean]** Raise an error if a specifically requested document is not found (requires $id)
     -   `q.filter` **[...Any]** Any other field (not beginning with '$') is treated as filtering criteria
     -   `q.$limit` **[number]** Limit the return to this many rows
--   `options` **[Object]** Optional options object which can alter behaviour of the function
-    -   `options.cacheFKs` **[boolean]** Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure (optional, default `true`)
-    -   `options.applySchema` **[boolean]** Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record (optional, default `true`)
 -   `callback` **function** (err, result) the callback to call on completion or error. If $one is truthy this returns a single monoxide.monoxideDocument, if not it returns an array of them
 
 **Examples**
@@ -373,10 +544,6 @@ Returns **Object** This chainable object
 
 Returns data from a Monoxide model
 
-**Parameters**
-
--   `options` **[Object]** Optional options object which can alter behaviour of the function
-
 Returns **monoxide.queryBuilder** 
 
 # monoxide.save
@@ -390,11 +557,10 @@ If the existing document ID is not found this function will execute the callback
 -   `q` **Object** The object to process
     -   `q.$collection` **string** The collection / model to query
     -   `q.$id` **string** The ID of the document to save
+    -   `q.$refetch` **[boolean]** Whether to refetch the record after update, false returns `null` in the callback (optional, default `true`)
+    -   `q.$errNoUpdate` **[boolean]** Raise an error if no documents were actually updated (optional, default `false`)
+    -   `q.$returnUpdated` **[boolean]** If true returns the updated document, if false it returns the document that was replaced (optional, default `true`)
     -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
--   `options` **[Object]** Optional options object which can alter behaviour of the function
-    -   `options.refetch` **[boolean]** Whether to refetch the record after update, false returns `null` in the callback (optional, default `true`)
-    -   `options.errNoUpdate` **[boolean]** Raise an error if no documents were actually updated (optional, default `false`)
-    -   `options.returnUpdated` **[boolean]** If true returns the updated document, if false it returns the document that was replaced (optional, default `true`)
 -   `function`  (err,result)] Optional callback to call on completion or error
 -   `callback`  
 
@@ -462,11 +628,10 @@ Update multiple documents
 
 -   `q` **Object** The object to query by
     -   `q.$collection` **string** The collection / model to query
+    -   `q.$refetch` **[boolean]** Return the newly updated record (optional, default `true`)
     -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as filter data
 -   `qUpdate` **Object** The object to update into the found documents
     -   `qUpdate.field` **[...Any]** Data to save into every record found by `q`
--   `options` **[Object]** Optional options object which can alter behaviour of the function
-    -   `options.refetch` **[boolean]** Return the newly updated record (optional, default `true`)
 -   `function`  (err,result)] Optional callback to call on completion or error
 -   `callback`  
 
@@ -518,7 +683,7 @@ Extract all FKs in dotted path notation from a Mongoose model
 
 **Parameters**
 
--   `schema` **Object** The schema object to examine (usually connection.base.models[model].schema
+-   `schema` **Object** The schema object to examine (usually monoxide.models[model].$mongooseModel.schema)
 -   `prefix` **string** existing Path prefix to use (internal use only)
 -   `base` **Object** Base object to append flat paths to (internal use only)
 
@@ -574,174 +739,7 @@ app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 
 **Parameters**
 
--   `options`  
-
-# findOneById
-
-Alias of findOneByID
-
-# fire
-
-Execute all hooks for an event
-This function fires all hooks in parallel and expects all to resolve correctly via callback
-NOTE: Hooks are always fired with the callback as the first argument
-
-**Parameters**
-
--   `name` **string** The name of the hook to invoke
--   `callback` **function** The callback to invoke on success
--   `parameters` **...Any** Any other parameters to be passed to each hook
-
-# hasHook
-
-Return whether a model has a specific hook
-If an array is passed the result is whether the model has none or all of the specified hooks
-
-**Parameters**
-
--   `hooks` **string or array or undefined or ** The hook(s) to query, if undefined or null this returns if any hooks are present
-
-Returns **boolean** Whether the hook(s) is present
-
-# hasVirtuals
-
-Return whether a model has virtuals
-
-Returns **boolean** Whether any virtuals are present
-
-# hook
-
-Attach a hook to a model
-A hook is exactly the same as a eventEmitter.on() event but must return a callback
-Multiple hooks can be attached and all will be called in parallel on certain events such as 'save'
-All hooks must return non-errors to proceed with the operation
-
-**Parameters**
-
--   `eventName`  
--   `callback`  
-
-Returns **monoxide.monoxideModel** The chainable monoxideModel
-
-# method
-
-Add a method to a all documents returned from this model
-A method is a user defined function which extends the `monoxide.monoxideDocument` prototype
-
-**Parameters**
-
--   `name` **string** The function name to add as a static method
--   `func` **function** The function to add as a static method
-
-Returns **monoxide.monoxideModel** The chainable monoxideModel
-
-# monoxide.monoxideMode.update
-
-Shortcut to invoke update on a given model
-
-**Parameters**
-
--   `q` **Object** The filter to query by
--   `qUpdate` **Object** The object to update into the found documents
--   `options` **[Object]** Optional options object which can alter behaviour of the function
--   `function`  (err,result)] Optional callback to call on completion or error
--   `callback`  
-
-Returns **Object** This chainable object
-
-# monoxide.monoxideModel.create
-
-Shortcut function to create a new record within a collection
-
-**Parameters**
-
--   `q` **[Object]** Optional document contents
--   `options` **[Object]** Optional options object which can alter behaviour of the function
--   `callback` **[function]** Optional callback
-
-Returns **monoxide.monoxideModel** The chainable monoxideModel
-
-# monoxide.monoxideModel.find
-
-Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
-
-**Parameters**
-
--   `q` **[Object]** Optional filtering object
--   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
-
-Returns **monoxide.queryBuilder** 
-
-# monoxide.monoxideModel.find
-
-Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
-This also sets $count=true in the queryBuilder
-
-**Parameters**
-
--   `q` **[Object]** Optional filtering object
--   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
-
-Returns **monoxide.queryBuilder** 
-
-# monoxide.monoxideModel.findOne
-
-Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
-This also sets $one=true in the queryBuilder
-
-**Parameters**
-
--   `q` **[Object]** Optional filtering object
--   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
-
-Returns **monoxide.queryBuilder** 
-
-# monoxide.monoxideModel.findOneByID
-
-Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
-This also sets $id=q in the queryBuilder
-
-**Parameters**
-
--   `q` **[Object]** Optional filtering object
--   `callback` **[function]** Optional callback. If present this is the equivelent of calling exec()
-
-Returns **monoxide.queryBuilder** 
-
-# monoxide.monoxideModel.remove
-
-Shortcut function to remove a number of rows based on a query
-
-**Parameters**
-
--   `q` **[Object]** Optional filtering object
--   `callback` **[function]** Optional callback
-
-Returns **monoxide** 
-
-# static
-
-Add a static method to a model
-A static is a user defined function which extends the `monoxide.monoxideModel` prototype
-
-**Parameters**
-
--   `name` **string** The function name to add as a static method
--   `func` **function** The function to add as a static method
-
-Returns **monoxide.monoxideModel** The chainable monoxideModel
-
-# virtual
-
-Define a virtual (a handler when a property gets set or read)
-
-**Parameters**
-
--   `name` **string or Object** The virtual name to apply or the full virtual object (must pretain to the Object.defineProperty descriptor)
--   `getCallback` **function** The get fnution to call when the virtual value is read
--   `setCallback` **function** The set function to call when the virtual value changes
-
-Returns **monoxide.monoxideModel** The chainable monoxideModel
+-   `settings`  
 
 # Monoxide
 
@@ -768,7 +766,6 @@ Perform a direct aggregation and return the result
         -   `q.$stages.$indexStats` **[Object]** 
         -   `q.$stages.$unwind` **[Object]** 
     -   `q.$collection` **string** The collection / model to query
--   `options` **[Object]** Optional options object which can alter behaviour of the function
 -   `callback` **function** (err, result) the callback to call on completion or error
 
 Returns **Object** This chainable object
@@ -786,7 +783,6 @@ NOTE: Really this function just wraps the monoxide.query() function to provide f
     -   `q.$id` **[string]** The ID to return
     -   `q.$populate` **[string or Array&lt;string&gt; or Array&lt;object&gt;]** Population criteria to apply
 -   `id` **[string]** The ID to return (alternative syntax)
--   `options` **[Object]** Optional options object which can alter behaviour of the function
 -   `callback` **function** (err, result) the callback to call on completion or error
 
 **Examples**

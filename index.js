@@ -44,8 +44,6 @@ function Monoxide() {
 	*
 	* @param {string} [id] The ID to return (alternative syntax)
 	*
-	* @param {Object} [options] Optional options object which can alter behaviour of the function
-	*
 	* @param {function} callback(err, result) the callback to call on completion or error
 	*
 	* @return {Object} This chainable object
@@ -62,35 +60,30 @@ function Monoxide() {
 	* 	console.log('Widget:', res);
 	* });
 	*/
-	self.get = function(q, id, options, callback) {
+	self.get = function(q, id, callback) {
 		// Deal with arguments {{{
-		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
-			// All ok
-		} else if (_.isObject(q) && _.isFunction(id)) {
+		if (_.isObject(q) && _.isFunction(id)) {
 			callback = id;
-			options = {};
-		} else if (_.isString(q) && _.isString(id) && _.isObject(options) && _.isFunction(callback)) {
+		} else if (_.isString(q) && _.isString(id) && _.isFunction(callback)) {
 			q = {
 				$collection: q,
 				$id: id,
 			};
-		} else if (_.isString(q) && _.isObject(id) && _.isObject(options) && _.isFunction(callback)) { // Probably being passed a Mongoose objectId as the ID
+		} else if (_.isString(q) && _.isObject(id) && _.isFunction(callback)) { // Probably being passed a Mongoose objectId as the ID
 			q = {
 				$collection: q,
 				$id: id.toString(),
 			};
-		} else if (_.isString(q) && _.isObject(id) && _.isFunction(options)) { // Probably being passed a Mongoose objectId as the ID
+		} else if (_.isString(q) && _.isObject(id)) { // Probably being passed a Mongoose objectId as the ID
 			q = {
 				$collection: q,
 				$id: id.toString(),
 			};
-			callback = options;
-		} else if (_.isString(q) && _.isString(id) && _.isFunction(options)) {
+		} else if (_.isString(q) && _.isString(id)) {
 			q = {
 				$collection: q,
 				$id: id,
 			};
-			callback = options;
 		} else if (!_.isFunction(callback)) {
 			throw new Error('Callback parameter must be function');
 		} else {
@@ -99,11 +92,11 @@ function Monoxide() {
 		// }}}
 
 		if (!q.$id) return callback('No $id specified');
-		return self.query(q, options, callback);
+		return self.query(q, callback);
 	};
 	// }}}
 
-	// .query([q], [options], callback) {{{
+	// .query([q], callback) {{{
 	/**
 	* Query Mongo directly with the Monoxide query syntax
 	*
@@ -113,19 +106,17 @@ function Monoxide() {
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {string} [q.$id] If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
-	* @param {(string|string[]|object[])} [q.$select] Field selection criteria to apply (implies options.applySchema=false as we will be dealing with a partial schema)
+	* @param {(string|string[]|object[])} [q.$select] Field selection criteria to apply (implies q.$applySchema=false as we will be dealing with a partial schema)
 	* @param {(string|string[]|object[])} [q.$sort] Sorting criteria to apply
 	* @param {(string|string[]|object[])} [q.$populate] Population criteria to apply
 	* @param {boolean} [q.$one=false] Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
 	* @param {number} [q.$limit] Limit the return to this many rows
 	* @param {number} [q.$skip] Offset return by this number of rows
 	* @param {boolean=false} [q.$count=false] Only count the results - do not return them. If enabled a number of returned with the result
+	* @param {boolean} [q.$cacheFKs=true] Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
+	* @param {boolean} [q.$applySchema=true] Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record
+	* @param {boolean} [q.$errNotFound] Raise an error if a specifically requested document is not found (requires $id)
 	* @param {...*} [q.filter] Any other field (not beginning with '$') is treated as filtering criteria
-	*
-	* @param {Object} [options] Optional options object which can alter behaviour of the function
-	* @param {boolean} [options.cacheFKs=true] Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
-	* @param {boolean} [options.applySchema=true] Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record
-	* @param {boolean} [options.errNotFound] Raise an error if a specifically requested document is not found (requires $id)
 	*
 	* @param {function} callback(err, result) the callback to call on completion or error. If $one is truthy this returns a single monoxide.monoxideDocument, if not it returns an array of them
 	*
@@ -142,36 +133,28 @@ function Monoxide() {
 	* 	console.log('Admin users:', res);
 	* });
 	*/
-	self.query = function MonoxideQuery(q, options, callback) {
+	self.query = function MonoxideQuery(q, callback) {
 		// Deal with arguments {{{
-		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+		if (_.isObject(q) && _.isFunction(callback)) {
 			// All ok
-		} else if (_.isObject(q) && _.isFunction(options)) {
-			callback = options;
-			options = {};
-		} else if (_.isString(q) && _.isObject(options) && _.isFunction(callback)) {
+		} else if (_.isString(q) && _.isFunction(callback)) {
 			q = {$collection: q};
-		} else if (_.isString(q) && _.isFunction(options)) {
-			q = {$collection: q};
-			callback = options;
 		} else if (_.isFunction(q)) {
 			callback = q;
 			q = {};
-			options = {};
 		} else if (!_.isFunction(callback)) {
 			throw new Error('Callback parameter must be function');
 		} else {
 			throw new Error('Unknown function call pattern');
 		}
-		// }}}
 
-		var settings = _.defaults(options || {}, {
-			cacheFKs: true, // Cache model Foreign Keys (used for populates) or compute them every time
-			applySchema: true, // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
-			errNotFound: true, // During $id / $one operations raise an error if the record is not found
+		_.defaults(q || {}, {
+			$cacheFKs: true, // Cache model Foreign Keys (used for populates) or compute them every time
+			$applySchema: true, // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
+			$errNotFound: true, // During $id / $one operations raise an error if the record is not found
 		});
-
-		if (!_.isEmpty(q.$select)) settings.applySchema = false; // Trun off schema application when using $select as we wont be grabbing the full object
+		if (!_.isEmpty(q.$select)) q.$applySchema = false; // Trun off schema application when using $select as we wont be grabbing the full object
+		// }}}
 
 		async()
 			.set('metaFields', [
@@ -184,6 +167,9 @@ function Monoxide() {
 				'$limit', // Limit the return to this many rows
 				'$skip', // Offset return by this number of rows
 				'$count', // Only count the results - do not return them
+				'$cacheFKs', // Cache model Foreign Keys (used for populates) or compute them every time
+				'$applySchema', // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
+				'$errNotFound', // During $id / $one operations raise an error if the record is not found
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -195,9 +181,9 @@ function Monoxide() {
 			// }}}
 			// .modelFKs - Determine foreign keys {{{
 			.then('modelFKs', function(next) {
-				if (settings.cacheFKs && self.models[q.$collection]._knownFKs) return next(null, self.models[q.$collection]._knownFKs); // Already computed
+				if (q.$cacheFKs && self.models[q.$collection]._knownFKs) return next(null, self.models[q.$collection]._knownFKs); // Already computed
 				var FKs = self.utilities.extractFKs(self.models[q.$collection].$mongoModel);
-				if (settings.cacheFKs) self.models[q.$collection]._knownFKs = FKs; // Cache for next time
+				if (q.$cacheFKs) self.models[q.$collection]._knownFKs = FKs; // Cache for next time
 				next(null, FKs);
 			})
 			// }}}
@@ -289,19 +275,19 @@ function Monoxide() {
 
 					if (q.$one) {
 						if (_.isEmpty(res)) {
-							if (settings.errNotFound) {
+							if (q.$errNotFound) {
 								next('Not found');
 							} else {
 								next(null, null);
 							}
 						} else {
-							next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: settings.applySchema}, res));
+							next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema}, res));
 						}
 					} else if (q.$count) {
 						next(null, res);
 					} else {
 						next(null, res.map(function(doc) {
-							return new self.monoxideDocument({$collection: q.$collection, $applySchema: settings.applySchema}, doc.toObject());
+							return new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema}, doc.toObject());
 						}));
 					}
 				});
@@ -322,7 +308,7 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .count([q], [options], callback) {{{
+	// .count([q], callback) {{{
 	/**
 	* Similar to query() but only return the count of possible results rather than the results themselves
 	*
@@ -332,8 +318,6 @@ function Monoxide() {
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {...*} [q.filter] Any other field (not beginning with '$') is treated as filtering criteria
-	*
-	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	*
 	* @param {function} callback(err,count) the callback to call on completion or error
 	*
@@ -351,22 +335,15 @@ function Monoxide() {
 	* 	console.log('Number of Admin Users:', count);
 	* });
 	*/
-	self.count = function MonoxideCount(q, options, callback) {
+	self.count = function MonoxideCount(q, callback) {
 		// Deal with arguments {{{
-		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+		if (_.isObject(q) && _.isFunction(callback)) {
 			// All ok
-		} else if (_.isObject(q) && _.isFunction(options)) {
-			callback = options;
-			options = {};
-		} else if (_.isString(q) && _.isObject(options) && _.isFunction(callback)) {
+		} else if (_.isString(q) && _.isFunction(callback)) {
 			q = {$collection: q};
-		} else if (_.isString(q) && _.isFunction(options)) {
-			q = {$collection: q};
-			callback = options;
 		} else if (!_.isFunction(q)) {
 			callback = q;
 			q = {};
-			options = {};
 		} else if (_.isFunction(callback)) {
 			throw new Error('Callback parameter is mandatory');
 		} else {
@@ -377,11 +354,11 @@ function Monoxide() {
 		// Glue count functionality to query
 		q.$count = true;
 
-		return self.query(q, options, callback);
+		return self.query(q, callback);
 	};
 	// }}}
 
-	// .save(item, [options], [callback]) {{{
+	// .save(item, [callback]) {{{
 	/**
 	* Save an existing Mongo document by its ID
 	* If you wish to create a new document see the monoxide.create() function.
@@ -394,12 +371,10 @@ function Monoxide() {
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {string} q.$id The ID of the document to save
+	* @param {boolean} [q.$refetch=true] Whether to refetch the record after update, false returns `null` in the callback
+	* @param {boolean} [q.$errNoUpdate=false] Raise an error if no documents were actually updated
+	* @param {boolean} [q.$returnUpdated=true] If true returns the updated document, if false it returns the document that was replaced
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
-	*
-	* @param {Object} [options] Optional options object which can alter behaviour of the function
-	* @param {boolean} [options.refetch=true] Whether to refetch the record after update, false returns `null` in the callback
-	* @param {boolean} [options.errNoUpdate=false] Raise an error if no documents were actually updated
-	* @param {boolean} [options.returnUpdated=true] If true returns the updated document, if false it returns the document that was replaced
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -415,35 +390,31 @@ function Monoxide() {
 	* 	console.log('Saved widget is now', widget);
 	* });
 	*/
-	self.save = function MonoxideQuery(q, options, callback) {
+	self.save = function MonoxideQuery(q, callback) {
 		var self = this;
 		// Deal with arguments {{{
-		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+		if (_.isObject(q) && _.isFunction(callback)) {
 			// All ok
-		} else if (_.isObject(q) && _.isFunction(options)) {
-			callback = options;
-			options = {};
-		} else if (!_.isFunction(q)) {
-			callback = q;
-			q = {};
-			options = {};
 		} else if (_.isFunction(callback)) {
 			throw new Error('Callback parameter is mandatory');
 		} else {
 			throw new Error('Unknown function call pattern');
 		}
-		// }}}
 
-		var settings = _.defaults(options || {}, {
-			refetch: true, // Fetch and return the record when updated (false returns null)
-			errNoUpdate: false,
-			returnUpdated: true,
+		_.defaults(q || {}, {
+			$refetch: true, // Fetch and return the record when updated (false returns null)
+			$errNoUpdate: false,
+			$returnUpdated: true,
 		});
+		// }}}
 
 		async()
 			.set('metaFields', [
 				'$id', // Mandatory field to specify while record to update
 				'$collection', // Collection to query to find the original record
+				'$refetch',
+				'$errNoUpdate',
+				'$returnUpdated',
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -468,7 +439,7 @@ function Monoxide() {
 
 				// Nothing to patch {{{
 				if (_.isEmpty(patch)) {
-					if (settings.errNoUpdate) {
+					if (q.$errNoUpdate) {
 						return next('Nothing to update');
 					} else {
 						return next(null, this.oldRec);
@@ -479,12 +450,12 @@ function Monoxide() {
 				self.models[q.$collection].$mongoModel.findOneAndUpdate(
 					{ _id: self.utilities.objectID(q.$id) }, // What we are writing to
 					{ $set: patch }, // What we are saving
-					{ returnOriginal: !settings.returnUpdated }, // Options passed to Mongo
+					{ returnOriginal: !q.$returnUpdated }, // Options passed to Mongo
 					function(err, res) {
 						if (err) return next(err);
 						// This would only really happen if the record has gone away since we started updating
-						if (settings.errNoUpdate && !res.nModified) return next('No documents updated');
-						if (!settings.refetch) return next(null, null);
+						if (q.$errNoUpdate && !res.nModified) return next('No documents updated');
+						if (!q.$refetch) return next(null, null);
 						next(null, new self.monoxideDocument({$collection: q.$collection}, res.value));
 					}
 				);
@@ -507,7 +478,7 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .update(q, [options], [callback]) {{{
+	// .update(q, [callback]) {{{
 	/**
 	* Update multiple documents
 	*
@@ -516,13 +487,11 @@ function Monoxide() {
 	*
 	* @param {Object} q The object to query by
 	* @param {string} q.$collection The collection / model to query
+	* @param {boolean} [q.$refetch=true] Return the newly updated record
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as filter data
 	*
 	* @param {Object} qUpdate The object to update into the found documents
 	* @param {...*} [qUpdate.field] Data to save into every record found by `q`
-	*
-	* @param {Object} [options] Optional options object which can alter behaviour of the function
-	* @param {boolean} [options.refetch=true] Return the newly updated record
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -535,36 +504,28 @@ function Monoxide() {
 	* 	status: 'active',
 	* });
 	*/
-	self.update = function MonoxideUpdate(q, qUpdate, options, callback) {
+	self.update = function MonoxideUpdate(q, qUpdate, callback) {
 		var self = this;
 		// Deal with arguments {{{
-		if (_.isObject(q) && _.isObject(qUpdate) && _.isObject(options) && _.isFunction(callback)) {
+		if (_.isObject(q) && _.isObject(qUpdate) && _.isFunction(callback)) {
 			// All ok
-		} else if (_.isString(q) && _.isObject(qUpdate) && _.isObject(options) && _.isFunction(options)) {
+		} else if (_.isString(q) && _.isObject(qUpdate) && _.isFunction(callback)) {
 			q = {$collection: q};
-			callback = options;
-			options = {};
-		} else if (_.isObject(q) && _.isObject(qUpdate) && _.isFunction(options)) {
-			callback = options;
-			options = {};
-		} else if (_.isString(q) && _.isObject(qUpdate) && _.isFunction(options)) {
-			q = {$collection: q};
-			callback = options;
-			options = {};
 		} else if (_.isFunction(callback)) {
 			throw new Error('Callback parameter is mandatory');
 		} else {
 			throw new Error('Unknown function call pattern');
 		}
-		// }}}
 
-		var settings = _.defaults(options || {}, {
-			refetch: true, // Fetch and return the record when updated (false returns null)
+		_.defaults(q || {}, {
+			$refetch: true, // Fetch and return the record when updated (false returns null)
 		});
+		// }}}
 
 		async()
 			.set('metaFields', [
 				'$collection', // Collection to query to find the original record
+				'$refetch',
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -596,7 +557,7 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .create(item, [options], [callback]) {{{
+	// .create(item, [callback]) {{{
 	/**
 	* Create a new Mongo document and return it
 	* If you wish to save an existing document see the monoxide.save() function.
@@ -605,10 +566,8 @@ function Monoxide() {
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
+	* @param {boolean} [options.$refetch=true] Return the newly create record
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
-	*
-	* @param {Object} [options] Optional options object which can alter behaviour of the function
-	* @param {boolean} [options.refetch=true] Return the newly create record
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -623,32 +582,26 @@ function Monoxide() {
 	* 	console.log('Created widget is', widget);
 	* });
 	*/
-	self.create = function MonoxideQuery(q, options, callback) {
+	self.create = function MonoxideQuery(q, callback) {
 		var self = this;
 		// Deal with arguments {{{
-		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+		if (_.isObject(q) && _.isFunction(callback)) {
 			// All ok
-		} else if (_.isObject(q) && _.isFunction(options)) {
-			callback = options;
-			options = {};
-		} else if (!_.isFunction(q)) {
-			callback = q;
-			q = {};
-			options = {};
 		} else if (_.isFunction(callback)) {
 			throw new Error('Callback parameter is mandatory');
 		} else {
 			throw new Error('Unknown function call pattern');
 		}
-		// }}}
 
-		var settings = _.defaults(options || {}, {
-			refetch: true, // Fetch and return the record when created (false returns null)
+		_.defaults(q || {}, {
+			$refetch: true, // Fetch and return the record when created (false returns null)
 		});
+		// }}}
 
 		async()
 			.set('metaFields', [
 				'$collection', // Collection to query to find the original record
+				'$refetch',
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -674,7 +627,7 @@ function Monoxide() {
 			// }}}
 			// Refetch record {{{
 			.then('newRec', function(next) {
-				if (!settings.refetch) return next(null, null);
+				if (!q.$refetch) return next(null, null);
 				self.query({
 					$collection: q.$collection,
 					$id: this.rawResponse.insertedId,
@@ -693,7 +646,7 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .delete(item, [options], [callback]) {{{
+	// .delete(item, [callback]) {{{
 	/**
 	* Delete a Mongo document by its ID
 	* This function has two behaviours - it will, by default, only delete a single record by its ID. If `q.$multiple` is true it will delete by query.
@@ -705,9 +658,7 @@ function Monoxide() {
 	* @param {string} q.$collection The collection / model to query
 	* @param {string} [q.$id] The ID of the document to delete (if you wish to do a remove based on query set q.$query=true)
 	* @param {boolean} [q.$multiple] Allow deletion of multiple records by query
-	*
-	* @param {Object} [options] Optional options object which can alter behaviour of the function
-	* @param {boolean} [options.errNotFound] Raise an error if a specifically requested document is not found (requires $id)
+	* @param {boolean} [q.$errNotFound] Raise an error if a specifically requested document is not found (requires $id)
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -719,34 +670,29 @@ function Monoxide() {
 	* 	console.log('Saved widget:', res);
 	* });
 	*/
-	self.delete = function MonoxideQuery(q, options, callback) {
+	self.delete = function MonoxideQuery(q, callback) {
 		var self = this;
 		// Deal with arguments {{{
-		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+		if (_.isObject(q) && _.isFunction(callback)) {
 			// All ok
-		} else if (_.isObject(q) && _.isFunction(options)) {
-			callback = options;
-			options = {};
-		} else if (!_.isFunction(q)) {
-			callback = q;
-			q = {};
-			options = {};
-		} else if (_.isFunction(callback)) {
+		} else if (!_.isFunction(callback)) {
 			throw new Error('Callback parameter is mandatory');
 		} else {
 			throw new Error('Unknown function call pattern');
 		}
-		// }}}
 
-		var settings = _.defaults(options || {}, {
-			errNotFound: true, // During raise an error if $id is specified but not found to delete
+		_.defaults(q || {}, {
+			$errNotFound: true, // During raise an error if $id is specified but not found to delete
 		});
+
+		// }}}
 
 		async()
 			.set('metaFields', [
 				'$id', // Mandatory field to specify while record to update
 				'$collection', // Collection to query to find the original record
 				'$multiple', // Whether to allow deletion by query
+				'$errNotFound',
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -772,7 +718,7 @@ function Monoxide() {
 						// Now actually delete the item
 						self.models[q.$collection].$mongoModel.deleteOne({_id: self.utilities.objectID(q.$id)}, function(err, res) {
 							if (err) return next(err);
-							if (settings.errNotFound && !res.result.ok) return next('Not found');
+							if (q.$errNotFound && !res.result.ok) return next('Not found');
 							// Delete was sucessful - call event then move next
 							self.models[q.$collection].fire('postDelete', next, {_id: q.$id});
 						});
@@ -792,21 +738,16 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .queryBuilder([options]) - query builder {{{
+	// .queryBuilder() - query builder {{{
 	/**
 	* Returns data from a Monoxide model
 	* @class
 	* @name monoxide.queryBuilder
-	* @param {Object} [options] Optional options object which can alter behaviour of the function
 	* @return {monoxide.queryBuilder}
 	*/
-	self.queryBuilder = function monoxideQueryBuilder(options) {
-		var settings = _.defaults(options || {}, {
-		});
-
+	self.queryBuilder = function monoxideQueryBuilder() {
 		var qb = this;
 		qb.query = {};
-		qb.settings = settings;
 
 		// qb.find(q, cb) {{{
 		/**
@@ -958,7 +899,7 @@ function Monoxide() {
 		qb.exec = function(callback) {
 			if (!_.isFunction(callback)) throw new Error('Callback to exec() is not a function');
 
-			return self.query(qb.query, qb.settings, callback);
+			return self.query(qb.query, callback);
 		};
 		// }}}
 
@@ -970,19 +911,16 @@ function Monoxide() {
 	/**
 	* @class
 	*/
-	self.monoxideModel = function monoxideModel(options) {
+	self.monoxideModel = function monoxideModel(settings) {
 		// Deal with arguments {{{
-		if (_.isString(options)) {
-			options = {$collection: options};
-		} else if (_.isObject(options)) {
+		if (_.isString(settings)) {
+			settings = {$collection: settings};
+		} else if (_.isObject(settings)) {
 			// All ok
 		} else {
 			throw new Error('Unknown function call pattern');
 		}
 		// }}}
-
-		var settings = _.defaults(options || {}, {
-		});
 
 		var mm = this;
 
@@ -1108,23 +1046,16 @@ function Monoxide() {
 		* @see monoxide.create
 		*
 		* @param {Object} [q] Optional document contents
-		* @param {Object} [options] Optional options object which can alter behaviour of the function
 		* @param {function} [callback] Optional callback
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
-		mm.create = function(q, options, callback) {
+		mm.create = function(q, callback) {
 			// Deal with arguments {{{
-			if (_.isObject(q) && _.isObject(options)) {
-				// All ok
-			} else if (_.isObject(q) && _.isFunction(options)) {
-				callback = options;
-				options = {};
-			} else if (_.isObject(q)) {
+			if (_.isObject(q)) {
 				// Also ok
 			} else if (_.isFunction(q)) {
 				callback = q;
 				q = {};
-				options = {};
 			} else {
 				throw new Error('Unknown function call pattern');
 			}
@@ -1132,7 +1063,7 @@ function Monoxide() {
 			q.$collection = mm.$collection;
 			// }}}
 
-			self.create(q, options, callback);
+			self.create(q, callback);
 			return mm;
 		};
 
@@ -1143,20 +1074,13 @@ function Monoxide() {
 		* @see monoxide.update
 		* @param {Object} q The filter to query by
 		* @param {Object} qUpdate The object to update into the found documents
-		* @param {Object} [options] Optional options object which can alter behaviour of the function
 		* @param {function} [callback(err,result)] Optional callback to call on completion or error
 		* @return {Object} This chainable object
 		*/
-		mm.update = function(q, qUpdate, options, callback) {
+		mm.update = function(q, qUpdate, callback) {
 			// Deal with arguments {{{
-			if (_.isObject(q) && _.isObject(qUpdate) && _.isObject(options)) {
+			if (_.isObject(q) && _.isObject(qUpdate)) {
 				// All ok
-			} else if (_.isObject(q) && _.isObject(qUpdate) && _.isFunction(options)) {
-				callback = options;
-				options = {};
-			} else if (_.isObject(q) && _.isObject(qUpdate)) {
-				callback = null;
-				options = {};
 			} else {
 				throw new Error('Unknown function call pattern');
 			}
@@ -1164,7 +1088,7 @@ function Monoxide() {
 			q.$collection = mm.$collection;
 			// }}}
 
-			self.update(q, qUpdate, options, callback);
+			self.update(q, qUpdate, callback);
 			return mm;
 		};
 
@@ -1565,7 +1489,7 @@ function Monoxide() {
 	};
 	// }}}
 
-	// .aggregate([q], [options], callback) {{{
+	// .aggregate([q], callback) {{{
 	/**
 	* Perform a direct aggregation and return the result
 	*
@@ -1590,37 +1514,22 @@ function Monoxide() {
 	* @param {Object} [q.$stages.$out]
 	* @param {Object} [q.$stages.$indexStats]
 	*
-	* @param {Object} [options] Optional options object which can alter behaviour of the function
-	*
 	* @param {function} callback(err, result) the callback to call on completion or error
 	*
 	* @return {Object} This chainable object
 	*/
-	self.aggregate = function MonoxideAggregate(q, options, callback) {
+	self.aggregate = function MonoxideAggregate(q, callback) {
 		// Deal with arguments {{{
-		if (_.isObject(q) && _.isObject(options) && _.isFunction(callback)) {
+		if (_.isObject(q) && _.isFunction(callback)) {
 			// All ok
-		} else if (_.isObject(q) && _.isFunction(options)) {
-			callback = options;
-			options = {};
-		} else if (_.isString(q) && _.isObject(options) && _.isFunction(callback)) {
+		} else if (_.isString(q) && _.isFunction(callback)) {
 			q = {$collection: q};
-		} else if (_.isString(q) && _.isFunction(options)) {
-			q = {$collection: q};
-			callback = options;
-		} else if (_.isFunction(q)) {
-			callback = q;
-			q = {};
-			options = {};
 		} else if (!_.isFunction(callback)) {
 			throw new Error('Callback parameter must be function');
 		} else {
 			throw new Error('Unknown function call pattern');
 		}
 		// }}}
-
-		var settings = _.defaults(options || {}, {
-		});
 
 		async()
 			// Sanity checks {{{
