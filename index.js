@@ -373,6 +373,7 @@ function Monoxide() {
 	* @param {string} q.$id The ID of the document to save
 	* @param {boolean} [q.$refetch=true] Whether to refetch the record after update, false returns `null` in the callback
 	* @param {boolean} [q.$errNoUpdate=false] Raise an error if no documents were actually updated
+	* @param {boolean} [q.$errBlankUpdate=false] Raise an error if no fields are updated
 	* @param {boolean} [q.$returnUpdated=true] If true returns the updated document, if false it returns the document that was replaced
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
 	*
@@ -404,6 +405,7 @@ function Monoxide() {
 		_.defaults(q || {}, {
 			$refetch: true, // Fetch and return the record when updated (false returns null)
 			$errNoUpdate: false,
+			$errBlankUpdate: false,
 			$returnUpdated: true,
 		});
 		// }}}
@@ -411,9 +413,11 @@ function Monoxide() {
 		async()
 			.set('metaFields', [
 				'$id', // Mandatory field to specify while record to update
+				'_id', // We also need to clip this from the output (as we cant write to it), but we need to pass it to hooks
 				'$collection', // Collection to query to find the original record
 				'$refetch',
 				'$errNoUpdate',
+				'$errBlankUpdate',
 				'$returnUpdated',
 			])
 			// Sanity checks {{{
@@ -422,6 +426,7 @@ function Monoxide() {
 				if (!q.$collection) return next('$collection must be specified for save operation');
 				if (!q.$id) return next('ID not specified');
 				if (!self.models[q.$collection]) return next('Model not initalized');
+				q._id = q.$id;
 				next();
 			})
 			// }}}
@@ -431,21 +436,12 @@ function Monoxide() {
 			})
 			// }}}
 			// Peform the update {{{
-			.then('oldRec', function(next) { // Retrieve the original record
-				self.query({$collection: q.$collection, $id: q.$id}, next);
-			})
 			.then('newRec', function(next) {
-				var patch = self.utilities.diff(this.oldRec.toObject(), _.omit(q, this.metaFields));
-
-				// Nothing to patch {{{
+				var patch = _.omit(q, this.metaFields);
 				if (_.isEmpty(patch)) {
-					if (q.$errNoUpdate) {
-						return next('Nothing to update');
-					} else {
-						return next(null, this.oldRec);
-					}
+					if (q.$errBlankUpdate) return next('Nothing to update');
+					return next(null, q);
 				}
-				// }}}
 
 				self.models[q.$collection].$mongoModel.findOneAndUpdate(
 					{ _id: self.utilities.objectID(q.$id) }, // What we are writing to
@@ -454,7 +450,7 @@ function Monoxide() {
 					function(err, res) {
 						if (err) return next(err);
 						// This would only really happen if the record has gone away since we started updating
-						if (q.$errNoUpdate && !res.nModified) return next('No documents updated');
+						if (q.$errNoUpdate && !res.ok) return next('No documents updated');
 						if (!q.$refetch) return next(null, null);
 						next(null, new self.monoxideDocument({$collection: q.$collection}, res.value));
 					}
@@ -1266,19 +1262,24 @@ function Monoxide() {
 
 		var proto = {
 			$MONOXIDE: true,
+			$collection: setup.$collection,
 			save: function(callback) {
 				var doc = this;
-				var fields = {
+				var patch = {
 					$collection: doc.$collection,
 					$id: doc._id,
+					$errNoUpdate: true, // Throw an error if we fail to update (i.e. record removed before save)
+					$returnUpdated: true,
 				};
-				_.extend(fields, _.pickBy(doc, function(v, k) {
-					// FIXME: Selectively pick only changed fields
-					if (!doc.hasOwnProperty(k)) return false;
-					return true;
-				}));
+				doc.isModified().forEach(function(path) {
+					patch[path] = _.get(doc, path);
+				});
 
-				self.save(fields, callback);
+				self.save(patch, function(err, newRec) {
+					doc = newRec;
+					callback(err, newRec);
+				});
+
 				return doc;
 			},
 			remove: function(callback) {
