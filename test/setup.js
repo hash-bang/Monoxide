@@ -106,6 +106,7 @@ module.exports = {
 		// Groups {{{
 		var Groups = monoxide.schema('groups', {
 			name: String,
+			users: [{type: 'pointer', ref: 'users'}],
 			preferences: {
 				defaults: {
 					items: [{type: 'pointer', ref: 'widgets'}]
@@ -124,6 +125,7 @@ module.exports = {
 			// Users {{{
 			users: [
 				{
+					_ref: 'users.joe',
 					name: 'Joe Random',
 					role: 'user',
 					favourite: 'widget-crash',
@@ -145,6 +147,7 @@ module.exports = {
 					],
 				},
 				{
+					_ref: 'users.jane',
 					name: 'Jane Quark',
 					role: 'user',
 					favourite: 'widget-bang',
@@ -189,6 +192,7 @@ module.exports = {
 			groups: [
 				{
 					name: 'Group Foo',
+					users: ['users.joe'],
 					preferences: {
 						defaults: {
 							items: ['widget-whollop', 'widget-bang'],
@@ -197,6 +201,7 @@ module.exports = {
 				},
 				{
 					name: 'Group Bar',
+					users: ['users.jane'],
 					preferences: {
 						defaults: {
 							items: ['widget-crash', 'widget-bang'],
@@ -205,6 +210,7 @@ module.exports = {
 				},
 				{
 					name: 'Group Baz',
+					users: ['users.joe', 'users.jane'],
 					preferences: {
 						defaults: {
 							items: ['widget-bang'],

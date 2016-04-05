@@ -1329,6 +1329,86 @@ function Monoxide() {
 					return modified;
 				}
 			},
+			populate: function(populations, callback) {
+				var doc = this;
+				var errs = [];
+				if (!_.isArray(populations)) populations = [populations];
+				var failedPopulations = [];
+
+				var docFinder = async(); // Async object which will find all the populations
+				// Construct the docFinder async object {{{
+				populations.forEach(function(population) {
+					if (_.isString(population)) {
+						population = {
+							path: population,
+						};
+					}
+
+					console.log('APPLY POPULATION', population);
+
+					var examineStack = [{ref: doc, path: ''}];
+
+					// Walk down each path until we reach the leaf nodes. examineStack should become an array of all leafs that need populating with `population` {{{
+					var segments = population.path.split('.');
+					segments.forEach(function(pathSegment, pathSegmentIndex) {
+						examineStack.forEach(function(esDoc, esDocIndex) {
+							if (esDoc === false) { // Skip this subdoc
+								return;
+							} else if (_.isUndefined(esDoc.ref[pathSegment])) {
+								errs.push('Cannot traverse into path: ' + esDoc.path.substr(1) + ' for doc ' + doc.$collection + '#' + doc._id);
+								examineStack[esDocIndex] = false;
+							} else if (_.isArray(esDoc.ref[pathSegment])) { // Found an array - remove this doc and append each document we need to examine at the next stage
+								esDoc.ref[pathSegment].forEach(function(d,i) {
+									// Do this in a forEach to break appart the weird DocumentArray structure we get back from Mongoose
+									examineStack.push({ref: d, path: esDoc.path + '.' + pathSegment + '.' + i})
+								});
+								examineStack[esDocIndex] = false;
+							} else if (esDoc.ref[pathSegment]) { // Traverse into object - replace this reference with the new pointer
+								examineStack[esDocIndex] = {ref: esDoc.ref[pathSegment], path: esDoc.path + '.' + pathSegment};
+							}
+						});
+					});
+					// }}}
+
+					// Replace all OIDs with lookups {{{
+					examineStack
+						.filter(function(esDoc) { return esDoc !== false })
+						.forEach(function(esDoc) {
+							esDoc.path = esDoc.path.substr(1);
+							if (!population.ref) {
+								population.ref = _.get(model, ['$mongooseModel', 'schema', 'subpaths', esDoc.path, 'options', 'ref']);
+								if (!population.ref) {
+									errs.push('Cannot determine collection to use for path ' + esDoc.path + '! Specify this is in model with {ref: <collection>}');
+									return;
+								}
+							}
+
+							docFinder.defer(function(next) {
+								self.query({
+									$collection: population.ref,
+									$id: esDoc.ref.toString(),
+								}, function(err, res) {
+									if (err) return next(err);
+									console.log('POPULATE!', population, 'WITH', esDoc);
+									_.set(doc, esDoc.path, res);
+									next();
+								});
+							});
+						});
+					// }}}
+				});
+				// }}}
+
+				// Run all fetchers and pass control to the callback {{{
+				docFinder
+					.await()
+					.end(function(err) {
+						console.log('FINISH WITH', doc);
+						console.log('ERRS', errs);
+						callback(err);
+					});
+				// }}}
+			},
 			$applySchema: true,
 		};
 
