@@ -1112,6 +1112,8 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder}
 		*/
 		mm.findOne = function(q, callback) {
+			if (_.isString(q)) throw new Error('Refusing to allow findOne(String). Use findOneByID if you wish to specify only the ID');
+
 			return (new self.queryBuilder())
 				.find({
 					$collection: mm.$collection, // Set the collection from the model

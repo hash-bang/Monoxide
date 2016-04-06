@@ -50,12 +50,13 @@ describe('Monoxide - get', function() {
 
 	it('should get() all users by ID (strings syntax)', function(finish) {
 		async()
-			.forEach('users', function(next, user) {
+			.forEach(users, function(next, user) {
 				monoxide.get('users', user._id, function(err, res) {
 					expect(err).to.be.not.ok;
 					expect(res).to.be.an.object;
 
 					expect(user._id).to.deep.equal(res._id);
+					next();
 				});
 			})
 			.end(finish);
@@ -63,7 +64,7 @@ describe('Monoxide - get', function() {
 
 	it('should get() all users by ID (object syntax)', function(finish) {
 		async()
-			.forEach('users', function(next, user) {
+			.forEach(users, function(next, user) {
 				monoxide.get({
 					$collection: 'users',
 					$id: user._id
@@ -72,6 +73,35 @@ describe('Monoxide - get', function() {
 					expect(res).to.be.an.object;
 
 					expect(user._id).to.deep.equal(res._id);
+					next();
+				});
+			})
+			.end(finish);
+	});
+
+	it('should get() all users by ID (via model#findOne)', function(finish) {
+		async()
+			.forEach(users, function(next, user) {
+				monoxide.models.users.findOne({_id: user._id}, function(err, res) {
+					expect(err).to.be.not.ok;
+					expect(res).to.be.an.object;
+
+					expect(user._id).to.deep.equal(res._id);
+					next();
+				});
+			})
+			.end(finish);
+	});
+
+	it('should get() all users by ID (via model#findOneByID)', function(finish) {
+		async()
+			.forEach(users, function(next, user) {
+				monoxide.models.users.findOneByID(user._id, function(err, res) {
+					expect(err).to.be.not.ok;
+					expect(res).to.be.an.object;
+
+					expect(user._id).to.deep.equal(res._id);
+					next();
 				});
 			})
 			.end(finish);
@@ -79,12 +109,13 @@ describe('Monoxide - get', function() {
 
 	it('should get() all widgets by ID', function(finish) {
 		async()
-			.forEach('widgets', function(next, widget) {
+			.forEach(widgets, function(next, widget) {
 				monoxide.get('widgets', widget._id, function(err, res) {
 					expect(err).to.be.not.ok;
 					expect(res).to.be.an.object;
 
 					expect(widget._id).to.deep.equal(res._id);
+					next();
 				});
 			})
 			.end(finish);
@@ -92,12 +123,13 @@ describe('Monoxide - get', function() {
 
 	it('should get() all groups by ID', function(finish) {
 		async()
-			.forEach('groups', function(next, group) {
-				monoxide.get('groups', widget._id, function(err, res) {
+			.forEach(groups, function(next, group) {
+				monoxide.get('groups', group._id, function(err, res) {
 					expect(err).to.be.not.ok;
 					expect(res).to.be.an.object;
 
-					expect(groups._id).to.deep.equal(res._id);
+					expect(res._id).to.deep.equal(res._id);
+					next();
 				});
 			})
 			.end(finish);
