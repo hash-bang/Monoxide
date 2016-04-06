@@ -748,7 +748,7 @@ function Monoxide() {
 				if (!q.$refetch) return next(null, null);
 				self.query({
 					$collection: q.$collection,
-					$id: this.rawResponse.insertedId,
+					$id: this.rawResponse.insertedId.toString(),
 				}, function(err, res) {
 					if (err == 'Not found') return next('Document creation failed');
 					next(err, res);
@@ -1447,7 +1447,7 @@ function Monoxide() {
 					var oidLeaf = _.get(doc, node.docPath);
 					if (_.isUndefined(oidLeaf)) return; // Ignore undefined
 					if (!self.utilities.isObjectID(oidLeaf)) {
-						_.set(doc, node.docPath, self.utilities.objectID(oidLeaf));
+						_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf));
 					}
 				});
 
