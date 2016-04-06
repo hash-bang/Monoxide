@@ -281,16 +281,126 @@ function Monoxide() {
 								next(null, null);
 							}
 						} else {
-							next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema}, res));
+							next(null, res);
 						}
 					} else if (q.$count) {
 						next(null, res);
 					} else {
-						next(null, res.map(function(doc) {
-							return new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema}, doc.toObject());
-						}));
+						next(null, res);
 					}
 				});
+			})
+			// }}}
+			// Exhaustively populate everything {{{
+			.then(function(next) {
+				return next(); // FIXME: Skip
+				if (q.$count || !q.$populate) return next(); // Nothing to do
+
+				console.log('BEGIN', require('util').inspect(this.result, {depth: null, colors: true}));
+				console.log();
+				console.log();
+				console.log();
+
+				var result = this.result;
+
+				var populateQueue = q.$populate.map(function(path) {
+					return {path: path, populated: 0, ran: false};
+				});
+
+				var tryPopulate = function() {
+					console.log('CYCLE START!', populateQueue);
+					var populatedThisCycle = 0;
+					async()
+						.limit(1)
+						.forEach(populateQueue.filter(function(pq) { return !pq.ran }), function(nextPath, population) {
+							async()
+								.limit(1)
+								.forEach(_.castArray(result), function(nextDoc, doc) {
+									/*
+									var buildStep = doc;
+									var nextIsArray = false; // Indicates if the next step should refer to all items within an array
+									population.path.split('.').forEach(function(segment) {
+										console.log('TRY TRAVERSE', segment);
+										if (doc[segment]) {
+											console.log(' - SEGMENT EXISTS AS KEY');
+											buildStep = doc[segment];
+										} else if (_.isArray(doc[segment])) {
+											console.log(' - SEGMENT EXISTS AS ARRAY');
+											buildStep = doc[segment];
+											nextIsArray = true;
+										}
+									});
+									*/
+
+									console.log('WILL POPULATE', population.path);
+									doc.populate(population.path, function(err, res) {
+										if (err) return nextPath(err);
+										console.log('CHK POPULATE', population.path, self.utilities.isPopulated(res, population.path));
+
+										if (self.utilities.isPopulated(res, population.path)) {
+											population.ran = true;
+											population.populated++;
+											populatedThisCycle++;
+										} else {
+											console.log('FAILED POPULATE OF', population.path);
+										}
+										nextDoc();
+									});
+								})
+								.end(nextPath);
+						})
+						.end(function(err) {
+							if (err) return next(err);
+							if (populateQueue.every(function(pq) { return pq.ran })) { // Everything has run
+								next();
+							} else { // Still need to run more populates
+								console.log('----------- NEED NEW CYCLE --------------');
+								console.log();
+								console.log();
+								console.log('CYCLE END', require('util').inspect(result, {depth: null, colors: true}));
+								console.log();
+								console.log('FINAL POPQUEUE IS', populateQueue);
+								console.log();
+								console.log();
+								if (!populatedThisCycle) return next(
+									'Unable to populate remaining paths: ' + 
+									populateQueue.filter(function(pq) { return !pq.ran }).map(function(pq) { return pq.path }).join(', ') +
+									'. Managed to populate: ' + JSON.stringify(populateQueue)
+								);
+								// Queue up in event loop for another pass
+								setTimeout(tryPopulate);
+							}
+						});
+				};
+
+				tryPopulate();
+			})
+			// }}}
+			// Convert Mongoose Documents into Monoxide Documents {{{
+			.then('result', function(next) {
+				if (q.$one) {
+					next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema}, this.result));
+				} else if (q.$count) {
+					next(null, this.result);
+				} else {
+					next(null, this.result.map(function(doc) {
+						return new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema}, doc.toObject());
+					}));
+				}
+			})
+			// }}}
+			// Apply populates {{{
+			.then(function(next) {
+				if (!q.$populate || !q.$populate.length || q.$count) return next(); // Skip
+				if (q.$one) {
+					this.result.populate(q.$populate, next);
+				} else {
+					async()
+						.forEach(this.result, function(next, doc) {
+							doc.populate(q.$populate, next);
+						})
+						.end(next);
+				}
 			})
 			// }}}
 			// End {{{
@@ -1344,30 +1454,34 @@ function Monoxide() {
 						};
 					}
 
-					console.log('APPLY POPULATION', population);
-
 					var examineStack = [{ref: doc, path: ''}];
 
 					// Walk down each path until we reach the leaf nodes. examineStack should become an array of all leafs that need populating with `population` {{{
 					var segments = population.path.split('.');
-					segments.forEach(function(pathSegment, pathSegmentIndex) {
-						examineStack.forEach(function(esDoc, esDocIndex) {
+					if (!segments.every(function(pathSegment, pathSegmentIndex) {
+						return examineStack.every(function(esDoc, esDocIndex) {
 							if (esDoc === false) { // Skip this subdoc
-								return;
+								return true;
 							} else if (_.isUndefined(esDoc.ref[pathSegment])) {
 								errs.push('Cannot traverse into path: ' + esDoc.path.substr(1) + ' for doc ' + doc.$collection + '#' + doc._id);
 								examineStack[esDocIndex] = false;
+								return false;
 							} else if (_.isArray(esDoc.ref[pathSegment])) { // Found an array - remove this doc and append each document we need to examine at the next stage
 								esDoc.ref[pathSegment].forEach(function(d,i) {
 									// Do this in a forEach to break appart the weird DocumentArray structure we get back from Mongoose
 									examineStack.push({ref: d, path: esDoc.path + '.' + pathSegment + '.' + i})
 								});
 								examineStack[esDocIndex] = false;
+								return true;
 							} else if (esDoc.ref[pathSegment]) { // Traverse into object - replace this reference with the new pointer
 								examineStack[esDocIndex] = {ref: esDoc.ref[pathSegment], path: esDoc.path + '.' + pathSegment};
+								return true;
 							}
 						});
-					});
+					})) {
+						failedPopulations.push(population);
+						return false;
+					}
 					// }}}
 
 					// Replace all OIDs with lookups {{{
@@ -1379,7 +1493,7 @@ function Monoxide() {
 								population.ref = _.get(model, ['$mongooseModel', 'schema', 'subpaths', esDoc.path, 'options', 'ref']);
 								if (!population.ref) {
 									errs.push('Cannot determine collection to use for path ' + esDoc.path + '! Specify this is in model with {ref: <collection>}');
-									return;
+									return false;
 								}
 							}
 
