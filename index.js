@@ -228,10 +228,21 @@ function Monoxide() {
 			// Apply various simple criteria {{{
 			.then(function(next) {
 				if (q.$count) return next(); // No point doing anything else if just counting
-				if (q.$populate) this.query.populate(q.$populate);
 				if (q.$limit) this.query.limit(q.$limit);
 				if (q.$skip) this.query.skip(q.$skip);
 
+				// q.$populate {{{
+				if (q.$populate) {
+					if (_.isArray(q.$populate)) {
+						this.query.populate(q.$populate);
+					} else if (_.isString(q.$populate) || _.isObject(q.$populate)) {
+						this.query.populate(q.$populate);
+						q.$populate = [q.$populate]; // Also rewrite into an array so we can destructure later
+					} else {
+						throw new Error('Invalid sort type: ' + (typeof q.$sort));
+					}
+				}
+				// }}}
 				// q.$select {{{
 				if (q.$select) {
 					if (_.isArray(q.$select)) {
