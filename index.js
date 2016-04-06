@@ -941,7 +941,7 @@ function Monoxide() {
 		* The raw MongoDB-Core model
 		* @var {Object}
 		*/
-		mm.$mongoModel = self.connection.db.collection(settings.$collection);
+		mm.$mongoModel = self.connection.db.collection(settings.$collection.toLowerCase());
 		if (!mm.$mongoModel) throw new Error('Model not found in MongoDB-Core - did you forget to call monoxide.schema(\'name\', <schema>) first?');
 
 		/**
