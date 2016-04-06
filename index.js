@@ -1492,9 +1492,10 @@ function Monoxide() {
 			* Since any segment of the path could be a nested object, array or sub-document collection this function is likely to return multiple elements
 			* For the nearest approximation of how this function operates think of it like performing the jQuery expression: `$('p').each(function() { ... })`
 			* @param {string} schemaPath The schema path to iterate down
+			* @param {boolean} [strict=false] Optional indicator that an error should be thrown if a path cannot be traversed
 			* @return {array} Array of all found leaf nodes
 			*/
-			getNodesBySchemaPath: function(schemaPath) {
+			getNodesBySchemaPath: function(schemaPath, strict) {
 				var doc = this;
 				var examineStack = [{
 					node: doc,
@@ -1516,7 +1517,7 @@ function Monoxide() {
 							return true;
 						} else if (_.isUndefined(esDoc.node[pathSegment])) {
 							// If we are trying to recurse into a path segment AND we are not at the leaf of the path (as undefined leaves are ok) - raise an error
-							throw new Error('Cannot traverse into path: "' + (esDoc.docPath + '.' + pathSegment).substr(1) + '" for doc ' + doc.$collection + '#' + doc._id);
+							if (strict) throw new Error('Cannot traverse into path: "' + (esDoc.docPath + '.' + pathSegment).substr(1) + '" for doc ' + doc.$collection + '#' + doc._id);
 							examineStack[esDocIndex] = false;
 							return false;
 						} else if (_.isArray(esDoc.node[pathSegment])) { // Found an array - remove this doc and append each document we need to examine at the next stage
