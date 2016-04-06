@@ -1672,17 +1672,6 @@ function Monoxide() {
 		// Convert data to a simple array if its weird Mongoose fluff
 		if (data instanceof mongoose.Document) data = data.toObject();
 
-		// Sanitize data to remove all ObjectID crap
-		var FKs = self.models[setup.$collection]._knownFKs || self.utilities.extractFKs(self.models[setup.$collection].$mongooseModel.schema);
-		_.forEach(FKs, function(pathSpec, path) {
-			if (pathSpec.type == 'objectId') {
-				var pathData = _.get(data, path);
-				if (self.utilities.isObjectID(pathData)) { // It is a pointer thats NOT been populated
-					_.set(data, path, pathData.toString());
-				}
-			}
-		});
-
 		_.extend(doc, data);
 
 		// Apply schema
@@ -1698,6 +1687,15 @@ function Monoxide() {
 				}
 			});
 		}
+
+		// Sanitize data to remove all ObjectID crap
+		doc.getFKNodes().forEach(function(node) {
+			if (node.fkType != 'objectId') return; // Only bother with OIDs
+			var leaf = _.get(doc, node.docPath);
+			if (self.utilities.isObjectID(leaf))
+				_.set(doc, node.docPath, leaf.toString());
+		});
+
 
 		// Break object into component parts and apply the '$clean' marker to arrays and objects
 		Object.defineProperty(doc, '$originalValues', {
