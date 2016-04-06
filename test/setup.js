@@ -151,7 +151,7 @@ module.exports = {
 					name: 'Jane Quark',
 					role: 'user',
 					favourite: 'widget-bang',
-					items: [],
+					items: ['widget-bang'],
 					_password: 'oeaeoeae', // INPUT: correct battery horse staple
 					mostPurchased: [
 						{

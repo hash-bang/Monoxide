@@ -2,7 +2,7 @@ var expect = require('chai').expect;
 var monoxide = require('..');
 var testSetup = require('./setup');
 
-describe('Monoxide - Aggregation pipeline', function() {
+describe('monoxide.aggregate()', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 

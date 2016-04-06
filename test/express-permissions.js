@@ -11,7 +11,7 @@ var testSetup = require('./setup');
 var port = 8181;
 var url = 'http://localhost:' + port;
 
-describe('Monoxide + Express permissions', function() {
+describe('monoxide.express (permission tests)', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 

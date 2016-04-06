@@ -14,7 +14,7 @@ var server;
 var port = 8181;
 var url = 'http://localhost:' + port;
 
-describe('Monoxide + Express', function() {
+describe('monoxide.express.*', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 

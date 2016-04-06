@@ -3,7 +3,7 @@ var expect = require('chai').expect;
 var monoxide = require('..');
 var testSetup = require('./setup');
 
-describe('Monoxide - get', function() {
+describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 

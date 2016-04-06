@@ -2,7 +2,7 @@ var expect = require('chai').expect;
 var monoxide = require('..');
 var testSetup = require('./setup');
 
-describe('Monoxide - update', function() {
+describe('monoxide.update()', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 

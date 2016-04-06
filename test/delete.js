@@ -2,7 +2,7 @@ var expect = require('chai').expect;
 var monoxide = require('..');
 var testSetup = require('./setup');
 
-describe('Monoxide - delete', function() {
+describe('monoxide.delete() / monoxide.models[].remove() / monoxideDocument.remove()', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 
