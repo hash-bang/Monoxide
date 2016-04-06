@@ -749,7 +749,10 @@ function Monoxide() {
 				self.query({
 					$collection: q.$collection,
 					$id: this.rawResponse.insertedId,
-				}, next);
+				}, function(err, res) {
+					if (err == 'Not found') return next('Document creation failed');
+					next(err, res);
+				});
 			})
 			// }}}
 			// End {{{
