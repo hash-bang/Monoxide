@@ -228,10 +228,21 @@ function Monoxide() {
 			// Apply various simple criteria {{{
 			.then(function(next) {
 				if (q.$count) return next(); // No point doing anything else if just counting
-				if (q.$populate) this.query.populate(q.$populate);
 				if (q.$limit) this.query.limit(q.$limit);
 				if (q.$skip) this.query.skip(q.$skip);
 
+				// q.$populate {{{
+				if (q.$populate) {
+					if (_.isArray(q.$populate)) {
+						this.query.populate(q.$populate);
+					} else if (_.isString(q.$populate) || _.isObject(q.$populate)) {
+						this.query.populate(q.$populate);
+						q.$populate = [q.$populate]; // Also rewrite into an array so we can destructure later
+					} else {
+						throw new Error('Invalid sort type: ' + (typeof q.$sort));
+					}
+				}
+				// }}}
 				// q.$select {{{
 				if (q.$select) {
 					if (_.isArray(q.$select)) {
@@ -1647,34 +1658,46 @@ function Monoxide() {
 		if (!_.isString(model) || !_.isObject(spec)) throw new Error('Schema construction requires a model ID + schema object');
 
 		var schema = new mongoose.Schema(_.deepMapValues(spec, function(value, path) {
-			if (!_.endsWith(path, '.type')) return value; // Ignore not type rewrites
-			if (!_.isString(value)) return value; // Only rewrite string values
+			// Rewrite .type leafs {{{
+			if (_.endsWith(path, '.type')) { // Ignore not type rewrites
+				if (!_.isString(value)) return value; // Only rewrite string values
 
-			switch (value.toLowerCase()) {
-				case 'oid':
-				case 'pointer':
-				case 'objectid':
-					return mongoose.Schema.ObjectId;
-				case 'string':
-					return mongoose.Schema.Types.String;
-				case 'number':
-					return mongoose.Schema.Types.Number;
-				case 'boolean':
-				case 'bool':
-					return mongoose.Schema.Types.Boolean;
-				case 'array':
-					return mongoose.Schema.Types.Array;
-				case 'date':
-					return mongoose.Schema.Types.Date;
-				case 'object':
-				case 'mixed':
-				case 'any':
-					return mongoose.Schema.Types.Mixed;
-				case 'buffer':
-					return mongoose.Schema.Types.Buffer;
-				default:
-					throw new Error('Unknown Monoxide data type: ' + value.toLowerCase());
+				switch (value.toLowerCase()) {
+					case 'oid':
+					case 'pointer':
+					case 'objectid':
+						return mongoose.Schema.ObjectId;
+					case 'string':
+						return mongoose.Schema.Types.String;
+					case 'number':
+						return mongoose.Schema.Types.Number;
+					case 'boolean':
+					case 'bool':
+						return mongoose.Schema.Types.Boolean;
+					case 'array':
+						return mongoose.Schema.Types.Array;
+					case 'date':
+						return mongoose.Schema.Types.Date;
+					case 'object':
+					case 'mixed':
+					case 'any':
+						return mongoose.Schema.Types.Mixed;
+					case 'buffer':
+						return mongoose.Schema.Types.Buffer;
+					default:
+						throw new Error('Unknown Monoxide data type: ' + value.toLowerCase());
+				}
+			// }}}
+			// Rewrite .ref leafs {{{
+			} else if (_.endsWith(path, '.ref')) {
+				if (!_.isString(value)) return value; // Leave complex objects alone
+				return value.toLowerCase();
+			// }}}
+			// Leave everything else unaltered {{{
+			} else { // Do nothing
+				return value;
 			}
+			// }}}
 		}));
 
 		// Add to model storage
