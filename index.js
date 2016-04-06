@@ -1,6 +1,7 @@
 var _ = require('lodash')
 	.mixin(require('lodash-deep'));
 var async = require('async-chainable');
+var deepDiff = require('deep-diff');
 var events = require('events');
 var mongoose = require('mongoose');
 var traverse = require('traverse');
@@ -182,7 +183,7 @@ function Monoxide() {
 			// .modelFKs - Determine foreign keys {{{
 			.then('modelFKs', function(next) {
 				if (q.$cacheFKs && self.models[q.$collection]._knownFKs) return next(null, self.models[q.$collection]._knownFKs); // Already computed
-				var FKs = self.utilities.extractFKs(self.models[q.$collection].$mongoModel);
+				var FKs = self.utilities.extractFKs(self.models[q.$collection].$mongooseModel.schema);
 				if (q.$cacheFKs) self.models[q.$collection]._knownFKs = FKs; // Cache for next time
 				next(null, FKs);
 			})
@@ -736,7 +737,7 @@ function Monoxide() {
 				self.models[q.$collection].fire('create', next, this.createDoc);
 			})
 			.then('rawResponse', function(next) {
-				self.models[q.$collection].$mongoModel.insertOne(this.createDoc.toObject(), next);
+				self.models[q.$collection].$mongoModel.insertOne(this.createDoc.toMongoObject(), next);
 			})
 			.then(function(next) {
 				self.models[q.$collection].fire('postCreate', next, this.createDoc);
@@ -1388,6 +1389,7 @@ function Monoxide() {
 			$collection: setup.$collection,
 			save: function(callback) {
 				var doc = this;
+				var mongoDoc = doc.toMongoObject();
 				var patch = {
 					$collection: doc.$collection,
 					$id: doc._id,
@@ -1395,7 +1397,7 @@ function Monoxide() {
 					$returnUpdated: true,
 				};
 				doc.isModified().forEach(function(path) {
-					patch[path] = _.get(doc, path);
+					patch[path] = _.get(mongoDoc, path);
 				});
 
 				self.save(patch, function(err, newRec) {
@@ -1413,14 +1415,36 @@ function Monoxide() {
 				}, callback);
 				return doc;
 			},
+
+			/**
+			* Transform a MonoxideDocument into a plain JavaScript object
+			* @return {Object} Plain JavaScript object with all special properties and other gunk removed
+			*/
 			toObject: function() {
 				var doc = this;
 				var newDoc = {};
 				_.forEach(this, function(v, k) {
 					if (doc.hasOwnProperty(k) && !_.startsWith(k, '$')) newDoc[k] = _.clone(v);
 				});
+
 				return newDoc;
 			},
+
+			/**
+			* Transform a MonoxideDocument into a Mongo object
+			* This function transforms all OID strings back into their Mongo equivalent
+			* @return {Object} Plain JavaScript object with all special properties and other gunk removed
+			*/
+			toMongoObject: function() {
+				var doc = this;
+				var outDoc = doc.toObject(); // Rely on the toObject() syntax to strip out rubbish
+				doc.getFKNodes().forEach(function(node) {
+					console.log('TRANSFORM DOCPATH', node.docPath);
+				});
+
+				return outDoc;
+			},
+
 			isModified: function(path) {
 				var doc = this;
 				if (path) {
@@ -1536,6 +1560,83 @@ function Monoxide() {
 					});
 				// }}}
 			},
+
+			/**
+			* Retrieves all 'leaf' elements matching a schema path
+			* Since any segment of the path could be a nested object, array or sub-document collection this function is likely to return multiple elements
+			* For the nearest approximation of how this function operates think of it like performing the jQuery expression: `$('p').each(function() { ... })`
+			* @param {string} schemaPath The schema path to iterate down
+			* @return {array} Array of all found leaf nodes
+			*/
+			getNodesBySchemaPath: function(schemaPath) {
+				var doc = this;
+				var examineStack = [{
+					node: doc,
+					docPath: '',
+					schemaPath: '',
+				}];
+
+				var segments = schemaPath.split('.');
+				segments.every(function(pathSegment, pathSegmentIndex) {
+					return examineStack.every(function(esDoc, esDocIndex) {
+						if (esDoc === false) { // Skip this subdoc
+							return true;
+						} else if (_.isUndefined(esDoc.node[pathSegment])) {
+							throw new Error('Cannot traverse into path: ' + esDoc.docPath.substr(1) + ' for doc ' + doc.$collection + '#' + doc._id);
+							examineStack[esDocIndex] = false;
+							return false;
+						} else if (_.isArray(esDoc.node[pathSegment])) { // Found an array - remove this doc and append each document we need to examine at the next stage
+							esDoc.node[pathSegment].forEach(function(d,i) {
+								// Do this in a forEach to break appart the weird DocumentArray structure we get back from Mongoose
+								examineStack.push({
+									node: d,
+									docPath: esDoc.docPath + '.' + pathSegment + '.' + i,
+									schemaPath: esDoc.schemaPath + '.' + pathSegment,
+								})
+							});
+							examineStack[esDocIndex] = false;
+							return true;
+						} else if (esDoc.node[pathSegment]) { // Traverse into object - replace this nodeerence with the new pointer
+							examineStack[esDocIndex] = {
+								node: esDoc.node[pathSegment],
+								docPath: esDoc.docPath + '.' + pathSegment,
+								schemaPath: esDoc.schemaPath + '.' + pathSegment,
+							};
+							return true;
+						}
+					});
+				});
+
+				return _(examineStack)
+					.filter()
+					.map(function(node) {
+						node.docPath = node.docPath.substr(1);
+						node.schemaPath = node.schemaPath.substr(1);
+						return node;
+					})
+					.value();
+			},
+
+			/**
+			* Return an array of all FK leaf nodes within the document
+			* This function combines the behaviour of monoxide.utilities.extractFKs with monoxide.monoxideDocument.getNodesBySchemaPath)(
+			* @return {array} An array of all leaf nodes
+			*/
+			getFKNodes: function() {
+				var doc = this;
+				var stack = [];
+
+				_.forEach(self.models[doc.$collection]._knownFKs || self.utilities.extractFKs(self.models[doc.$collection].$mongooseModel.schema), function(fkType, schemaPath) {
+					if (fkType.type == 'subDocument') return; // Skip sub-documents (as they are stored against the parent anyway)
+
+					stack = stack.concat(doc.getNodesBySchemaPath(schemaPath).map(function(node) {
+						node.fkType = fkType.type;
+						return node;
+					}));
+				});
+				return stack;
+			},
+
 			$applySchema: true,
 		};
 
@@ -2461,7 +2562,6 @@ function Monoxide() {
 	* });
 	*/
 	self.utilities.diff = function(originalDoc, newDoc) {
-		var deepDiff = require('deep-diff');
 		var patch = {};
 
 		deepDiff.observableDiff(originalDoc, newDoc, function(diff) {
