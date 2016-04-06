@@ -1450,7 +1450,7 @@ function Monoxide() {
 				if (path) {
 					var v = _.get(doc, path);
 					var pathJoined = _.isArray(path) ? path.join('.') : path;
-					if (v instanceof mongoose.Types.ObjectId) {
+					if (self.utilities.isObjectID(v)) {
 						return doc.$originalValues[pathJoined] ? doc.$originalValues[pathJoined].toString() != v.toString() : false;
 					} else if (_.isObject(v)) { // If its an object (or an array) examine the $clean propertly
 						return !v.$clean;
@@ -1465,7 +1465,7 @@ function Monoxide() {
 						if (
 							_.startsWith(this.key, '$') ||
 							this.key == '_id' ||
-							(v instanceof mongoose.Types.ObjectId)
+							self.utilities.isObjectID(v)
 						) return this.remove(true); // Don't scan down hidden elements
 
 						if (doc.isModified(this.path)) {
@@ -1660,7 +1660,7 @@ function Monoxide() {
 		_.forEach(FKs, function(pathSpec, path) {
 			if (pathSpec.type == 'objectId') {
 				var pathData = _.get(data, path);
-				if (pathData instanceof mongoose.Types.ObjectId) { // It is a pointer thats NOT been populated
+				if (self.utilities.isObjectID(pathData)) { // It is a pointer thats NOT been populated
 					_.set(data, path, pathData.toString());
 				}
 			}
@@ -2472,6 +2472,19 @@ function Monoxide() {
 	*/
 	self.utilities.objectID = function(str) {
 		return new mongoose.Types.ObjectId(str);
+	};
+	// }}}
+
+	// .utilities.isObjectID(string) {{{
+	/**
+	* Return if the input is a valid MongoDB-Core compatible ObjectID object
+	* This is mainly used within functions that need to check that a given variable is a Mongo OID
+	* @name monoxide.utilities.isObjectID
+	* @param {mixed} subject The item to examine
+	* @return {boolean} Whether the subject is a MongoDB-Core compatible ObjectID object instance
+	*/
+	self.utilities.isObjectID = function(subject) {
+		return (subject instanceof mongoose.Types.ObjectId);
 	};
 	// }}}
 
