@@ -303,91 +303,6 @@ function Monoxide() {
 				});
 			})
 			// }}}
-			// Exhaustively populate everything {{{
-			.then(function(next) {
-				return next(); // FIXME: Skip
-				if (q.$count || !q.$populate) return next(); // Nothing to do
-
-				console.log('BEGIN', require('util').inspect(this.result, {depth: null, colors: true}));
-				console.log();
-				console.log();
-				console.log();
-
-				var result = this.result;
-
-				var populateQueue = q.$populate.map(function(path) {
-					return {path: path, populated: 0, ran: false};
-				});
-
-				var tryPopulate = function() {
-					console.log('CYCLE START!', populateQueue);
-					var populatedThisCycle = 0;
-					async()
-						.limit(1)
-						.forEach(populateQueue.filter(function(pq) { return !pq.ran }), function(nextPath, population) {
-							async()
-								.limit(1)
-								.forEach(_.castArray(result), function(nextDoc, doc) {
-									/*
-									var buildStep = doc;
-									var nextIsArray = false; // Indicates if the next step should refer to all items within an array
-									population.path.split('.').forEach(function(segment) {
-										console.log('TRY TRAVERSE', segment);
-										if (doc[segment]) {
-											console.log(' - SEGMENT EXISTS AS KEY');
-											buildStep = doc[segment];
-										} else if (_.isArray(doc[segment])) {
-											console.log(' - SEGMENT EXISTS AS ARRAY');
-											buildStep = doc[segment];
-											nextIsArray = true;
-										}
-									});
-									*/
-
-									console.log('WILL POPULATE', population.path);
-									doc.populate(population.path, function(err, res) {
-										if (err) return nextPath(err);
-										console.log('CHK POPULATE', population.path, self.utilities.isPopulated(res, population.path));
-
-										if (self.utilities.isPopulated(res, population.path)) {
-											population.ran = true;
-											population.populated++;
-											populatedThisCycle++;
-										} else {
-											console.log('FAILED POPULATE OF', population.path);
-										}
-										nextDoc();
-									});
-								})
-								.end(nextPath);
-						})
-						.end(function(err) {
-							if (err) return next(err);
-							if (populateQueue.every(function(pq) { return pq.ran })) { // Everything has run
-								next();
-							} else { // Still need to run more populates
-								console.log('----------- NEED NEW CYCLE --------------');
-								console.log();
-								console.log();
-								console.log('CYCLE END', require('util').inspect(result, {depth: null, colors: true}));
-								console.log();
-								console.log('FINAL POPQUEUE IS', populateQueue);
-								console.log();
-								console.log();
-								if (!populatedThisCycle) return next(
-									'Unable to populate remaining paths: ' + 
-									populateQueue.filter(function(pq) { return !pq.ran }).map(function(pq) { return pq.path }).join(', ') +
-									'. Managed to populate: ' + JSON.stringify(populateQueue)
-								);
-								// Queue up in event loop for another pass
-								setTimeout(tryPopulate);
-							}
-						});
-				};
-
-				tryPopulate();
-			})
-			// }}}
 			// Convert Mongoose Documents into Monoxide Documents {{{
 			.then('result', function(next) {
 				if (q.$one) {
@@ -403,6 +318,8 @@ function Monoxide() {
 			// }}}
 			// Apply populates {{{
 			.then(function(next) {
+				// FIXME: Currently skipping deep-populate functionality
+				return next();
 				if (!q.$populate || !q.$populate.length || q.$count) return next(); // Skip
 				if (q.$one) {
 					this.result.populate(q.$populate, next);
