@@ -1464,34 +1464,46 @@ function Monoxide() {
 		if (!_.isString(model) || !_.isObject(spec)) throw new Error('Schema construction requires a model ID + schema object');
 
 		var schema = new mongoose.Schema(_.deepMapValues(spec, function(value, path) {
-			if (!_.endsWith(path, '.type')) return value; // Ignore not type rewrites
-			if (!_.isString(value)) return value; // Only rewrite string values
+			// Rewrite .type leafs {{{
+			if (_.endsWith(path, '.type')) { // Ignore not type rewrites
+				if (!_.isString(value)) return value; // Only rewrite string values
 
-			switch (value.toLowerCase()) {
-				case 'oid':
-				case 'pointer':
-				case 'objectid':
-					return mongoose.Schema.ObjectId;
-				case 'string':
-					return mongoose.Schema.Types.String;
-				case 'number':
-					return mongoose.Schema.Types.Number;
-				case 'boolean':
-				case 'bool':
-					return mongoose.Schema.Types.Boolean;
-				case 'array':
-					return mongoose.Schema.Types.Array;
-				case 'date':
-					return mongoose.Schema.Types.Date;
-				case 'object':
-				case 'mixed':
-				case 'any':
-					return mongoose.Schema.Types.Mixed;
-				case 'buffer':
-					return mongoose.Schema.Types.Buffer;
-				default:
-					throw new Error('Unknown Monoxide data type: ' + value.toLowerCase());
+				switch (value.toLowerCase()) {
+					case 'oid':
+					case 'pointer':
+					case 'objectid':
+						return mongoose.Schema.ObjectId;
+					case 'string':
+						return mongoose.Schema.Types.String;
+					case 'number':
+						return mongoose.Schema.Types.Number;
+					case 'boolean':
+					case 'bool':
+						return mongoose.Schema.Types.Boolean;
+					case 'array':
+						return mongoose.Schema.Types.Array;
+					case 'date':
+						return mongoose.Schema.Types.Date;
+					case 'object':
+					case 'mixed':
+					case 'any':
+						return mongoose.Schema.Types.Mixed;
+					case 'buffer':
+						return mongoose.Schema.Types.Buffer;
+					default:
+						throw new Error('Unknown Monoxide data type: ' + value.toLowerCase());
+				}
+			// }}}
+			// Rewrite .ref leafs {{{
+			} else if (_.endsWith(path, '.ref')) {
+				if (!_.isString(value)) return value; // Leave complex objects alone
+				return value.toLowerCase();
+			// }}}
+			// Leave everything else unaltered {{{
+			} else { // Do nothing
+				return value;
 			}
+			// }}}
 		}));
 
 		// Add to model storage
