@@ -6,13 +6,26 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 
-	it('create save new user', function(finish) {
+	var widgets;
+	it('should get a list of existing widgets', function(finish) {
+		monoxide.query({
+			$collection: 'widgets',
+			$sort: 'name',
+		}, function(err, res) {
+			expect(err).to.be.not.ok;
+			expect(res).to.be.an.array;
+			widgets = res;
+			finish();
+		});
+	});
+
+	it('create a new user (via monoxide.create)', function(finish) {
 		monoxide.create({
 			$collection: 'users',
 			name: 'New User',
 			mostPurchased: [
-				{number: 50},
-				{number: 60},
+				{number: 50, item: widgets[0]._id},
+				{number: 60, item: widgets[1]._id},
 			],
 			password: 'wonderful',
 		}, function(err, user) {
@@ -28,15 +41,17 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(user.mostPurchased).to.be.an.array;
 			expect(user.mostPurchased).to.have.length(2);
 			expect(user.mostPurchased[0]).to.have.property('number', 50);
-			expect(user.mostPurchased[0].item).to.be.undefined;
+			expect(user.mostPurchased[0]).to.have.property('item', widgets[0]._id);
+			expect(user.mostPurchased[0].item).to.be.a.string;
 			expect(user.mostPurchased[1]).to.have.property('number', 60);
-			expect(user.mostPurchased[1].item).to.be.undefined;
+			expect(user.mostPurchased[1]).to.have.property('item', widgets[1]._id);
+			expect(user.mostPurchased[1].item).to.be.a.string;
 
 			finish();
 		});
 	});
 
-	it('create save new user (monoxide.model method)', function(finish) {
+	it('create a new user (via monoxide.model[].create)', function(finish) {
 		monoxide.models.users.create({
 			name: 'New User2',
 			mostPurchased: [

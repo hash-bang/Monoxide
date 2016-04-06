@@ -38,8 +38,8 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 			$id: users[0]._id,
 			name: 'Edited User',
 			mostPurchased: [
-				{number: 12, item: widgets[0]._id.toString()},
-				{number: 15, item: widgets[1]._id.toString()},
+				{number: 12, item: widgets[0]._id},
+				{number: 15, item: widgets[1]._id},
 			],
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
@@ -66,8 +66,8 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 	it('should save a user (via model)', function(finish) {
 		users[1].name = 'Edited User2';
 		users[1].mostPurchased = [
-			{number: 18, item: widgets[1]._id.toString()},
-			{number: 19, item: widgets[0]._id.toString()},
+			{number: 18, item: widgets[1]._id},
+			{number: 19, item: widgets[0]._id},
 		];
 		users[1].save(function(err, user) {
 			expect(err).to.not.be.ok;
