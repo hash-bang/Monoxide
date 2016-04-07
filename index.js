@@ -1406,8 +1406,10 @@ function Monoxide() {
 			* Expand given paths into objects
 			* @param {Object|array|string} populations A single or multiple populations to perform
 			* @param {function} callback The callback to run on completion
+			* @param {boolean} [strict=false] Whether to raise errors and agressively retry if a population fails
+			* @return {Object} This document
 			*/
-			populate: function(populations, callback) {
+			populate: function(populations, callback, strict) {
 				var doc = this;
 				var populations = _(populations)
 					.castArray()
@@ -1420,7 +1422,7 @@ function Monoxide() {
 					})
 					.value();
 
-				var tryPopulate = function(finish, populations) {
+				var tryPopulate = function(finish, populations, strict) {
 					var willPopulate = 0; // Count of items that seem valid that we will try to populate
 					var failedPopulations = []; // Populations that we couldn't get the end-points of (probably because they are nested)
 					var populator = async(); // Defered async worker that will actually populate things
@@ -1452,15 +1454,17 @@ function Monoxide() {
 								});
 								nextPopulation();
 							} catch (e) {
-								failedPopulations.push(population);
+								if (strict) failedPopulations.push(population);
 								nextPopulation();
 							}
 						})
 						.then(function(next) {
 							if (willPopulate > 0) {
 								populator.await().end(next); // Run all population defers
-							} else {
+							} else if (strict) {
 								next('Unable to resolve remaining populations: ' + JSON.stringify(populations) + '. In ' + doc.$collection + '#' + doc._id);
+							} else {
+								next();
 							}
 						})
 						.end(function(err) {
@@ -1477,7 +1481,8 @@ function Monoxide() {
 							}
 						});
 				};
-				tryPopulate(callback, populations);
+				tryPopulate(callback, populations, strict);
+				return doc;
 			},
 
 			/**
