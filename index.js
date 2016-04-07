@@ -1460,7 +1460,7 @@ function Monoxide() {
 							if (willPopulate > 0) {
 								populator.await().end(next); // Run all population defers
 							} else {
-								next('Unable to resolve remaining populations: ' + JSON.stringify(populations));
+								next('Unable to resolve remaining populations: ' + JSON.stringify(populations) + '. In ' + doc.$collection + '#' + doc._id);
 							}
 						})
 						.end(function(err) {
