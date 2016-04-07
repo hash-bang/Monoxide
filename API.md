@@ -92,7 +92,6 @@ Returns **monoxide.monoxideModel** The chainable monoxideModel
 # monoxide.monoxideModel.find
 
 Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
-This also sets $count=true in the queryBuilder
 
 **Parameters**
 
@@ -104,6 +103,7 @@ Returns **monoxide.queryBuilder**
 # monoxide.monoxideModel.find
 
 Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
+This also sets $count=true in the queryBuilder
 
 **Parameters**
 
@@ -559,6 +559,7 @@ If the existing document ID is not found this function will execute the callback
     -   `q.$id` **string** The ID of the document to save
     -   `q.$refetch` **[boolean]** Whether to refetch the record after update, false returns `null` in the callback (optional, default `true`)
     -   `q.$errNoUpdate` **[boolean]** Raise an error if no documents were actually updated (optional, default `false`)
+    -   `q.$errBlankUpdate` **[boolean]** Raise an error if no fields are updated (optional, default `false`)
     -   `q.$returnUpdated` **[boolean]** If true returns the updated document, if false it returns the document that was replaced (optional, default `true`)
     -   `q.field` **[...Any]** Any other field (not beginning with '$') is treated as data to save
 -   `function`  (err,result)] Optional callback to call on completion or error
@@ -689,6 +690,17 @@ Extract all FKs in dotted path notation from a Mongoose model
 
 Returns **Object** A dictionary of foreign keys for the schema (each key will be the info of the object)
 
+# monoxide.utilities.isObjectID
+
+Return if the input is a valid MongoDB-Core compatible ObjectID object
+This is mainly used within functions that need to check that a given variable is a Mongo OID
+
+**Parameters**
+
+-   `subject` **mixed** The item to examine
+
+Returns **boolean** Whether the subject is a MongoDB-Core compatible ObjectID object instance
+
 # monoxide.utilities.objectID
 
 Construct and return a MongoDB-Core compatible ObjectID object
@@ -740,6 +752,51 @@ app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 **Parameters**
 
 -   `settings`  
+
+# getFKNodes
+
+Return an array of all FK leaf nodes within the document
+This function combines the behaviour of monoxide.utilities.extractFKs with monoxide.monoxideDocument.getNodesBySchemaPath)(
+
+Returns **array** An array of all leaf nodes
+
+# getNodesBySchemaPath
+
+Retrieves all 'leaf' elements matching a schema path
+Since any segment of the path could be a nested object, array or sub-document collection this function is likely to return multiple elements
+For the nearest approximation of how this function operates think of it like performing the jQuery expression: `$('p').each(function() { ... })`
+
+**Parameters**
+
+-   `schemaPath` **string** The schema path to iterate down
+-   `strict` **[boolean]** Optional indicator that an error should be thrown if a path cannot be traversed (optional, default `false`)
+
+Returns **array** Array of all found leaf nodes
+
+# populate
+
+Expand given paths into objects
+
+**Parameters**
+
+-   `populations` **Object or array or string** A single or multiple populations to perform
+-   `callback` **function** The callback to run on completion
+-   `strict` **[boolean]** Whether to raise errors and agressively retry if a population fails (optional, default `false`)
+
+Returns **Object** This document
+
+# toMongoObject
+
+Transform a MonoxideDocument into a Mongo object
+This function transforms all OID strings back into their Mongo equivalent
+
+Returns **Object** Plain JavaScript object with all special properties and other gunk removed
+
+# toObject
+
+Transform a MonoxideDocument into a plain JavaScript object
+
+Returns **Object** Plain JavaScript object with all special properties and other gunk removed
 
 # Monoxide
 
