@@ -318,8 +318,6 @@ function Monoxide() {
 			// }}}
 			// Apply populates {{{
 			.then(function(next) {
-				// FIXME: Currently skipping deep-populate functionality
-				return next();
 				if (!q.$populate || !q.$populate.length || q.$count) return next(); // Skip
 				if (q.$one) {
 					this.result.populate(q.$populate, next);
@@ -1402,89 +1400,84 @@ function Monoxide() {
 					return modified;
 				}
 			},
+
+
+			/**
+			* Expand given paths into objects
+			* @param {Object|array|string} populations A single or multiple populations to perform
+			* @param {function} callback The callback to run on completion
+			*/
 			populate: function(populations, callback) {
 				var doc = this;
-				var errs = [];
-				if (!_.isArray(populations)) populations = [populations];
-				var failedPopulations = [];
+				var populations = _(populations)
+					.castArray()
+					.map(function(population) { // Mangle all populations into objects (each object should contain a path and an optional ref)
+						if (_.isString(population)) {
+							return {path: population};
+						} else {
+							return population;
+						}
+					})
+					.value();
 
-				var docFinder = async(); // Async object which will find all the populations
-				// Construct the docFinder async object {{{
-				populations.forEach(function(population) {
-					if (_.isString(population)) {
-						population = {
-							path: population,
-						};
-					}
+				var tryPopulate = function(finish, populations) {
+					var willPopulate = 0; // Count of items that seem valid that we will try to populate
+					var failedPopulations = []; // Populations that we couldn't get the end-points of (probably because they are nested)
+					var populator = async(); // Defered async worker that will actually populate things
+					async()
+						.forEach(populations, function(nextPopulation, population) {
+							try {
+								doc.getNodesBySchemaPath(population.path, true).forEach(function(node) {
+									if (!population.ref) {
+										population.ref = _.get(model, ['$mongooseModel', 'schema', 'paths', node.schemaPath, 'options', 'ref']);
+										if (!population.ref) throw new Error('Cannot determine collection to use for schemaPath ' + node.schemaPath + '! Specify this is in model with {ref: <collection>}');
+									}
 
-					var examineStack = [{ref: doc, path: ''}];
-
-					// Walk down each path until we reach the leaf nodes. examineStack should become an array of all leafs that need populating with `population` {{{
-					var segments = population.path.split('.');
-					if (!segments.every(function(pathSegment, pathSegmentIndex) {
-						return examineStack.every(function(esDoc, esDocIndex) {
-							if (esDoc === false) { // Skip this subdoc
-								return true;
-							} else if (_.isUndefined(esDoc.ref[pathSegment])) {
-								errs.push('Cannot traverse into path: ' + esDoc.path.substr(1) + ' for doc ' + doc.$collection + '#' + doc._id);
-								examineStack[esDocIndex] = false;
-								return false;
-							} else if (_.isArray(esDoc.ref[pathSegment])) { // Found an array - remove this doc and append each document we need to examine at the next stage
-								esDoc.ref[pathSegment].forEach(function(d,i) {
-									// Do this in a forEach to break appart the weird DocumentArray structure we get back from Mongoose
-									examineStack.push({ref: d, path: esDoc.path + '.' + pathSegment + '.' + i})
+									if (_.isObject(node.node) && node.node._id) { // Object is already populated
+										willPopulate++; // Say we're going to resolve this anyway even though we have nothing to do - prevents an issue where the error catcher reports it as a null operation (willPopulate==0)
+									} else {
+										populator.defer(function(next) {
+											self.query({
+												$errNotFound: false,
+												$collection: population.ref,
+												$id: node.node.toString(),
+											}, function(err, res) {
+												if (err) return next(err);
+												_.set(doc, node.docPath, res);
+												next();
+											});
+										});
+										willPopulate++;
+									}
 								});
-								examineStack[esDocIndex] = false;
-								return true;
-							} else if (esDoc.ref[pathSegment]) { // Traverse into object - replace this reference with the new pointer
-								examineStack[esDocIndex] = {ref: esDoc.ref[pathSegment], path: esDoc.path + '.' + pathSegment};
-								return true;
+								nextPopulation();
+							} catch (e) {
+								failedPopulations.push(population);
+								nextPopulation();
+							}
+						})
+						.then(function(next) {
+							if (willPopulate > 0) {
+								populator.await().end(next); // Run all population defers
+							} else {
+								next('Unable to resolve remaining populations: ' + JSON.stringify(populations));
+							}
+						})
+						.end(function(err) {
+							if (err) {
+								callback(err);
+							} else if (failedPopulations.length) {
+								console.log('SILL MORE POPULATIONS TO RUN', failedPopulations);
+								setTimeout(function() {
+									console.log('FIXME: Defered runnable');
+									//tryPopulate(callback, failedPopulations);
+								});
+							} else {
+								callback(null, doc);
 							}
 						});
-					})) {
-						failedPopulations.push(population);
-						return false;
-					}
-					// }}}
-
-					// Replace all OIDs with lookups {{{
-					examineStack
-						.filter(function(esDoc) { return esDoc !== false })
-						.forEach(function(esDoc) {
-							esDoc.path = esDoc.path.substr(1);
-							if (!population.ref) {
-								population.ref = _.get(model, ['$mongooseModel', 'schema', 'subpaths', esDoc.path, 'options', 'ref']);
-								if (!population.ref) {
-									errs.push('Cannot determine collection to use for path ' + esDoc.path + '! Specify this is in model with {ref: <collection>}');
-									return false;
-								}
-							}
-
-							docFinder.defer(function(next) {
-								self.query({
-									$collection: population.ref,
-									$id: esDoc.ref.toString(),
-								}, function(err, res) {
-									if (err) return next(err);
-									console.log('POPULATE!', population, 'WITH', esDoc);
-									_.set(doc, esDoc.path, res);
-									next();
-								});
-							});
-						});
-					// }}}
-				});
-				// }}}
-
-				// Run all fetchers and pass control to the callback {{{
-				docFinder
-					.await()
-					.end(function(err) {
-						console.log('FINISH WITH', doc);
-						console.log('ERRS', errs);
-						callback(err);
-					});
-				// }}}
+				};
+				tryPopulate(callback, populations);
 			},
 
 			/**

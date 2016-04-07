@@ -63,7 +63,11 @@ describe('monoxide.query()', function() {
 		monoxide.query({
 			$collection: 'users',
 			$sort: 'name',
-			$populate: ['favourite', 'items', 'mostPurchased.item'],
+			$populate: [
+				{path: 'favourite', ref: 'widgets'},
+				{path: 'items', ref: 'widgets'},
+				{path: 'mostPurchased.item', ref: 'widgets'},
+			],
 		}, function(err, users) {
 			expect(err).to.not.be.ok;
 			expect(users).to.be.an.array;
@@ -75,6 +79,7 @@ describe('monoxide.query()', function() {
 			expect(users[0]).to.have.property('items');
 			expect(users[0].items).to.be.an.array;
 			expect(users[0].items).to.have.length(1);
+			expect(users[0].items[0]).to.have.property('name', 'Widget bang');
 
 			expect(users[0]).to.have.property('mostPurchased');
 			expect(users[0].mostPurchased).to.be.an.array;
@@ -89,11 +94,18 @@ describe('monoxide.query()', function() {
 		});
 	});
 
-	xit('should support deep population', function(finish) {
+	it('should support deep population (with population objects)', function(finish) {
 		monoxide.query({
 			$collection: 'groups',
 			$sort: 'name',
-			$populate: ['users', 'users.mostPurchased.item', 'preferences.defaults.items'],
+			$populate: [
+				{path: 'users.favourite', ref: 'widgets'},
+				{path: 'users.items', ref: 'widgets'},
+				{path: 'users.mostPurchased.item', ref: 'widgets'},
+				{path: 'users', ref: 'users'},
+				{path: 'users.mostPurchased.item', ref: 'widgets'},
+				{path: 'preferences.defaults.items', ref: 'widgets'},
+			],
 		}, function(err, groups) {
 			expect(err).to.not.be.ok;
 			expect(groups).to.be.an.array;
