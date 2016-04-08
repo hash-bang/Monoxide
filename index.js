@@ -1983,6 +1983,7 @@ function Monoxide() {
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
 	* @param {string} [settings.queryRemaps] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
+	* @param {string} [settings.queryAllowed=Object] Optional specification on what types of values should be permitted for query fields (keys can be: 'scalar', 'scalarCSV', 'array')
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example
@@ -2007,6 +2008,10 @@ function Monoxide() {
 				populate: '$populate',
 				select: '$select',
 			},
+			queryAllowed: { // Fields and their allowed contents (post remap)
+				'$populate': {scalar: true, scalarCSV: true, array: true},
+				'$select': {scalar: true, scalarCSV: true, array: true},
+			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
 
@@ -2020,6 +2025,21 @@ function Monoxide() {
 				.mapKeys(function(val, key) {
 					if (settings.queryRemaps[key]) return settings.queryRemaps[key];
 					return key;
+				})
+				.mapValues(function(val, key) {
+					if (settings.queryAllowed[key]) {
+						var allowed = settings.queryAllowed[key];
+						if (!_.isString(val) && !allowed.scalar) {
+							return null;
+						} else if (_.isString(val) && allowed.scalarCSV) {
+							return val.split(/\s*,\s*/);
+						} else if (_.isArray(val) && allowed.array) {
+							return val;
+						} else {
+							return val;
+						}
+					}
+					return val;
 				})
 				.value();
 
@@ -2111,7 +2131,7 @@ function Monoxide() {
 							return val;
 						}
 					}
-					return key;
+					return val;
 				})
 				.value();
 
