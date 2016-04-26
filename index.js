@@ -1948,7 +1948,6 @@ function Monoxide() {
 			} else if (settings.create && req.method == 'POST' && !_.isBoolean(settings.create)) {
 				req.monoxide.id = req.params.id;
 				self.utilities.runMiddleware(req, res, settings.create, function() {
-					if (err) return next(err);
 					self.express.create(settings)(req, res, next);
 				}, settings);
 			} else if (settings.create && req.method == 'POST') {
