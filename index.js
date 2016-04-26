@@ -1362,7 +1362,11 @@ function Monoxide() {
 					var oidLeaf = _.get(doc, node.docPath);
 					if (_.isUndefined(oidLeaf)) return; // Ignore undefined
 					if (!self.utilities.isObjectID(oidLeaf)) {
-						_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf));
+						if (oidLeaf._id) { // Already populated?
+							_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf._id));
+						} else { // Convert to an OID
+							_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf));
+						}
 					}
 				});
 
