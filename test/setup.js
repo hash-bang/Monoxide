@@ -97,6 +97,7 @@ module.exports = {
 
 		// Widgets {{{
 		var Widgets = monoxide.schema('widgets', {
+			created: {type: Date, default: Date.now},
 			name: String,
 			content: String,
 			status: {type: 'string', enum: ['active', 'deleted'], default: 'active'},
@@ -171,18 +172,21 @@ module.exports = {
 			widgets: [
 				{
 					_ref: 'widget-crash',
+					created: '2016-06-23T10:23:42Z',
 					name: 'Widget crash',
 					content: 'This is the crash widget',
 					// color: 'blue', // Should default to this via schema
 				},
 				{
 					_ref: 'widget-bang',
+					created: '2016-01-27T19:17:04Z',
 					name: 'Widget bang',
 					content: 'This is the bang widget',
 					color: 'red',
 				},
 				{
 					_ref: 'widget-whollop',
+					created: '2016-03-19T17:43:21',
 					name: 'Widget whollop',
 					content: 'This is the whollop widget',
 					color: 'blue',

@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var expect = require('chai').expect;
 var monoxide = require('..');
 var testSetup = require('./setup');
@@ -94,6 +95,22 @@ describe('monoxide.query()', function() {
 		});
 	});
 
+	it.skip('should complain when being given an invalid population path', function(finish) {
+		monoxide.query({
+			$collection: 'users',
+			$sort: 'name',
+			$populate: [
+				{path: 'favourite', ref: 'widgets'},
+				{path: 'itemsXXX', ref: 'widgets'},
+				{path: 'mostPurchased.item', ref: 'widgets'},
+			],
+		}, function(err) {
+			expect(err).to.be.ok;
+
+			finish();
+		});
+	});
+
 	it('should support deep population (with population objects)', function(finish) {
 		monoxide.query({
 			$collection: 'groups',
@@ -134,6 +151,24 @@ describe('monoxide.query()', function() {
 			expect(user.mostPurchased[1]).to.have.property('number', 2);
 			expect(user.mostPurchased[1]).to.have.property('item')
 			expect(user.mostPurchased[1].item).to.have.property('name', 'Widget whollop');
+
+			finish();
+		});
+	});
+
+	it('should query the widgets model, sorting by creation date', function(finish) {
+		monoxide.query({
+			$collection: 'widgets',
+			$sort: 'created',
+		}, function(err, widgets) {
+			expect(err).to.not.be.ok;
+			expect(widgets).to.be.an.array;
+
+			var widgetsSorted = _.sortBy(widgets, 'created');
+
+			widgetsSorted.forEach(function(sortedWidget, index) {
+				expect(widgets[index]._id).to.equal(sortedWidget._id);
+			});
 
 			finish();
 		});
