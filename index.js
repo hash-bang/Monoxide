@@ -1305,6 +1305,7 @@ function Monoxide() {
 		var proto = {
 			$MONOXIDE: true,
 			$collection: setup.$collection,
+			$populated: {},
 			save: function(callback) {
 				var doc = this;
 				var mongoDoc = doc.toMongoObject();
@@ -1361,6 +1362,7 @@ function Monoxide() {
 					if (node.fkType != 'objectId') return; // Only rewrite OID entities
 					var oidLeaf = _.get(doc, node.docPath);
 					if (_.isUndefined(oidLeaf)) return; // Ignore undefined
+
 					if (!self.utilities.isObjectID(oidLeaf)) {
 						if (oidLeaf._id) { // Already populated?
 							_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf._id));
@@ -1379,24 +1381,30 @@ function Monoxide() {
 					var v = _.get(doc, path);
 					var pathJoined = _.isArray(path) ? path.join('.') : path;
 					if (self.utilities.isObjectID(v)) {
-						return doc.$originalValues[pathJoined] ? doc.$originalValues[pathJoined].toString() != v.toString() : false;
+						if (doc.$populated[pathJoined]) { // Has been populated
+							// FIXME; What happens if a populated document changes
+							throw new Error('Changing populated document objects is not yet supported');
+							return false;
+						} else { // Has not been populated
+							return doc.$originalValues[pathJoined] ? // If we know about it
+								doc.$originalValues[pathJoined] != v.toString() : // Compare against the string value
+								true; // Otherwise declare it modified
+						}
 					} else if (_.isObject(v)) { // If its an object (or an array) examine the $clean propertly
 						return !v.$clean;
 					} else {
 						return doc.$originalValues[pathJoined] != v;
 					}
-					return true;
 				} else {
 					var modified = [];
-					traverse(this).map(function(v) { // NOTE - We're using traverse().map() here as traverse().forEach() actually mutates the array if we tell it not to recurse with this.remove(true) (needed to stop recursion into complex objects if the parent has been changed)
+					traverse(doc).map(function(v) { // NOTE - We're using traverse().map() here as traverse().forEach() actually mutates the array if we tell it not to recurse with this.remove(true) (needed to stop recursion into complex objects if the parent has been changed)
 						if (!this.path.length) return; // Root node
-						if (
-							_.startsWith(this.key, '$') ||
-							this.key == '_id' ||
-							self.utilities.isObjectID(v)
-						) return this.remove(true); // Don't scan down hidden elements
-
-						if (doc.isModified(this.path)) {
+						if (_.startsWith(this.key, '$') || this.key == '_id') { // Don't scan down hidden elements
+							return this.remove(true);
+						} else if (self.utilities.isObjectID(v)) { // Leaf is an object ID
+							if (doc.isModified(this.path)) modified.push(this.path.join('.'));
+							this.remove(true); // Don't scan any deeper
+						} else if (doc.isModified(this.path)) {
 							if (_.isObject(v)) this.remove(true);
 							modified.push(this.path.join('.'));
 						}
@@ -1450,6 +1458,7 @@ function Monoxide() {
 											}, function(err, res) {
 												if (err) return next(err);
 												_.set(doc, node.docPath, res);
+												doc.$populated[node.docPath] = true;
 												next();
 											});
 										});
@@ -1559,7 +1568,7 @@ function Monoxide() {
 
 			/**
 			* Return an array of all FK leaf nodes within the document
-			* This function combines the behaviour of monoxide.utilities.extractFKs with monoxide.monoxideDocument.getNodesBySchemaPath)(
+			* This function combines the behaviour of monoxide.utilities.extractFKs with monoxide.monoxideDocument.getNodesBySchemaPath)
 			* @return {array} An array of all leaf nodes
 			*/
 			getFKNodes: function() {
@@ -1632,9 +1641,15 @@ function Monoxide() {
 					enumerable: false,
 					value: true,
 				});
-			} else { // For everything else - stash the original value in this.parent.$originalValues
-				doc.$originalValues[this.path.join('.')] = v;
+			} else if (!_.isPlainObject(v)) { // For everything else - stash the original value in this.parent.$originalValues
+				doc.$originalValues[this.path.join('.')] = self.utilities.isObjectID(v) ? v.toString() : v;
 			}
+		});
+
+		// Apply population data
+		doc.getFKNodes().forEach(function(node) {
+			doc.$populated[node.docPath] = self.utilities.isObjectID(node.docPath);
+			doc.$originalValues[node.docPath] = _.get(doc, node.docPath);
 		});
 
 		return doc;

@@ -128,4 +128,58 @@ describe('monoxideDocument.isModified()', function() {
 			finish();
 		});
 	});
+
+	it('should detect new keys', function(finish) {
+		monoxide.query({
+			$collection: 'users',
+			$sort: 'name',
+		}, function(err, res) {
+			expect(err).to.be.not.ok;
+			expect(res).to.be.an.array;
+
+			var user = res[0];
+			user.settings.prefix = 'Mr.';
+
+			var modified = user.isModified();
+			expect(modified).to.be.ok;
+			expect(modified).to.be.an.array;
+			expect(modified).to.have.length(1);
+			expect(modified[0]).to.be.equal('settings.prefix');
+
+			expect(user.isModified('settings.prefix')).to.be.true;
+
+			finish();
+		});
+	});
+
+	it('should detect new OID keys', function(finish) {
+		monoxide.query({
+			$collection: 'widgets',
+			$sort: 'name',
+		}, function(err, widgets) {
+			expect(err).to.be.not.ok;
+			expect(widgets).to.be.an.array;
+
+			monoxide.query({
+				$collection: 'users',
+				$sort: 'name',
+			}, function(err, res) {
+				expect(err).to.be.not.ok;
+				expect(res).to.be.an.array;
+
+				var user = res[0];
+				user.settings.featured = monoxide.utilities.objectID(widgets[0]._id); // Force string into an OID
+
+				var modified = user.isModified();
+				expect(modified).to.be.ok;
+				expect(modified).to.be.an.array;
+				expect(modified).to.have.length(1);
+				expect(modified[0]).to.be.equal('settings.featured');
+
+				expect(user.isModified('settings.featured')).to.be.true;
+
+				finish();
+			});
+		});
+	});
 });

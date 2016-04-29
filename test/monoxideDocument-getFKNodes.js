@@ -51,7 +51,7 @@ describe('monoxideDocument.getFKNodes()', function() {
 		expect(schemaPaths).to.include('items');
 		expect(docPaths).to.include('items.0');
 
-		expect(schemaPaths).to.have.length(5);
-		expect(docPaths).to.have.length(7);
+		expect(schemaPaths).to.have.length(6);
+		expect(docPaths).to.have.length(8);
 	});
 });
