@@ -2481,6 +2481,12 @@ function Monoxide() {
 	self.utilities.isObjectID = function(subject) {
 		return (subject instanceof mongoose.Types.ObjectId);
 	};
+
+	/**
+	* Alias of isObjectID
+	* @see monoxide.utilities.isObjectId
+	*/
+	self.utilities.isObjectId = self.utilities.isObjectID;
 	// }}}
 
 	// .utilities.runMiddleware(middleware) {{{
