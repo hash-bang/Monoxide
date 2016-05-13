@@ -783,6 +783,7 @@ function Monoxide() {
 	*/
 	self.queryBuilder = function monoxideQueryBuilder() {
 		var qb = this;
+		qb.$MONOXIDE = true;
 		qb.query = {};
 
 		// qb.find(q, cb) {{{
