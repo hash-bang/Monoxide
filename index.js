@@ -1347,7 +1347,7 @@ function Monoxide() {
 
 				self.save(patch, function(err, newRec) {
 					doc = newRec;
-					callback(err, newRec);
+					if (_.isFunction(callback)) callback(err, newRec);
 				});
 
 				return doc;
