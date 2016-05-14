@@ -644,6 +644,33 @@ function Monoxide() {
 				next();
 			})
 			// }}}
+			// Coherse all OIDs (or arrays of OIDs) into their correct internal type {{{
+			.then(function(next) {
+				_.forEach(self.models[q.$collection]._knownFKs || self.utilities.extractFKs(self.models[q.$collection].$mongooseModel.schema), function(fkType, schemaPath) {
+					switch(fkType.type) {
+						case 'objectId': // Convert the field to an OID if it isn't already
+							if (_.has(q, schemaPath)) {
+								console.log('OID1!', schemaPath);
+								var newVal = _.get(q, schemaPath);
+								if (!self.utilities.isObjectID(newVal))
+									_.set(q, schemaPath, self.utilities.objectID(newVal));
+							}
+							break;
+						case 'objectIdArray': // Convert each item to an OID if it isn't already
+							if (_.has(q, schemaPath)) {
+								_.set(q, schemaPath, _.get(q, schemaPath).map(function(i, idx) {
+									console.log('OID2!', schemaPath + '.' + idx);
+									return (!self.utilities.isObjectID(newVal))
+										? self.utilities.objectID(i)
+										: i;
+								}));
+							}
+							break;
+					}
+				});
+				next();
+			})
+			// }}}
 			// Create record {{{
 			.then('createDoc', function(next) { // Compute the document we will create
 				next(null, new self.monoxideDocument({$collection: q.$collection}, _.omit(q, this.metaFields)));
