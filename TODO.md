@@ -28,3 +28,11 @@ TODO
 - [x] monoxide.document.save()
 - [x] monoxide.document.hook('save', cb)
 - [ ] Auto reconnection
+
+
+Tests
+=====
+
+- [ ] Tidy up calls to extractFKs into a cached schema computed on boot
+- [ ] Saving a populated document
+- [ ] Saving a nested document

@@ -650,7 +650,6 @@ function Monoxide() {
 					switch(fkType.type) {
 						case 'objectId': // Convert the field to an OID if it isn't already
 							if (_.has(q, schemaPath)) {
-								console.log('OID1!', schemaPath);
 								var newVal = _.get(q, schemaPath);
 								if (!self.utilities.isObjectID(newVal))
 									_.set(q, schemaPath, self.utilities.objectID(newVal));
@@ -659,7 +658,6 @@ function Monoxide() {
 						case 'objectIdArray': // Convert each item to an OID if it isn't already
 							if (_.has(q, schemaPath)) {
 								_.set(q, schemaPath, _.get(q, schemaPath).map(function(i, idx) {
-									console.log('OID2!', schemaPath + '.' + idx);
 									return (!self.utilities.isObjectID(newVal))
 										? self.utilities.objectID(i)
 										: i;
