@@ -107,7 +107,7 @@ function Monoxide() {
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {string} [q.$id] If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
-	* @param {(string|string[]|object[])} [q.$select] Field selection criteria to apply (implies q.$applySchema=false as we will be dealing with a partial schema)
+	* @param {(string|string[]|object[])} [q.$select] Field selection criteria to apply (implies q.$applySchema=false as we will be dealing with a partial schema). Any fields prefixed with '-' are removed
 	* @param {(string|string[]|object[])} [q.$sort] Sorting criteria to apply
 	* @param {(string|string[]|object[])} [q.$populate] Population criteria to apply
 	* @param {boolean} [q.$one=false] Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
@@ -831,6 +831,7 @@ function Monoxide() {
 		// qb.select(q, cb) {{{
 		/**
 		* Add select criteria to an existing query
+		* If this function is passed a falsy value it is ignored
 		* @name monoxide.queryBuilder.select
 		* @memberof monoxide.queryBuilder
 		* @param {Object|Array|string} [q] Select criteria, for strings or arrays of strings use the field name optionally prefixed with '-' for omission. For Objects use `{field: 1|-1}`
@@ -838,7 +839,9 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
 		qb.select = function(q, callback) {
-			if (_.isString(q)) {
+			if (!q) {
+				return qb;
+			} else if (_.isString(q)) {
 				if (qb.query.$select) {
 					qb.query.$select.push(q);
 				} else {
@@ -861,6 +864,7 @@ function Monoxide() {
 		// qb.sort(q, cb) {{{
 		/**
 		* Add sort criteria to an existing query
+		* If this function is passed a falsy value it is ignored
 		* @name monoxide.queryBuilder.sort
 		* @memberof monoxide.queryBuilder
 		* @param {Object|Array|string} [q] Sorting criteria, for strings or arrays of strings use the field name optionally prefixed with '-' for decending search order. For Objects use `{ field: 1|-1|'asc'|'desc'}`
@@ -868,7 +872,9 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
 		qb.sort = function(q, callback) {
-			if (_.isString(q)) {
+			if (!q) {
+				return qb;
+			} else if (_.isString(q)) {
 				if (qb.query.$sort) {
 					qb.query.$sort.push(q);
 				} else {
@@ -891,6 +897,7 @@ function Monoxide() {
 		// qb.limit(q, cb) {{{
 		/**
 		* Add limit criteria to an existing query
+		* If this function is passed a falsy value the limit is removed
 		* @name monoxide.queryBuilder.limit
 		* @memberof monoxide.queryBuilder
 		* @param {number} q Limit records to this number
@@ -898,8 +905,12 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
 		qb.limit = function(q, callback) {
-			qb.query.$limit = q;
-			if (_.isFunction(callback)) return qb.exec(callback);
+			if (!q) {
+				delete qb.query.$limit;
+			} else {
+				qb.query.$limit = q;
+				if (_.isFunction(callback)) return qb.exec(callback);
+			}
 			return qb;
 		};
 		// }}}
@@ -907,6 +918,7 @@ function Monoxide() {
 		// qb.skip(q, cb) {{{
 		/**
 		* Add skip criteria to an existing query
+		* If this function is passed a falsy value the skip offset is removed
 		* @name monoxide.queryBuilder.skip
 		* @memberof monoxide.queryBuilder
 		* @param {number} q Skip this number of records
@@ -914,8 +926,12 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
 		qb.skip = function(q, callback) {
-			qb.query.$skip = q;
-			if (_.isFunction(callback)) return qb.exec(callback);
+			if (!q) {
+				delete qb.query.$skip;
+			} else {
+				qb.query.$skip = q;
+				if (_.isFunction(callback)) return qb.exec(callback);
+			}
 			return qb;
 		};
 		// }}}
@@ -923,6 +939,7 @@ function Monoxide() {
 		// qb.populate(q, cb) {{{
 		/**
 		* Add population criteria to an existing query
+		* If this function is passed a falsy value it is ignored
 		* @name monoxide.queryBuilder.populate
 		* @memberof monoxide.queryBuilder
 		* @param {Array|string} [q] Population criteria, for strings or arrays of strings use the field name
@@ -930,7 +947,9 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
 		qb.populate = function(q, callback) {
-			if (_.isString(q)) {
+			if (!q) {
+				return qb;
+			} else if (_.isString(q)) {
 				if (qb.query.$populate) {
 					qb.query.$populate.push(q);
 				} else {
