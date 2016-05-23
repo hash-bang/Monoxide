@@ -1667,10 +1667,21 @@ function Monoxide() {
 
 		// Sanitize data to remove all ObjectID crap
 		doc.getFKNodes().forEach(function(node) {
-			if (node.fkType != 'objectId') return; // Only bother with OIDs
-			var leaf = _.get(doc, node.docPath);
-			if (self.utilities.isObjectID(leaf))
-				_.set(doc, node.docPath, leaf.toString());
+			if (node.fkType == 'objectId') {
+				var singleOid = _.get(doc, node.docPath);
+				if (self.utilities.isObjectID(singleOid))
+					_.set(doc, node.docPath, singleOid.toString());
+			} else if (node.fkType == 'objectIdArray') {
+				var oidArray = _.get(doc, node.docPath);
+				if (self.utilities.isObjectID(oidArray)) {
+					_.set(doc, node.docPath, oidArray.toString());
+				} else if (_.isObject(oidArray) && oidArray._id && self.utilities.isObjectID(oidArray._id)) {
+					// FIXME: Rather crappy sub-document flattening for now
+					// This needs to actually scope into the sub-object schema and flatten each ID and not just the _id element
+
+					oidArray._id = oidArray._id.toString();
+				}
+			}
 		});
 
 

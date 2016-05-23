@@ -32,8 +32,9 @@ describe('monoxide.query() using $populate', function() {
 			expect(users[0]).to.have.property('mostPurchased');
 			expect(users[0].mostPurchased).to.be.an.array;
 			expect(users[0].mostPurchased).to.have.length(2);
-			expect(users[0].mostPurchased[0]).to.have.property('number', 1);
+			expect(users[0].mostPurchased[0]).to.have.property('_id');
 			expect(users[0].mostPurchased[0].item).to.have.property('name', 'Widget bang');
+			expect(users[0].mostPurchased[1]).to.have.property('_id');
 			expect(users[0].mostPurchased[1]).to.have.property('number', 2);
 			expect(users[0].mostPurchased[1]).to.have.property('item')
 			expect(users[0].mostPurchased[1].item).to.have.property('name', 'Widget whollop');
@@ -53,6 +54,56 @@ describe('monoxide.query() using $populate', function() {
 			],
 		}, function(err) {
 			expect(err).to.be.ok;
+
+			finish();
+		});
+	});
+
+	it('should transform OIDs into strings', function(finish) {
+		monoxide.query({
+			$collection: 'users',
+			$sort: 'name',
+			$populate: [
+				{path: 'mostPurchased.item', ref: 'widgets'},
+			],
+		}, function(err, users) {
+			expect(err).to.not.be.ok;
+			expect(users).to.be.an.array;
+
+			users.forEach(function(user) {
+				// Favourite = OID 1:1
+				expect(user).to.have.property('favourite');
+				expect(user.favourite).to.be.a.string;
+				expect(user.favourite).to.satisfy(_.isString);
+				expect(user.favourite).to.not.satisfy(_.isObject);
+
+				// Items = OID 1:M (as array)
+				expect(user).to.have.property('items');
+				expect(user.items).to.be.an.array;
+				user.items.forEach(function(i) {
+					expect(i).to.be.a.string;
+					expect(i).to.satisfy(_.isString);
+					expect(i).to.not.satisfy(_.isObject);
+				});
+
+				// mostPurchased = OID 1:M (as collection)
+				expect(user).to.have.property('mostPurchased');
+				expect(user.mostPurchased).to.be.an.array;
+				console.log(require('util').inspect(user, {depth: null, colors: true}))
+				user.mostPurchased.forEach(function(mp) {
+					expect(mp).to.have.property('_id');
+					expect(mp._id).to.be.a.string;
+					expect(mp._id).to.satisfy(_.isString);
+					expect(mp._id).to.not.satisfy(_.isObject);
+
+					expect(mp).to.have.property('item');
+					expect(mp.item).to.have.property('_id');
+					expect(mp.item._id).to.be.a.string;
+					console.log('ITEM IS', mp.item._id);
+					expect(mp.item._id).to.satisfy(_.isString);
+					expect(mp.item._id).to.not.satisfy(_.isObject);
+				});
+			});
 
 			finish();
 		});
