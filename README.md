@@ -27,6 +27,7 @@ Key differences from Mongoose / MongoDB-Core:
 * Hooks (i.e. Mongoose `pre`, `post` calls) **actually work as they should**. Hooks like all the above are local and not fired at the database level
 * All pointers (or `mongoose.Types.ObjectId` as Mongoose refers to them) are **strings**. Comparison is simple string comparison, there is no need to call `.toString()` on each object. The function still exists if you want an entirely plain object sans all the *glued* functions like `save()`
 * Schemas get applied on each document retrieval. Changing the schema of your project no longer leads to documents having 'the old version'. New fields added to the schema *after* document creation will be applied to older documents.
+* By default all fields prefixed with `_` (excepting `_id` and `__v`) are removed from ReST server output. This can be changed by adjusting the `omitFields` setting for `monoxide.express.(middleware|query|get`.
 
 
 Features:

@@ -64,8 +64,10 @@ describe('monoxide.express.*', function() {
 				users = res.body;
 				expect(users).to.be.an.array;
 
+				expect(users[0]).to.have.property('__v'); // All fields prefixed with '_' should be omitted by default, excepting _id, __v
 				expect(users[0]).to.have.property('name', 'Jane Quark');
 				expect(users[0]).to.have.property('role', 'user');
+				expect(users[0]).to.not.have.property('_password');
 				expect(users[0]).to.have.property('favourite');
 				expect(users[0].favourite).to.be.an.object;
 				expect(users[0].favourite).to.have.property('name', 'Widget bang');
@@ -146,8 +148,10 @@ describe('monoxide.express.*', function() {
 				var user = res.body;
 				expect(user).to.be.an.object;
 
+				expect(user).to.have.property('__v'); // All fields prefixed with '_' should be omitted by default, excepting _id, __v
 				expect(user).to.have.property('name', 'Jane Quark');
 				expect(user).to.have.property('role', 'user');
+				expect(user).to.not.have.property('_password');
 				expect(user).to.have.property('favourite');
 				expect(user.favourite).to.be.an.object;
 				expect(user.favourite).to.have.property('name', 'Widget bang');

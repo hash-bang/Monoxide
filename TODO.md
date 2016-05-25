@@ -28,6 +28,7 @@ TODO
 - [x] monoxide.document.save()
 - [x] monoxide.document.hook('save', cb)
 - [ ] Auto reconnection
+- [x] Omit fields (e.g. '_' prefix)
 
 
 Tests
@@ -36,3 +37,5 @@ Tests
 - [ ] Tidy up calls to extractFKs into a cached schema computed on boot
 - [ ] Saving a populated document
 - [ ] Saving a nested document
+- [ ] Coherce all OIDs into strings on object find
+- [ ] Make output Express safe - i.e. omit '$MONOXIDE'

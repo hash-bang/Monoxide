@@ -1371,6 +1371,13 @@ function Monoxide() {
 
 				return doc;
 			},
+
+			/**
+			* Remove the document from the collection
+			* This method is really just a thin wrapper around monoxide.delete()
+			* @param {function} [callback] Optional callback to invoke on completion
+			* @see monoxide.delete
+			*/
 			remove: function(callback) {
 				var doc = this;
 				self.delete({
@@ -1378,6 +1385,30 @@ function Monoxide() {
 					$id: doc._id,
 				}, callback);
 				return doc;
+			},
+
+			/**
+			* Remove certain fields from the document object
+			* This has the same 
+			* This method is really just a thin wrapper around monoxide.delete()
+			* @param {string|regexp|array} fields Either a single field name, regular expression or array of strings/regexps to filter by. Any key matching will be removed from the object
+			* @return {monoxide.monoxideDocument} This object after the fields have been removed
+			*/
+			omit: function(fields) {
+				var removeFields = _.castArray(fields);
+				traverse(this).forEach(function(v) {
+					if (!this.key) return; // Skip array entries
+					var key = this.key;
+					if (removeFields.some(function(filter) {
+						return (
+							(_.isString(filter) && key == filter) ||
+							(_.isRegExp(filter) && filter.test(key))
+						);
+					})) {
+						this.remove();
+					}
+				});
+				return this;
 			},
 
 			/**
@@ -2058,6 +2089,7 @@ function Monoxide() {
 	* @param {string} [settings.collection] The model name to bind to
 	* @param {string} [settings.queryRemaps] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
 	* @param {string} [settings.queryAllowed=Object] Optional specification on what types of values should be permitted for query fields (keys can be: 'scalar', 'scalarCSV', 'array')
+	* @param {array|string|regexp} [settings.omitFields] Run all results though monoxideDocument.omit() before returning to remove the stated fields
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example
@@ -2087,6 +2119,7 @@ function Monoxide() {
 				'$select': {scalar: true, scalarCSV: true, array: true},
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
+			omitFields: [/^_(?!id|_v)/], // Omit all fields prefixed with '_' that are not '_id' or '__v'
 		});
 
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.get(). Specify as a string or {collection: String}');
@@ -2121,9 +2154,14 @@ function Monoxide() {
 			q.$id = req.params.id;
 
 			self.get(q, function(err, doc) {
+				// Apply omitFields {{{
+				if (!_.isEmpty(settings.omitFields) && _.isObject(doc)) {
+					doc.omit(settings.omitFields);
+				}
+				// }}}
 				if (settings.passThrough) { // Act as middleware
 					req.document = doc;
-					next(err, rows);
+					next(err, doc);
 				} else if (err) { // Act as endpoint and there was an error
 					res.status(400).end();
 				} else { // Act as endpoint and result is ok
@@ -2146,6 +2184,7 @@ function Monoxide() {
 	* @param {string} [settings.collection] The model name to bind to
 	* @param {string} [settings.queryRemaps=Object] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
 	* @param {string} [settings.queryAllowed=Object] Optional specification on what types of values should be permitted for query fields (keys can be: 'scalar', 'scalarCSV', 'array')
+	* @param {array|string|regexp} [settings.omitFields] Run all results though monoxideDocument.omit() before returning to remove the stated fields
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example
@@ -2181,6 +2220,7 @@ function Monoxide() {
 				'$sort': {scalar: true},
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
+			omitFields: [/^_(?!id|_v)/], // Omit all fields prefixed with '_' that are not '_id' or '__v'
 		});
 
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.query(). Specify as a string or {collection: String}');
@@ -2212,6 +2252,13 @@ function Monoxide() {
 			q.$collection = settings.collection;
 
 			self.query(q, function(err, rows) {
+				// Apply omitFields {{{
+				if (!_.isEmpty(settings.omitFields)) {
+					rows.forEach(function(row) {
+						row.omit(settings.omitFields);
+					});
+				}
+				// }}}
 				if (settings.passThrough) { // Act as middleware
 					req.document = rows;
 					next(err, rows);
