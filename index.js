@@ -620,8 +620,8 @@ function Monoxide() {
 		// Deal with arguments {{{
 		if (_.isObject(q) && _.isFunction(callback)) {
 			// All ok
-		} else if (_.isFunction(callback)) {
-			throw new Error('Callback parameter is mandatory');
+		} else if (!_.isFunction(callback)) {
+			// Callback is optional
 		} else {
 			throw new Error('Unknown function call pattern');
 		}

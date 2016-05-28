@@ -51,6 +51,18 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 		});
 	});
 
+	it('create a new user (via monoxide.create; without callback)', function() {
+		monoxide.create({
+			$collection: 'users',
+			name: 'New User 2',
+			mostPurchased: [
+				{number: 50, item: widgets[0]._id},
+				{number: 60, item: widgets[1]._id},
+			],
+			password: 'splendid',
+		});
+	});
+
 	it('create a new user (via monoxide.model[].create)', function(finish) {
 		monoxide.models.users.create({
 			name: 'New User2',
