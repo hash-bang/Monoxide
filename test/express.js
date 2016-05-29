@@ -24,8 +24,18 @@ describe('monoxide.express.*', function() {
 		app.use(bodyParser.json());
 		app.set('log.indent', '      ');
 
-		app.get('/api/users', monoxide.express.query('users'));
-		app.get('/api/users/:id', monoxide.express.get('users'));
+		app.get('/api/users', monoxide.express.query('users', {
+			map: function(user) {
+				user.nameParts = user.splitNames();
+				return user;
+			},
+		}));
+		app.get('/api/users/:id', monoxide.express.get('users', {
+			map: function(user) {
+				user.nameParts = user.splitNames();
+				return user;
+			},
+		}));
 		app.post('/api/users', monoxide.express.create('users'));
 		app.post('/api/users/:id', monoxide.express.save('users'));
 
@@ -78,6 +88,8 @@ describe('monoxide.express.*', function() {
 				expect(users[0].mostPurchased[0].item).to.be.a.string;
 				expect(users[0].mostPurchased[1]).to.have.property('number', 2);
 				expect(users[0].mostPurchased[1].item).to.be.a.string;
+				expect(users[0]).to.have.property('nameParts'); // Check that the map function fired
+				expect(users[0].nameParts).to.deep.equal(['Jane', 'Quark']);
 
 				expect(users[1]).to.have.property('name', 'Joe Random');
 				expect(users[1]).to.have.property('role', 'user');
@@ -90,6 +102,8 @@ describe('monoxide.express.*', function() {
 				expect(users[1].mostPurchased[1].item).to.be.a.string;
 				expect(users[1].mostPurchased[2]).to.have.property('number', 15);
 				expect(users[1].mostPurchased[2].item).to.be.a.string;
+				expect(users[1]).to.have.property('nameParts');
+				expect(users[1].nameParts).to.deep.equal(['Joe', 'Random']);
 
 				finish();
 			});
@@ -162,6 +176,9 @@ describe('monoxide.express.*', function() {
 				expect(user.mostPurchased[0].item).to.be.a.string;
 				expect(user.mostPurchased[1]).to.have.property('number', 2);
 				expect(user.mostPurchased[1].item).to.be.a.string;
+
+				expect(user).to.have.property('nameParts'); // Check that the map function fired
+				expect(user.nameParts).to.deep.equal(['Jane', 'Quark']);
 
 				finish();
 			});

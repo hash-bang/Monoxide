@@ -2090,6 +2090,7 @@ function Monoxide() {
 	* @param {string} [settings.queryRemaps] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
 	* @param {string} [settings.queryAllowed=Object] Optional specification on what types of values should be permitted for query fields (keys can be: 'scalar', 'scalarCSV', 'array')
 	* @param {array|string|regexp} [settings.omitFields] Run all results though monoxideDocument.omit() before returning to remove the stated fields
+	* @param {function} [settings.map] Run the document though this map function before returning
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example
@@ -2159,6 +2160,11 @@ function Monoxide() {
 					doc.omit(settings.omitFields);
 				}
 				// }}}
+				// Apply map {{{
+				if (_.isObject(doc) && _.isFunction(settings.map)) {
+					doc = [doc].map(settings.map)[0];
+				}
+				// }}}
 				if (settings.passThrough) { // Act as middleware
 					req.document = doc;
 					next(err, doc);
@@ -2185,6 +2191,7 @@ function Monoxide() {
 	* @param {string} [settings.queryRemaps=Object] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
 	* @param {string} [settings.queryAllowed=Object] Optional specification on what types of values should be permitted for query fields (keys can be: 'scalar', 'scalarCSV', 'array')
 	* @param {array|string|regexp} [settings.omitFields] Run all results though monoxideDocument.omit() before returning to remove the stated fields
+	* @param {function} [settings.map] Run all documents though this map function before returning
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example
@@ -2257,6 +2264,11 @@ function Monoxide() {
 					rows.forEach(function(row) {
 						row.omit(settings.omitFields);
 					});
+				}
+				// }}}
+				// Apply map {{{
+				if (_.isFunction(settings.map)) {
+					rows = rows.map(settings.map);
 				}
 				// }}}
 				if (settings.passThrough) { // Act as middleware
