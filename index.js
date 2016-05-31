@@ -290,7 +290,7 @@ function Monoxide() {
 							if (q.$errNotFound) {
 								next('Not found');
 							} else {
-								next(null, null);
+								next(null, undefined);
 							}
 						} else {
 							next(null, res);
@@ -305,7 +305,9 @@ function Monoxide() {
 			// }}}
 			// Convert Mongoose Documents into Monoxide Documents {{{
 			.then('result', function(next) {
-				if (q.$one) {
+				if (this.result === undefined) {
+					next(null, undefined);
+				} else if (q.$one) {
 					next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema}, this.result));
 				} else if (q.$count) {
 					next(null, this.result);
@@ -318,7 +320,7 @@ function Monoxide() {
 			// }}}
 			// Apply populates {{{
 			.then(function(next) {
-				if (!q.$populate || !q.$populate.length || q.$count) return next(); // Skip
+				if (!q.$populate || !q.$populate.length || q.$count || this.result === undefined) return next(); // Skip
 				if (q.$one) {
 					this.result.populate(q.$populate, next);
 				} else {
@@ -981,6 +983,29 @@ function Monoxide() {
 			if (!_.isFunction(callback)) throw new Error('Callback to exec() is not a function');
 
 			return self.query(qb.query, callback);
+		};
+		// }}}
+
+		// qb.optional() {{{
+		/**
+		* Convenience function to set $errNotFound
+		* @name monoxide.queryBuilder.optional
+		* @memberof monoxide.queryBuilder
+		* @param {Object|function} [isOptional=true] Whether the return from this query should NOT throw an error if nothing was found
+		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
+		* @return {monoxide.queryBuilder} This chainable object
+		*/
+		qb.optional = function(isOptional, callback) {
+			if (_.isBoolean(isOptional)) {
+				qb.query.$errNotFound = !isOptional;
+				return _.isFunction(callback) ? qb.exec() : qb;
+			} else if (_.isFunction(isOptional)) {
+				qb.query.$errNotFound = false;
+				return qb.exec();
+			} else {
+				qb.query.$errNotFound = false;
+				return qb;
+			}
 		};
 		// }}}
 

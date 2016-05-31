@@ -94,8 +94,16 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 	});
 
 	it('should not get() a user by an invalid ID (via model#findOne)', function(finish) {
-		monoxide.models.users.findOne({_id: 'xxx'}, function(err, res) {
+		monoxide.models.users.findOne({_id: '500000000000000000000000'}, function(err, res) {
 			expect(err).to.be.ok;
+			expect(res).to.be.undefined;
+			finish();
+		});
+	});
+
+	it('should not get() a user by an invalid ID (via model#findOne + $errNotFound=false)', function(finish) {
+		monoxide.models.users.findOne({_id: '500000000000000000000000', $errNotFound: false}, function(err, res) {
+			expect(err).to.be.not.ok;
 			expect(res).to.be.undefined;
 			finish();
 		});
@@ -116,11 +124,22 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 	});
 
 	it('should not get() a user by an invalid ID (via model#findOneByID)', function(finish) {
-		monoxide.models.users.findOneByID('xxx', function(err, res) {
+		monoxide.models.users.findOneByID('500000000000000000000000', function(err, res) {
 			expect(err).to.be.ok;
 			expect(res).to.be.undefined;
 			finish();
 		});
+	});
+
+	it('should not get() a user by an invalid ID (via model#findOneByID + optional())', function(finish) {
+		monoxide.models.users
+			.findOneByID('500000000000000000000000')
+			.optional()
+			.exec(function(err, res) {
+				expect(err).to.be.not.ok;
+				expect(res).to.be.undefined;
+				finish();
+			});
 	});
 
 	it('should get() all widgets by ID', function(finish) {
@@ -152,7 +171,7 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 	});
 
 	it('should not get() an invalid ID', function(finish) {
-		monoxide.get('users', 'xxx', function(err, res) {
+		monoxide.get('users', '500000000000000000000000', function(err, res) {
 			expect(err).to.be.ok;
 			expect(res).to.be.undefined;
 			finish();
