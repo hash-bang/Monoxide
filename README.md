@@ -1,11 +1,10 @@
-**THIS PROJECT IS CURRENTLY IN BETA - FUNCTIONS ARE LIKELY TO CHANGE WITHOUT NOTICE - USE WITH CAUTION**
-
-
 Monoxide
 =========
 A less poisonous to work with Mongo.
 
 Monoxide attempts to provide nicer, chainable functionality on top of base Mongo while making some of the more C centric designs of Mongo more Node like.
+
+**NOTE: While Monoxide is now mostly stable there are still likely to be bugs. Please report these to the author if found**
 
 
 1. [API documentation](API.md)
