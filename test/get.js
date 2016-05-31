@@ -93,6 +93,14 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 			.end(finish);
 	});
 
+	it('should not get() a user by an invalid ID (via model#findOne)', function(finish) {
+		monoxide.models.users.findOne({_id: 'xxx'}, function(err, res) {
+			expect(err).to.be.ok;
+			expect(res).to.be.undefined;
+			finish();
+		});
+	});
+
 	it('should get() all users by ID (via model#findOneByID)', function(finish) {
 		async()
 			.forEach(users, function(next, user) {
@@ -105,6 +113,14 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 				});
 			})
 			.end(finish);
+	});
+
+	it('should not get() a user by an invalid ID (via model#findOneByID)', function(finish) {
+		monoxide.models.users.findOneByID('xxx', function(err, res) {
+			expect(err).to.be.ok;
+			expect(res).to.be.undefined;
+			finish();
+		});
 	});
 
 	it('should get() all widgets by ID', function(finish) {
@@ -133,5 +149,13 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 				});
 			})
 			.end(finish);
+	});
+
+	it('should not get() an invalid ID', function(finish) {
+		monoxide.get('users', 'xxx', function(err, res) {
+			expect(err).to.be.ok;
+			expect(res).to.be.undefined;
+			finish();
+		});
 	});
 });
