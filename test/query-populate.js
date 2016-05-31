@@ -89,7 +89,6 @@ describe('monoxide.query() using $populate', function() {
 				// mostPurchased = OID 1:M (as collection)
 				expect(user).to.have.property('mostPurchased');
 				expect(user.mostPurchased).to.be.an.array;
-				console.log(require('util').inspect(user, {depth: null, colors: true}))
 				user.mostPurchased.forEach(function(mp) {
 					expect(mp).to.have.property('_id');
 					expect(mp._id).to.be.a.string;
@@ -99,7 +98,6 @@ describe('monoxide.query() using $populate', function() {
 					expect(mp).to.have.property('item');
 					expect(mp.item).to.have.property('_id');
 					expect(mp.item._id).to.be.a.string;
-					console.log('ITEM IS', mp.item._id);
 					expect(mp.item._id).to.satisfy(_.isString);
 					expect(mp.item._id).to.not.satisfy(_.isObject);
 				});
