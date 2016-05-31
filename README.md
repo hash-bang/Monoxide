@@ -18,24 +18,18 @@ Monoxide attempts to provide nicer, chainable functionality on top of base Mongo
 
 Key differences from Mongoose / MongoDB-Core:
 
-* Provides an out-of-the-box [Express middleware](#rest-server)
-* Returns a nicer syntax for [specifying schemas](#schema-setup)
-* Sort + Populate functionality can now be specified as an array rather than only as space delimited strings
-* All documents are accessible as plain JavaScript objects
-* Virtuals are handled locally (not on the database)
-* Methods are handled locally (again not on the database)
-* Hooks (i.e. Mongoose `pre`, `post` calls) **actually work as they should**. Hooks like all the above are local and not fired at the database level
-* All pointers (or `mongoose.Types.ObjectId` as Mongoose refers to them) are **strings**. Comparison is simple string comparison, there is no need to call `.toString()` on each object. The function still exists if you want an entirely plain object sans all the *glued* functions like `save()`
+* **ReST server** - Provides an out-of-the-box [Express middleware](#rest-server)
+* **Syntax** - Returns a nicer syntax for [specifying schemas](#schema-setup)
+* **Query parameters as arrays** - Sort + Populate functionality can now be specified as an array rather than only as space delimited strings
+* **Plain objects** - All documents are accessible as plain JavaScript objects
+* **Virtuals** - Virtuals are handled locally (not on the database)
+* **Methods** - Methods are handled locally (again not on the database)
+* **Hooks** - Hooks (i.e. Mongoose `pre`, `post` calls) **actually work as they should**. Hooks like all the above are local and not fired at the database level
+* **OIDs / ObjectIDs** - All pointers (or `mongoose.Types.ObjectId` as Mongoose refers to them) are **strings**. Comparison is simple string comparison, there is no need to call `.toString()` on each object. The function still exists if you want an entirely plain object sans all the *glued* functions like `save()`
 * Schemas get applied on each document retrieval. Changing the schema of your project no longer leads to documents having 'the old version'. New fields added to the schema *after* document creation will be applied to older documents.
-* By default all fields prefixed with `_` (excepting `_id` and `__v`) are removed from ReST server output. This can be changed by adjusting the `omitFields` setting for `monoxide.express.(middleware|query|get`.
-* Each output document can be run though the `map` function to decorate it before it leaves the server - this is useful to omit complex things the client doesn't need or otherwise glue information to the document.
-
-
-Features:
-
-* Much clearner and more 'JavaScripty' syntax
-* The [ReST server](#rest-server) provides various callback middleware layers to perform various restriction lockdowns - e.g. selectively provide queries or only delete records if the user is an admin.
-* Hooks that actually work! Trap save, query, create and other events correctly - have the option to reject them at the callback level
+* **ReST field surpression** - By default all fields prefixed with `_` (excepting `_id` and `__v`) are removed from ReST server output. This can be changed by adjusting the `omitFields` setting for `monoxide.express.(middleware|query|get`.
+* **Document mapping** - Each output document can be run though the `map` function to decorate it before it leaves the server - this is useful to omit complex things the client doesn't need or otherwise glue information to the document.
+* **Callback error if no matching records** - If no matching records are found in a `get()` operation and `$errNotFound` is true (the default) Monoxide will populate the error property of the callback. This is useful to automatically abandon Async chains when an expected record is not found rather than having to do manual check for record existence later.
 
 
 See the [ideas list](ideas.md) for future ideas.
@@ -89,17 +83,6 @@ The primary interface to Monoxide is the ReST server interface for Express:
 
 	var app = express();
 
-	app.use('/api/doodads/:id?', monoxide.express.middleware('doodads'));
-	app.use('/api/widgets/:id?', monoxide.express.middleware('widgets'));
-
-
-You can also pass more complex options structures by specifying an object:
-
-	var express = require('express');
-	var monoxide = require('monoxide');
-
-	var app = express();
-
 	app.use('/api/users/:id?', monoxide.express.middleware({
 		collection: 'users',
 
@@ -112,6 +95,17 @@ You can also pass more complex options structures by specifying an object:
 
 		// ... other options here ... //
 	}));
+
+
+OR you can also bring in only the specific Express middleware thats required:
+
+	var express = require('express');
+	var monoxide = require('monoxide');
+
+	var app = express();
+
+	app.use('/api/doodads/:id?', monoxide.express.middleware('doodads'));
+	app.use('/api/widgets/:id?', monoxide.express.middleware('widgets'));
 
 
 You can also secure the various methods by passing in middleware:
