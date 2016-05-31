@@ -428,7 +428,7 @@ function Monoxide() {
 	* 	console.log('Saved widget is now', widget);
 	* });
 	*/
-	self.save = function MonoxideQuery(q, callback) {
+	self.save = function(q, callback) {
 		var self = this;
 		// Deal with arguments {{{
 		if (_.isObject(q) && _.isFunction(callback)) {
@@ -1462,9 +1462,14 @@ function Monoxide() {
 							throw new Error('Changing populated document objects is not yet supported');
 							return false;
 						} else { // Has not been populated
-							return doc.$originalValues[pathJoined] ? // If we know about it
-								doc.$originalValues[pathJoined] != v.toString() : // Compare against the string value
-								true; // Otherwise declare it modified
+							if (doc.$originalValues[pathJoined]) { // Compare against the string value
+								return doc.$originalValues[pathJoined] != v.toString();
+							} else if (doc.$originalValues[pathJoined + '.id'] && doc.$originalValues[pathJoined + '._bsontype']) { // Known but its stored as a Mongo OID - look into its values to determine its real comparitor string
+								// When the lookup is a raw OID we need to pass the binary junk into the objectID THEN get its string value before we can compare it to the one we last saw when we fetched the object
+								return self.utilities.objectID(doc.$originalValues[pathJoined + '.id']).toString() != v.toString(); // Compare against the string value
+							} else {
+								return true; // Otherwise declare it modified
+							}
 						}
 					} else if (_.isObject(v)) { // If its an object (or an array) examine the $clean propertly
 						return !v.$clean;
