@@ -1465,7 +1465,7 @@ function Monoxide() {
 					if (_.isUndefined(oidLeaf)) return; // Ignore undefined
 
 					if (!self.utilities.isObjectID(oidLeaf)) {
-						if (oidLeaf._id) { // Already populated?
+						if (_.has(oidLeaf, '_id')) { // Already populated?
 							_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf._id));
 						} else { // Convert to an OID
 							_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf));
@@ -1560,7 +1560,7 @@ function Monoxide() {
 											self.query({
 												$errNotFound: false,
 												$collection: population.ref,
-												$id: node.node.toString(),
+												$id: self.utilities.isObjectID(node.node) ? node.node.toString() : node.node,
 											}, function(err, res) {
 												if (err) return next(err);
 												_.set(doc, node.docPath, res);
@@ -1648,7 +1648,7 @@ function Monoxide() {
 							});
 							examineStack[esDocIndex] = false;
 							return true;
-						} else if (esDoc.node[pathSegment]) { // Traverse into object - replace this nodeerence with the new pointer
+						} else if (_.has(esDoc.node, pathSegment)) { // Traverse into object - replace this nodeerence with the new pointer
 							examineStack[esDocIndex] = {
 								node: esDoc.node[pathSegment],
 								docPath: esDoc.docPath + '.' + pathSegment,
