@@ -1459,7 +1459,7 @@ function Monoxide() {
 				var doc = this;
 				var outDoc = doc.toObject(); // Rely on the toObject() syntax to strip out rubbish
 
-				doc.getFKNodes().forEach(function(node) {
+				doc.getOIDs().forEach(function(node) {
 					if (node.fkType != 'objectId') return; // Only rewrite OID entities
 					var oidLeaf = _.get(doc, node.docPath);
 					if (_.isUndefined(oidLeaf)) return; // Ignore undefined
@@ -1673,21 +1673,23 @@ function Monoxide() {
 			},
 
 			/**
-			* Return an array of all FK leaf nodes within the document
+			* Return an array of all OID leaf nodes within the document
 			* This function combines the behaviour of monoxide.utilities.extractFKs with monoxide.monoxideDocument.getNodesBySchemaPath)
 			* @return {array} An array of all leaf nodes
 			*/
-			getFKNodes: function() {
+			getOIDs: function() {
 				var doc = this;
 				var stack = [];
 
 				_.forEach(model.$oids, function(fkType, schemaPath) {
 					if (fkType.type == 'subDocument') return; // Skip sub-documents (as they are stored against the parent anyway)
 
-					stack = stack.concat(doc.getNodesBySchemaPath(schemaPath).map(function(node) {
-						node.fkType = fkType.type;
-						return node;
-					}));
+					stack = stack.concat(doc.getNodesBySchemaPath(schemaPath)
+						.map(function(node) {
+							node.fkType = fkType.type;
+							return node;
+						})
+					);
 				});
 				return stack;
 			},
@@ -1727,7 +1729,7 @@ function Monoxide() {
 		}
 
 		// Sanitize data to remove all ObjectID crap
-		doc.getFKNodes().forEach(function(node) {
+		doc.getOIDs().forEach(function(node) {
 			if (node.fkType == 'objectId') {
 				var singleOid = _.get(doc, node.docPath);
 				if (self.utilities.isObjectID(singleOid))
@@ -1764,7 +1766,7 @@ function Monoxide() {
 		});
 
 		// Apply population data
-		doc.getFKNodes().forEach(function(node) {
+		doc.getOIDs().forEach(function(node) {
 			doc.$populated[node.docPath] = self.utilities.isObjectID(node.docPath);
 			doc.$originalValues[node.docPath] = _.get(doc, node.docPath);
 		});
