@@ -3,7 +3,7 @@ var expect = require('chai').expect;
 var monoxide = require('..');
 var testSetup = require('./setup');
 
-describe('monoxideDocument.getFKNodes()', function() {
+describe('monoxideDocument.getOIDs()', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 
@@ -24,7 +24,7 @@ describe('monoxideDocument.getFKNodes()', function() {
 		var schemaPaths = [];
 		var docPaths = [];
 
-		var nodes = users[0].getFKNodes();
+		var nodes = users[0].getOIDs();
 		expect(nodes).to.be.an.array;
 
 		nodes.forEach(function(node) {
