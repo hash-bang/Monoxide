@@ -180,14 +180,6 @@ function Monoxide() {
 				next();
 			})
 			// }}}
-			// .modelFKs - Determine foreign keys {{{
-			.then('modelFKs', function(next) {
-				if (q.$cacheFKs && self.models[q.$collection]._knownFKs) return next(null, self.models[q.$collection]._knownFKs); // Already computed
-				var FKs = self.utilities.extractFKs(self.models[q.$collection].$mongooseModel.schema);
-				if (q.$cacheFKs) self.models[q.$collection]._knownFKs = FKs; // Cache for next time
-				next(null, FKs);
-			})
-			// }}}
 			// .query - start the find query {{{
 			.set('filterPostPopulate', {}) // Filter by these fields post populate
 			.then('query', function(next) {
@@ -202,7 +194,7 @@ function Monoxide() {
 						.omit(this.metaFields) // Remove all meta fields
 						// FIXME: Ensure all fields are flat
 						.omitBy(function(val, key) { // Remove all fields that will need populating later
-							if (_.some(me.modelFKs, function(FK) {
+							if (_.some(q.$collection.$oids, function(FK) {
 								return _.startsWith(key, FK);
 							})) {
 								me.filterPostPopulate[key] = val;
@@ -648,7 +640,7 @@ function Monoxide() {
 			// }}}
 			// Coherse all OIDs (or arrays of OIDs) into their correct internal type {{{
 			.then(function(next) {
-				_.forEach(self.models[q.$collection]._knownFKs || self.utilities.extractFKs(self.models[q.$collection].$mongooseModel.schema), function(fkType, schemaPath) {
+				_.forEach(self.models[q.$collection].$oids, function(fkType, schemaPath) {
 					switch(fkType.type) {
 						case 'objectId': // Convert the field to an OID if it isn't already
 							if (_.has(q, schemaPath)) {
@@ -1049,6 +1041,14 @@ function Monoxide() {
 		* @var {Object}
 		*/
 		mm.$mongooseModel = self.connection.base.models[settings.$collection.toLowerCase()];
+
+		/**
+		* Holder for all OID information
+		* This can either be the `._id` of the object, sub-documents, array pointers or object pointers
+		* @see monoxide.utilities.extractFKs
+		* @var {Object}
+		*/
+		mm.$oids = self.utilities.extractFKs(mm.$mongooseModel.schema);
 
 		mm.$collection = settings.$collection;
 		mm.$methods = {};
@@ -1681,7 +1681,7 @@ function Monoxide() {
 				var doc = this;
 				var stack = [];
 
-				_.forEach(self.models[doc.$collection]._knownFKs || self.utilities.extractFKs(self.models[doc.$collection].$mongooseModel.schema), function(fkType, schemaPath) {
+				_.forEach(model.$oids, function(fkType, schemaPath) {
 					if (fkType.type == 'subDocument') return; // Skip sub-documents (as they are stored against the parent anyway)
 
 					stack = stack.concat(doc.getNodesBySchemaPath(schemaPath).map(function(node) {
