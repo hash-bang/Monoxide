@@ -152,4 +152,33 @@ describe('monoxide.query() using $populate', function() {
 			finish();
 		});
 	});
+
+	it('should support null / undefined values in population', function(finish) {
+		monoxide.models.users.findOne({name: 'Jane Quark'}, function(err, user) {
+			expect(err).to.be.not.ok;
+			user.favourite = undefined;
+			user.items = [];
+			user.mostPurchased = [];
+			user.save(function(err, newUser) {
+				expect(err).to.be.not.ok;
+				monoxide.models.users
+					.findOne({name: 'Jane Quark'})
+					.exec(function(err, user) {
+						expect(err).to.be.not.ok;
+						expect(user).to.have.property('name', 'Jane Quark');
+
+						expect(user).to.have.property('favourite');
+						expect(user.favourite).to.be.not.ok;
+
+						expect(user).to.have.property('items');
+						expect(user.items).to.have.length(0);
+
+						expect(user).to.have.property('mostPurchased');
+						expect(user.mostPurchased).to.have.length(0);
+
+						finish();
+					});
+			});
+		});
+	});
 });
