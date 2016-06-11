@@ -1555,6 +1555,8 @@ function Monoxide() {
 
 									if (_.isObject(node.node) && node.node._id) { // Object is already populated
 										willPopulate++; // Say we're going to resolve this anyway even though we have nothing to do - prevents an issue where the error catcher reports it as a null operation (willPopulate==0)
+									} else if (!node.node) {
+										// Node is falsy - nothing to populate here
 									} else {
 										populator.defer(function(next) {
 											self.query({
