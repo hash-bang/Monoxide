@@ -20,18 +20,24 @@ describe('monoxideDocument.*', function() {
 		});
 	});
 
-	it('should hide methods as prototype functions', function() {
-		expect(users[0]).to.have.property('$collection');
-		expect(users[0]).to.not.have.ownProperty('$collection');
+	it('should hide custom methods as prototype functions', function() {
+		['splitNames', 'randomWait'].forEach(function(prop) {
+			expect(users[0]).to.have.property(prop);
+			expect(users[0]).to.not.have.ownProperty(prop);
+		});
+	});
 
-		expect(users[0]).to.have.property('save');
-		expect(users[0]).to.not.have.ownProperty('save');
+	it('should hide monoxide methods as prototype functions', function() {
+		[
+			// Properties
+			'$MONOXIDE', '$collection', '$populated',
 
-		expect(users[0]).to.have.property('splitNames');
-		expect(users[0]).to.not.have.ownProperty('splitNames');
-
-		expect(users[0]).to.have.property('randomWait');
-		expect(users[0]).to.not.have.ownProperty('randomWait');
+			// Methods
+			'save', 'remove', 'omit', 'toObject', 'toMongoObject', 'isModified', 'populate', 'getNodesBySchemaPath', 'getOIDs',
+		].forEach(function(prop) {
+			expect(users[0]).to.have.property(prop);
+			expect(users[0]).to.not.have.ownProperty(prop);
+		});
 	});
 
 	it('should pass lodash test (isObject)', function() {
@@ -42,11 +48,21 @@ describe('monoxideDocument.*', function() {
 		expect(_.isPlainObject(users[0])).to.be.ok;
 	});
 
-	it('should have enumerable properties', function() {
-		expect(Object.keys(users[0])).to.not.include('$collection');
-		expect(Object.keys(users[0])).to.not.include('save');
-		expect(Object.keys(users[0])).to.not.include('splitNames');
-		expect(Object.keys(users[0])).to.not.include('randomWait');
+	it('should return an un-prototyped object via toObject()', function() {
+		var asObj = users[0].toObject();
+
+		[
+			// Custom methods
+			'splitNames', 'randomWait',
+
+			// Properties
+			'$MONOXIDE', '$collection', '$populated',
+
+			// Methods
+			'save', 'remove', 'omit', 'toObject', 'toMongoObject', 'isModified', 'populate', 'getNodesBySchemaPath', 'getOIDs',
+		].forEach(function(prop) {
+			expect(asObj).to.not.have.property(prop);
+		});
 	});
 
 	it('should return sane responses during `for in`', function() {
