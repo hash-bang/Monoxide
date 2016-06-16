@@ -114,4 +114,58 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			finish();
 		});
 	});
+
+	it('should not create OIDs if passed null', function(finish) {
+		monoxide.models.users.create({
+			name: 'New User4',
+			favourite: null,
+		}, function(err, user) {
+			expect(err).to.not.be.ok;
+			expect(user).to.be.an.object;
+
+			expect(user).to.have.property('name', 'New User4');
+			expect(user).to.have.property('role', 'user');
+
+			expect(user).to.have.property('favourite');
+			expect(user.favourite).to.be.null;
+
+			finish();
+		});
+	});
+
+	it('should not create OIDs if passed undefined', function(finish) {
+		monoxide.models.users.create({
+			name: 'New User5',
+			favourite: undefined,
+		}, function(err, user) {
+			expect(err).to.not.be.ok;
+			expect(user).to.be.an.object;
+
+			expect(user).to.have.property('name', 'New User5');
+			expect(user).to.have.property('role', 'user');
+
+			expect(user).to.have.property('favourite');
+			expect(user.favourite).to.be.null;
+
+			finish();
+		});
+	});
+
+	it('should not create OIDs if passed false', function(finish) {
+		monoxide.models.users.create({
+			name: 'New User6',
+			favourite: undefined,
+		}, function(err, user) {
+			expect(err).to.not.be.ok;
+			expect(user).to.be.an.object;
+
+			expect(user).to.have.property('name', 'New User6');
+			expect(user).to.have.property('role', 'user');
+
+			expect(user).to.have.property('favourite');
+			expect(user.favourite).to.be.null;
+
+			finish();
+		});
+	});
 });

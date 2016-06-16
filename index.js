@@ -2610,11 +2610,13 @@ function Monoxide() {
 	/**
 	* Construct and return a MongoDB-Core compatible ObjectID object
 	* This is mainly used within functions that need to convert a string ID into an object
+	* This has one additional check which will return undefined if the value passed in is falsy
 	* @name monoxide.utilities.objectID
 	* @param {string} str The string to convert into an ObjectID
 	* @return {Object} A MongoDB-Core compatible ObjectID object instance
 	*/
 	self.utilities.objectID = function(str) {
+		if (!str) return undefined;
 		return new mongoose.Types.ObjectId(str);
 	};
 	// }}}
