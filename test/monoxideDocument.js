@@ -77,5 +77,4 @@ describe('monoxideDocument.*', function() {
 		expect(props).to.include('splitNames');
 		expect(props).to.include('randomWait');
 	});
-
 });

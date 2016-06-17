@@ -114,6 +114,7 @@ function Monoxide() {
 	* @param {number} [q.$limit] Limit the return to this many rows
 	* @param {number} [q.$skip] Offset return by this number of rows
 	* @param {boolean=false} [q.$count=false] Only count the results - do not return them. If enabled a number of returned with the result
+	* @param {boolean} [q.$decorate=true] Add all Monoxide methods, functions and meta properties, if false the return is a plain object
 	* @param {boolean} [q.$cacheFKs=true] Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
 	* @param {boolean} [q.$applySchema=true] Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record
 	* @param {boolean} [q.$errNotFound] Raise an error if a specifically requested document is not found (requires $id)
@@ -170,6 +171,7 @@ function Monoxide() {
 				'$count', // Only count the results - do not return them
 				'$cacheFKs', // Cache model Foreign Keys (used for populates) or compute them every time
 				'$applySchema', // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
+				'$decorate',
 				'$errNotFound', // During $id / $one operations raise an error if the record is not found
 			])
 			// Sanity checks {{{
@@ -300,12 +302,12 @@ function Monoxide() {
 				if (this.result === undefined) {
 					next(null, undefined);
 				} else if (q.$one) {
-					next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema}, this.result));
+					next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema, $decorate: q.$decorate}, this.result));
 				} else if (q.$count) {
 					next(null, this.result);
 				} else {
 					next(null, this.result.map(function(doc) {
-						return new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema}, doc.toObject());
+						return new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema, $decorate: q.$decorate}, doc.toObject());
 					}));
 				}
 			})
@@ -1365,11 +1367,15 @@ function Monoxide() {
 	* @class
 	* @name monoxide.monoxideDocument
 	* @param {Object} setup The prototype fields. Everything in this object is extended into the prototype
+	* @param {boolean} [setup.$applySchema=true] Whether to enforce the model schema on the object. This includes applying default values
+	* @param {boolean [setup.decorate=true] Whether to apply any decoration. If false this function returns data undecorated (i.e. no custom Monoxide functionality)
 	* @param {string} setup.$collection The collection this document belongs to
 	* @param {Object} data The initial data
 	* @return {monoxide.monoxideDocument}
 	*/
 	self.monoxideDocument = function monoxideDocument(setup, data) {
+		if (setup.$decorate === false) return data;
+
 		var model = self.models[setup.$collection];
 
 		var proto = {

@@ -101,4 +101,35 @@ describe('monoxide.query()', function() {
 			});
 		});
 	});
+
+	it('should be able to return undecorated objects (.query($decorate=false))', function(finish) {
+		monoxide.query({
+			$decorate: false,
+			$collection: 'widgets',
+			$sort: 'created',
+		}, function(err, widgets) {
+			expect(err).to.be.not.ok;
+			expect(widgets).to.be.an.array;
+
+			widgets.forEach(function(widget) {
+				[
+					// Custom methods
+					'splitNames', 'randomWait',
+
+					// Properties
+					'$MONOXIDE', '$collection', '$populated',
+
+					// Methods
+					'save', 'remove', 'omit', 'toObject', 'toMongoObject', 'isModified', 'populate', 'getNodesBySchemaPath', 'getOIDs',
+				].forEach(function(prop) {
+					expect(widget).to.not.have.property(prop);
+				});
+
+				expect(widget).to.satisfy(_.isObject);
+				expect(widget).to.satisfy(_.isPlainObject);
+			});
+
+			finish();
+		});
+	});
 });
