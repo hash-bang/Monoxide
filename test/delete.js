@@ -1,4 +1,5 @@
 var expect = require('chai').expect;
+var mlog = require('mocha-logger');
 var monoxide = require('..');
 var testSetup = require('./setup');
 
@@ -34,6 +35,8 @@ describe('monoxide.delete() / monoxide.models[].remove() / monoxideDocument.remo
 				expect(err).to.be.ok;
 				expect(remaining).to.be.not.ok;
 
+				mlog.log('deleted ID', widgets[0]._id);
+
 				widgets.shift();
 				finish();
 			});
@@ -47,6 +50,8 @@ describe('monoxide.delete() / monoxide.models[].remove() / monoxideDocument.remo
 			monoxide.models.widgets.findOne({_id: widgets[0]._id}, function(err, remaining) {
 				expect(err).to.be.ok;
 				expect(remaining).to.be.not.ok;
+
+				mlog.log('deleted ID', widgets[0]._id);
 
 				widgets.shift();
 				finish();
@@ -65,6 +70,7 @@ describe('monoxide.delete() / monoxide.models[].remove() / monoxideDocument.remo
 			monoxide.models.widgets.count(function(err, count) {
 				expect(err).to.be.not.ok;
 				expect(count).to.be.equal(0);
+				mlog.log('deleted', count, 'items');
 				finish();
 			});
 		});
@@ -77,6 +83,7 @@ describe('monoxide.delete() / monoxide.models[].remove() / monoxideDocument.remo
 			monoxide.models.widgets.count(function(err, count) {
 				expect(err).to.be.not.ok;
 				expect(count).to.be.equal(0);
+				mlog.log('deleted', count, 'items');
 				finish();
 			});
 		});

@@ -1,5 +1,6 @@
 var expect = require('chai').expect;
 var objectID = require('mongoose').Types.ObjectId;
+var mlog = require('mocha-logger');
 var monoxide = require('..');
 var testSetup = require('./setup');
 
@@ -12,6 +13,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 		monoxide.query({
 			$collection: 'widgets',
 			$sort: 'name',
+			$plain: true, // Force all objects to be plain objects
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
 			expect(res).to.be.an.array;
@@ -28,10 +30,13 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 				{number: 50, item: widgets[0]._id},
 				{number: 60, item: widgets[1]._id},
 			],
+			favourite: widgets[2]._id,
 			password: 'wonderful',
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
+
+			mlog.log('created ID', user._id);
 
 			expect(user).to.have.property('name', 'New User');
 			expect(user).to.have.property('role', 'user');
@@ -47,6 +52,35 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(user.mostPurchased[1]).to.have.property('number', 60);
 			expect(user.mostPurchased[1]).to.have.property('item', widgets[1]._id);
 			expect(user.mostPurchased[1].item).to.be.a.string;
+
+			finish();
+		});
+	});
+
+	it('should validate the created user (via monoxide.create) against Mongoose return', function(finish) {
+		monoxide.models.users.$mongooseModel.findOne({name: 'New User'}, function(err, user) {
+			expect(err).to.not.be.ok;
+			expect(user).to.be.an.object;
+			expect(user).to.have.property('name', 'New User');
+
+			// Validate favourite OID
+			expect(user).to.have.property('favourite');
+			expect(user.favourite).to.be.an.instanceOf(objectID);
+
+			// Validate items OID
+			expect(user).to.have.property('items');
+			expect(user.items).to.be.an.array;
+			user.items.forEach(function(item) {
+				expect(item).to.be.an.instanceOf(objectID);
+			});
+
+			// Validate mostpurchased[].item OID
+			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.have.length(2);
+			user.mostPurchased.forEach(function(mostPurchased) {
+				expect(mostPurchased).to.have.property('item');
+				expect(mostPurchased.item).to.be.an.instanceOf(objectID);
+			});
 
 			finish();
 		});
@@ -76,6 +110,8 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
 
+			mlog.log('created ID', user._id);
+
 			expect(user).to.have.property('name', 'New User2');
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('_password', 'a');
@@ -99,6 +135,8 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
+
+			mlog.log('created ID', user._id);
 
 			expect(user).to.have.property('name', 'New User3');
 			expect(user).to.have.property('role', 'user');

@@ -34,7 +34,7 @@
     "gulp": "^3.9.1",
     "gulp-documentation": "^2.2.0",
     "mocha": "^2.4.5",
-    "mocha-logger": "^1.0.2",
+    "mocha-logger": "^1.0.4",
     "mongoose-scenario": "^2.0.1",
     "superagent": "^1.7.2"
   }
