@@ -1,4 +1,5 @@
 var expect = require('chai').expect;
+var objectID = require('mongoose').Types.ObjectId;
 var monoxide = require('..');
 var testSetup = require('./setup');
 

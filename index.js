@@ -114,7 +114,8 @@ function Monoxide() {
 	* @param {number} [q.$limit] Limit the return to this many rows
 	* @param {number} [q.$skip] Offset return by this number of rows
 	* @param {boolean=false} [q.$count=false] Only count the results - do not return them. If enabled a number of returned with the result
-	* @param {boolean} [q.$decorate=true] Add all Monoxide methods, functions and meta properties, if false the return is a plain object
+	* @param {boolean} [q.$decorate=true] Add all Monoxide methods, functions and meta properties
+	* @param {boolean} [q.$plain=false] Return a plain object or object array. This is the equivelent of calling .toObject() on any resultant object. Implies $decorate=true
 	* @param {boolean} [q.$cacheFKs=true] Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
 	* @param {boolean} [q.$applySchema=true] Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record
 	* @param {boolean} [q.$errNotFound] Raise an error if a specifically requested document is not found (requires $id)
@@ -172,6 +173,7 @@ function Monoxide() {
 				'$cacheFKs', // Cache model Foreign Keys (used for populates) or compute them every time
 				'$applySchema', // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
 				'$decorate',
+				'$plain',
 				'$errNotFound', // During $id / $one operations raise an error if the record is not found
 			])
 			// Sanity checks {{{
@@ -302,11 +304,13 @@ function Monoxide() {
 				if (this.result === undefined) {
 					next(null, undefined);
 				} else if (q.$one) {
+					if (q.$decorate) return next(null, this.result.toObject());
 					next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema, $decorate: q.$decorate}, this.result));
 				} else if (q.$count) {
 					next(null, this.result);
 				} else {
 					next(null, this.result.map(function(doc) {
+						if (q.$decorate) return doc.toObject();
 						return new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema, $decorate: q.$decorate}, doc.toObject());
 					}));
 				}
@@ -314,7 +318,7 @@ function Monoxide() {
 			// }}}
 			// Apply populates {{{
 			.then(function(next) {
-				if (!q.$populate || !q.$populate.length || q.$count || this.result === undefined) return next(); // Skip
+				if (!q.$populate || !q.$populate.length || q.$count || !q.decorate || q.$plain || this.result === undefined) return next(); // Skip
 				if (q.$one) {
 					this.result.populate(q.$populate, next);
 				} else {

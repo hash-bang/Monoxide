@@ -170,4 +170,39 @@ describe('monoxide.query()', function() {
 			});
 		});
 	});
+
+	it('should perform a plain query ($plain=true)', function(finish) {
+		monoxide.models.users.findOne({
+			$plain: true,
+			name: 'Joe Random',
+		}, function(err, user) {
+			expect(err).to.be.not.ok;
+			expect(user).to.be.an.object;
+			expect(user).to.have.property('name', 'Joe Random');
+
+			// Validate that 1:1 OIDs are plain strings
+			expect(user).to.have.property('favourite');
+			expect(user.favourite).to.be.a.string;
+			expect(user.favourite).to.satisfy(_.isString);
+
+			// Validate 1:M OIDs are plain strings
+			expect(user).to.have.property('items');
+			expect(user.items).to.be.an.array;
+			user.items.forEach(function(item) {
+				expect(item).to.be.a.string;
+				expect(item).to.satisfy(_.isString);
+			});
+
+			// Validate 1:M (collection) OIDs are plain strings
+			expect(user).to.have.property('mostPurchased');
+			expect(user.mostPurchased).to.be.an.array;
+			user.mostPurchased.forEach(function(mostPurchased) {
+				expect(mostPurchased).to.have.property('item');
+				expect(mostPurchased.item).to.be.a.string;
+				expect(mostPurchased.item).to.satisfy(_.isString);
+			});
+
+			finish();
+		});
+	});
 });
