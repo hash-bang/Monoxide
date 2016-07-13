@@ -57,39 +57,10 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 		});
 	});
 
-	it('should validate the created user (via monoxide.create) against Mongoose return', function(finish) {
-		monoxide.models.users.$mongooseModel.findOne({name: 'New User'}, function(err, user) {
-			expect(err).to.not.be.ok;
-			expect(user).to.be.an.object;
-			expect(user).to.have.property('name', 'New User');
-
-			// Validate favourite OID
-			expect(user).to.have.property('favourite');
-			expect(user.favourite).to.be.an.instanceOf(objectID);
-
-			// Validate items OID
-			expect(user).to.have.property('items');
-			expect(user.items).to.be.an.array;
-			user.items.forEach(function(item) {
-				expect(item).to.be.an.instanceOf(objectID);
-			});
-
-			// Validate mostpurchased[].item OID
-			expect(user.mostPurchased).to.be.an.array;
-			expect(user.mostPurchased).to.have.length(2);
-			user.mostPurchased.forEach(function(mostPurchased) {
-				expect(mostPurchased).to.have.property('item');
-				expect(mostPurchased.item).to.be.an.instanceOf(objectID);
-			});
-
-			finish();
-		});
-	});
-
 	it('create a new user (via monoxide.create; without callback)', function() {
 		monoxide.create({
 			$collection: 'users',
-			name: 'New User 2',
+			name: 'New User2',
 			mostPurchased: [
 				{number: 50, item: widgets[0]._id},
 				{number: 60, item: widgets[1]._id},
@@ -100,7 +71,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 	it('create a new user (via monoxide.model[].create)', function(finish) {
 		monoxide.models.users.create({
-			name: 'New User2',
+			name: 'New User3',
 			mostPurchased: [
 				{number: 80},
 				{number: 70},
@@ -112,7 +83,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 			mlog.log('created ID', user._id);
 
-			expect(user).to.have.property('name', 'New User2');
+			expect(user).to.have.property('name', 'New User3');
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('_password', 'a');
 			expect(user).to.have.property('favourite');
@@ -131,14 +102,14 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 	it('should create omitted fields with defaults', function(finish) {
 		monoxide.models.users.create({
-			name: 'New User3',
+			name: 'New User4',
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
 
 			mlog.log('created ID', user._id);
 
-			expect(user).to.have.property('name', 'New User3');
+			expect(user).to.have.property('name', 'New User4');
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('favourite');
 			expect(user.favourite).to.be.a.string;
@@ -156,26 +127,8 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 	it('should not create OIDs if passed null', function(finish) {
 		monoxide.models.users.create({
-			name: 'New User4',
-			favourite: null,
-		}, function(err, user) {
-			expect(err).to.not.be.ok;
-			expect(user).to.be.an.object;
-
-			expect(user).to.have.property('name', 'New User4');
-			expect(user).to.have.property('role', 'user');
-
-			expect(user).to.have.property('favourite');
-			expect(user.favourite).to.be.null;
-
-			finish();
-		});
-	});
-
-	it('should not create OIDs if passed undefined', function(finish) {
-		monoxide.models.users.create({
 			name: 'New User5',
-			favourite: undefined,
+			favourite: null,
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
@@ -190,7 +143,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 		});
 	});
 
-	it('should not create OIDs if passed false', function(finish) {
+	it('should not create OIDs if passed undefined', function(finish) {
 		monoxide.models.users.create({
 			name: 'New User6',
 			favourite: undefined,
@@ -203,6 +156,63 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 			expect(user).to.have.property('favourite');
 			expect(user.favourite).to.be.null;
+
+			finish();
+		});
+	});
+
+	it('should not create OIDs if passed false', function(finish) {
+		monoxide.models.users.create({
+			name: 'New User7',
+			favourite: undefined,
+		}, function(err, user) {
+			expect(err).to.not.be.ok;
+			expect(user).to.be.an.object;
+
+			expect(user).to.have.property('name', 'New User7');
+			expect(user).to.have.property('role', 'user');
+
+			expect(user).to.have.property('favourite');
+			expect(user.favourite).to.be.null;
+
+			finish();
+		});
+	});
+
+
+	it('should validate the created user (via monoxide.create) against Mongoose return', function(finish) {
+		monoxide.models.users.$mongooseModel.find({
+			name: {$in: ['New User', 'New User2', 'New User3', 'New User4', 'New User5', 'New User6', 'New User7']},
+		}, function(err, users) {
+			expect(err).to.not.be.ok;
+			expect(users).to.be.an.array;
+			expect(users).to.have.length(7);
+
+			users.forEach(function(user) {
+				expect(user).to.be.an.object;
+				expect(user).to.have.property('name');
+				expect(user.name).to.match(/^New User[0-7]?/);
+
+				// Validate favourite OID
+				expect(user).to.have.property('favourite');
+				if (user.favourite)
+					expect(user.favourite).to.be.an.instanceOf(objectID);
+
+				// Validate items OID
+				expect(user).to.have.property('items');
+				expect(user.items).to.be.an.array;
+				user.items.forEach(function(item) {
+					expect(item).to.be.an.instanceOf(objectID);
+				});
+
+				// Validate mostpurchased[].item OID
+				expect(user.mostPurchased).to.be.an.array;
+				user.mostPurchased.forEach(function(mostPurchased) {
+					expect(mostPurchased).to.have.property('item');
+					if (mostPurchased.item)
+						expect(mostPurchased.item).to.be.an.instanceOf(objectID);
+				});
+			});
 
 			finish();
 		});
