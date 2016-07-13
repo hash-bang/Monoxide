@@ -132,4 +132,42 @@ describe('monoxide.query()', function() {
 			finish();
 		});
 	});
+
+	it('should be able to query via a collection array', function(finish) {
+		monoxide.models.widgets.findOne({name: 'Widget bang'}, function(err, widget) {
+			expect(err).to.be.not.ok;
+			expect(widget).to.be.an.object;
+			expect(widget).to.have.property('name', 'Widget bang');
+
+			monoxide.models.users.find({
+				$collection: 'users',
+				$sort: 'name',
+				'mostPurchased.item': widget._id,
+			}, function(err, users) {
+				expect(err).to.not.be.ok;
+				expect(users).to.be.an.array;
+				expect(users).to.have.length(2);
+				finish();
+			});
+		});
+	});
+
+	it('should be able to query via an array of IDs', function(finish) {
+		monoxide.models.widgets.findOne({name: 'Widget bang'}, function(err, widget) {
+			expect(err).to.be.not.ok;
+			expect(widget).to.be.an.object;
+			expect(widget).to.have.property('name', 'Widget bang');
+
+			monoxide.models.users.find({
+				$collection: 'users',
+				$sort: 'name',
+				items: widget._id,
+			}, function(err, users) {
+				expect(err).to.not.be.ok;
+				expect(users).to.be.an.array;
+				expect(users).to.have.length(2);
+				finish();
+			});
+		});
+	});
 });
