@@ -30,6 +30,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 				{number: 50, item: widgets[0]._id},
 				{number: 60, item: widgets[1]._id},
 			],
+			items: [widgets[1]._id, widgets[0]._id],
 			favourite: widgets[2]._id,
 			password: 'wonderful',
 		}, function(err, user) {
@@ -65,6 +66,8 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 				{number: 50, item: widgets[0]._id},
 				{number: 60, item: widgets[1]._id},
 			],
+			items: [widgets[0]._id, widgets[1]._id, widgets[2]._id],
+			favourite: widgets[2]._id,
 			password: 'splendid',
 		});
 	});
@@ -73,9 +76,11 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 		monoxide.models.users.create({
 			name: 'New User3',
 			mostPurchased: [
-				{number: 80},
-				{number: 70},
+				{number: 80, item: widgets[1]._id},
+				{number: 70, item: widgets[2]._id},
 			],
+			items: [widgets[0]._id, widgets[1]._id],
+			favourite: widgets[0]._id,
 			password: 'shark', // Should return {_password: 'a'}
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
@@ -92,9 +97,9 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(user.mostPurchased).to.be.an.array;
 			expect(user.mostPurchased).to.have.length(2);
 			expect(user.mostPurchased[0]).to.have.property('number', 80);
-			expect(user.mostPurchased[0].item).to.be.undefined;
+			expect(user.mostPurchased[0].item).to.be.equal(widgets[1]._id);
 			expect(user.mostPurchased[1]).to.have.property('number', 70);
-			expect(user.mostPurchased[1].item).to.be.undefined;
+			expect(user.mostPurchased[1].item).to.be.equal(widgets[2]._id);
 
 			finish();
 		});
@@ -182,11 +187,11 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 	it('should validate the created user (via monoxide.create) against Mongoose return', function(finish) {
 		monoxide.models.users.$mongooseModel.find({
-			name: {$in: ['New User', 'New User2', 'New User3', 'New User4', 'New User5', 'New User6', 'New User7']},
+			name: {$in: ['New User', 'New User2', 'New User3']},
 		}, function(err, users) {
 			expect(err).to.not.be.ok;
 			expect(users).to.be.an.array;
-			expect(users).to.have.length(7);
+			expect(users).to.have.length(3);
 
 			users.forEach(function(user) {
 				expect(user).to.be.an.object;
