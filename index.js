@@ -1470,16 +1470,27 @@ function Monoxide() {
 				var outDoc = doc.toObject(); // Rely on the toObject() syntax to strip out rubbish
 
 				doc.getOIDs().forEach(function(node) {
-					if (node.fkType != 'objectId') return; // Only rewrite OID entities
-					var oidLeaf = _.get(doc, node.docPath);
-					if (_.isUndefined(oidLeaf)) return; // Ignore undefined
+					switch (node.fkType) {
+						case 'objectId':
+							var oidLeaf = _.get(doc, node.docPath);
+							if (_.isUndefined(oidLeaf)) return; // Ignore undefined
 
-					if (!self.utilities.isObjectID(oidLeaf)) {
-						if (_.has(oidLeaf, '_id')) { // Already populated?
-							_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf._id));
-						} else { // Convert to an OID
-							_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf));
-						}
+							if (!self.utilities.isObjectID(oidLeaf)) {
+								if (_.has(oidLeaf, '_id')) { // Already populated?
+									_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf._id));
+								} else { // Convert to an OID
+									_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf));
+								}
+							}
+							break;
+						case 'objectIdArray':
+							var oidLeaf = _.get(doc, node.schemaPath);
+							_.set(outDoc, node.schemaPath, oidLeaf.map(function(leaf) {
+								return self.utilities.isObjectID(leaf) ? leaf : self.utilities.objectID(leaf);
+							}));
+							break;
+						default:
+							return; // Ignore unsupported OID types
 					}
 				});
 

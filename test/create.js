@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var expect = require('chai').expect;
 var objectID = require('mongoose').Types.ObjectId;
 var mlog = require('mocha-logger');
@@ -9,7 +10,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 	after(testSetup.teardown);
 
 	var widgets;
-	it('should get a list of existing widgets', function(finish) {
+	it('should get a list of existing widgets (as a plain array)', function(finish) {
 		monoxide.query({
 			$collection: 'widgets',
 			$sort: 'name',
@@ -17,6 +18,19 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
 			expect(res).to.be.an.array;
+			expect(res).to.have.length(3);
+
+			res.forEach(function(widget) {
+				expect(widget).to.be.an.object;
+				expect(widget).to.have.property('_id');
+				expect(widget).to.have.property('name');
+				expect(widget).to.have.property('content');
+
+				expect(widget._id).to.be.a.string;
+				expect(widget._id).to.satisfy(_.isString);
+				expect(widget._id).to.satisfy(i => typeof i == 'string');
+			});
+
 			widgets = res;
 			finish();
 		});
