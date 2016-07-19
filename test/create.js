@@ -185,7 +185,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 	});
 
 
-	it('should validate the created user (via monoxide.create) against Mongoose return', function(finish) {
+	it('should validate the created user OIDs are stored as OIDs', function(finish) {
 		monoxide.models.users.$mongooseModel.find({
 			name: {$in: ['New User', 'New User2', 'New User3']},
 		}, function(err, users) {
@@ -200,26 +200,76 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 				// Validate favourite OID
 				expect(user).to.have.property('favourite');
-				if (user.favourite)
-					expect(user.favourite).to.be.an.instanceOf(objectID);
+				expect(user.favourite).to.be.an.instanceOf(objectID);
 
 				// Validate items OID
 				expect(user).to.have.property('items');
 				expect(user.items).to.be.an.array;
+				expect(user.items).to.have.length.of.at.least(2);
 				user.items.forEach(function(item) {
 					expect(item).to.be.an.instanceOf(objectID);
 				});
 
 				// Validate mostpurchased[].item OID
 				expect(user.mostPurchased).to.be.an.array;
+				expect(user.mostPurchased).to.have.length.of.at.least(2);
 				user.mostPurchased.forEach(function(mostPurchased) {
 					expect(mostPurchased).to.have.property('item');
-					if (mostPurchased.item)
-						expect(mostPurchased.item).to.be.an.instanceOf(objectID);
+					expect(mostPurchased.item).to.be.an.instanceOf(objectID);
 				});
 			});
 
 			finish();
 		});
+	});
+
+	it('should validate the created user documents can populate their OIDs', function(finish) {
+		monoxide.models.users.$mongooseModel
+			.find({
+				name: {$in: ['New User', 'New User2', 'New User3']},
+			})
+			.populate('mostPurchased.item')
+			.populate('items')
+			.populate('favourite')
+			.exec(function(err, users) {
+				expect(err).to.not.be.ok;
+				expect(users).to.be.an.array;
+				expect(users).to.have.length(3);
+
+				users.forEach(function(user) {
+					expect(user).to.be.an.object;
+					expect(user).to.have.property('name');
+					expect(user.name).to.match(/^New User[0-7]?/);
+
+					// Validate favourite OID
+					expect(user).to.have.property('favourite');
+					expect(user.favourite).to.be.an.object;
+					expect(user.favourite).to.have.property('_id');
+					expect(user.favourite).to.have.property('name');
+					expect(user.favourite).to.have.property('content');
+
+					// Validate items OID
+					expect(user).to.have.property('items');
+					expect(user.items).to.be.an.array;
+					user.items.forEach(function(item) {
+						expect(item).to.be.an.object;
+						expect(item).to.have.property('_id');
+						expect(item).to.have.property('name');
+						expect(item).to.have.property('content');
+					});
+
+					// Validate mostpurchased[].item OID
+					expect(user.mostPurchased).to.be.an.array;
+					user.mostPurchased.forEach(function(mostPurchased) {
+						expect(mostPurchased).to.have.property('item');
+						expect(mostPurchased.item).to.be.an.object;
+						expect(mostPurchased.item).to.have.property('_id');
+						expect(mostPurchased.item).to.have.property('name');
+						expect(mostPurchased.item).to.have.property('content');
+					});
+				});
+
+				finish();
+			});
 	});
 });
