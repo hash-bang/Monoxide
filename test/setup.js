@@ -2,6 +2,7 @@ var _ = require('lodash');
 var async = require('async-chainable');
 var expect = require('chai').expect;
 var monoxide = require('..');
+var mlog = require('mocha-logger');
 var scenario = require('mongoose-scenario');
 
 // The Database URI to use for tests
@@ -9,7 +10,7 @@ var mongoURI = 'mongodb://localhost/monoxide-test';
 
 // Setting this to FALSE will disable the database teardown (i.e. not erase the Schema + DB when done)
 // This is useful for debugging but only with single scripts as each test script will expect a fresh database
-var allowTeardown = true;
+var allowTeardown = process.env.TEARDOWN ? process.env.TEARDOWN=='true' : true;
 
 module.exports = {
 	// init {{{
@@ -28,7 +29,8 @@ module.exports = {
 	teardown: function(finish) {
 		var self = module.exports;
 		if (!allowTeardown) {
-			console.log('Skipping teardown');
+			mlog.error('Skipping teardown');
+			mlog.log('To examine use `mongo ' + mongoURI.replace(/^.+\/(.*)?/, '$1') + '`');
 			return finish();
 		}
 
