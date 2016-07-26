@@ -8,7 +8,7 @@ Monoxide attempts to provide nicer, chainable functionality on top of base Mongo
 
 
 1. [API documentation](API.md)
-2. [ReST server setup](#reset-server)
+2. [ReST server](#rest-server)
 3. [Example setups](examples/)
 4. [Common recipes and design patterns](RECIPES.md)
 4. [TODO list](TODO.md)
