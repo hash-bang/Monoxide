@@ -26,8 +26,8 @@ describe('monoxide.query() using $populate', function() {
 
 			expect(users[0]).to.have.property('items');
 			expect(users[0].items).to.be.an.array;
-			expect(users[0].items).to.have.length(1);
-			expect(users[0].items[0]).to.have.property('name', 'Widget bang');
+			expect(users[0].items).to.have.length(2);
+			expect(users[0].items[0]).to.have.property('name', 'Widget crash');
 
 			expect(users[0]).to.have.property('mostPurchased');
 			expect(users[0].mostPurchased).to.be.an.array;

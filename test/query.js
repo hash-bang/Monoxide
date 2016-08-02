@@ -78,7 +78,7 @@ describe('monoxide.query()', function() {
 		});
 	});
 
-	it('should query by a sub-document array of OIDs', function(finish) {
+	it('should query by a sub-document array of OIDs ($in)', function(finish) {
 		monoxide.query({
 			$collection: 'widgets',
 			$sort: 'created',
@@ -88,14 +88,35 @@ describe('monoxide.query()', function() {
 
 			monoxide.query({
 				$collection: 'users',
-				items: widgets[0]._id,
+				items: {$in: [widgets[0]._id]},
 			}, function(err, users) {
 				expect(err).to.not.be.ok;
 				expect(users).to.be.an.array;
-				expect(users).to.have.length(2);
+				expect(users).to.have.length(1);
 
 				expect(users[0]).to.have.property('items');
 				expect(users[0].items[0].toString()).to.equal(widgets[0]._id);
+
+				finish();
+			});
+		});
+	});
+
+	it('should query by a sub-document array of OIDs ($nin)', function(finish) {
+		monoxide.query({
+			$collection: 'widgets',
+			$sort: 'created',
+		}, function(err, widgets) {
+			expect(err).to.be.not.ok;
+			expect(widgets).to.be.an.array;
+
+			monoxide.query({
+				$collection: 'users',
+				items: {$nin: [ widgets[0]._id, widgets[2]._id] },
+			}, function(err, users) {
+				expect(err).to.not.be.ok;
+				expect(users).to.be.an.array;
+				expect(users).to.have.length(0);
 
 				finish();
 			});
@@ -161,11 +182,11 @@ describe('monoxide.query()', function() {
 			monoxide.models.users.find({
 				$collection: 'users',
 				$sort: 'name',
-				items: widget._id,
+				items: {$in: [widget._id]},
 			}, function(err, users) {
 				expect(err).to.not.be.ok;
 				expect(users).to.be.an.array;
-				expect(users).to.have.length(2);
+				expect(users).to.have.length(1);
 				finish();
 			});
 		});

@@ -92,7 +92,7 @@ module.exports = {
 					.replace(/[^aeiou]+/g, '');
 			})
 			.virtual('passwordStrength', function() {
-				// Returns the length of the (badly, see above) password which is an approximate indicator of strength
+				// Returns the length of the (badly, see above) hashed password which is an approximate indicator of hash strength
 				return (this._password.length || 0);
 			})
 		// }}}
@@ -155,7 +155,7 @@ module.exports = {
 					name: 'Jane Quark',
 					role: 'user',
 					favourite: 'widget-bang',
-					items: ['widget-bang'],
+					items: ['widget-crash', 'widget-whollop'],
 					_password: 'oeaeoeae', // INPUT: correct battery horse staple
 					mostPurchased: [
 						{
