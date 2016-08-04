@@ -14,6 +14,9 @@ function Monoxide() {
 	var self = this;
 	self.models = {};
 	self.connection;
+	self.settings = {
+		removeAll: true, // Allow db.model.delete() calls with no arguments
+	};
 
 	// .connect {{{
 	/**
@@ -736,8 +739,6 @@ function Monoxide() {
 		// Deal with arguments {{{
 		if (_.isObject(q) && _.isFunction(callback)) {
 			// All ok
-		} else if (!_.isFunction(callback)) {
-			throw new Error('Callback parameter is mandatory');
 		} else {
 			throw new Error('Unknown function call pattern');
 		}
@@ -760,6 +761,10 @@ function Monoxide() {
 				if (!q || _.isEmpty(q)) return next('No query given for delete operation');
 				if (!q.$collection) return next('$collection must be specified for delete operation');
 				if (!q.$id && !q.$multiple) return next('$id or $multiple must be speciied during delete operation');
+
+				if (!self.settings.removeAll && _.isEmpty(_.omit(q, this.metaFields))) { // Apply extra checks to make sure we are not nuking everything if we're not allowed
+					return callback('delete operation not allowed with empty query');
+				}
 				next();
 			})
 			// }}}
