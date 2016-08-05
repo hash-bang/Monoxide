@@ -22,12 +22,41 @@ describe('monoxide.express (permission tests)', function() {
 		app.use(bodyParser.json());
 		app.set('log.indent', '      ');
 
+		// Setup hooks to check that $data exists {{{
+		monoxide.models.widgets
+			.hook('query', function(next, q) {
+				if (!q.$data) return next();
+				expect(q).to.have.property('$data');
+				expect(q.$data).to.have.property('quz', 'qux');
+				expect(q.$data).to.have.property('corge', 456);
+				next();
+			})
+			.hook('save', function(next, doc) {
+				expect(doc).to.have.property('$data');
+				expect(doc.$data).to.have.property('quz', 'qux');
+				expect(doc.$data).to.have.property('corge', 456);
+				next();
+			})
+			.hook('postSave', function(next, doc) {
+				expect(doc).to.have.property('$data');
+				expect(doc.$data).to.have.property('quz', 'qux');
+				expect(doc.$data).to.have.property('corge', 456);
+				next();
+			});
+		// }}}
+
 		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 			get: true,
 			query: true,
 			count: true,
 			save: false,
 			delete: false,
+			$data: function(next, doc) {
+				return next(null, { // Junk data to attach to $data in the downstream DB calls
+					quz: 'qux',
+					corge: 456,
+				});
+			},
 		}));
 
 		var server = app.listen(port, null, function(err) {
@@ -82,6 +111,12 @@ describe('monoxide.express (permission tests)', function() {
 			get: function(req, res, next) {
 				if (req.params.id == widgets[0]._id) return res.status(403).send('Nope!').end();
 				next();
+			},
+			$data: function(next, doc) {
+				return next(null, { // Junk data to attach to $data in the downstream DB calls
+					quz: 'qux',
+					corge: 456,
+				});
 			},
 		}));
 
@@ -138,6 +173,12 @@ describe('monoxide.express (permission tests)', function() {
 					res.status(500).send('Fake server error').end();
 				},
 			],
+			$data: function(next, doc) {
+				return next(null, { // Junk data to attach to $data in the downstream DB calls
+					quz: 'qux',
+					corge: 456,
+				});
+			},
 		}));
 
 		var server = app.listen(port, null, function(err) {
@@ -195,6 +236,12 @@ describe('monoxide.express (permission tests)', function() {
 					next();
 				},
 			],
+			$data: function(next, doc) {
+				return next(null, { // Junk data to attach to $data in the downstream DB calls
+					quz: 'qux',
+					corge: 456,
+				});
+			},
 		}));
 
 		var server = app.listen(port, null, function(err) {
@@ -258,6 +305,12 @@ describe('monoxide.express (permission tests)', function() {
 				}
 				return res.status(403).send('Nope!').end();
 			},
+			$data: function(next, doc) {
+				return next(null, { // Junk data to attach to $data in the downstream DB calls
+					quz: 'qux',
+					corge: 456,
+				});
+			},
 		}));
 
 		var server = app.listen(port, null, function(err) {
@@ -288,6 +341,12 @@ describe('monoxide.express (permission tests)', function() {
 
 		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {
 			count: false,
+			$data: function(next, doc) {
+				return next(null, { // Junk data to attach to $data in the downstream DB calls
+					quz: 'qux',
+					corge: 456,
+				});
+			},
 		}));
 
 		var server = app.listen(port, null, function(err) {
@@ -314,6 +373,12 @@ describe('monoxide.express (permission tests)', function() {
 				// Only allow count if ?color=blue
 				if (req.query.color && req.query.color == 'blue') return next();
 				return res.status(403).send('Nope!').end();
+			},
+			$data: function(next, doc) {
+				return next(null, { // Junk data to attach to $data in the downstream DB calls
+					quz: 'qux',
+					corge: 456,
+				});
 			},
 		}));
 
@@ -372,6 +437,12 @@ describe('monoxide.express (permission tests)', function() {
 				// Only allow saving if the body contains 'force' as a true boolean variable
 				if (req.body.force && req.body.force === true) return next();
 				return res.status(403).send('Nope!').end();
+			},
+			$data: function(next, doc) {
+				return next(null, { // Junk data to attach to $data in the downstream DB calls
+					quz: 'qux',
+					corge: 456,
+				});
 			},
 		}));
 
@@ -433,6 +504,12 @@ describe('monoxide.express (permission tests)', function() {
 				if (req.query.force && req.query.force === 'confirm') return next();
 				return res.status(403).send('Nope!').end();
 			},
+			$data: function(next, doc) {
+				return next(null, { // Junk data to attach to $data in the downstream DB calls
+					quz: 'qux',
+					corge: 456,
+				});
+			},
 		}));
 
 		var server = app.listen(port, null, function(err) {
@@ -465,6 +542,10 @@ describe('monoxide.express (permission tests)', function() {
 				monoxide.save({
 					$collection: req.monoxide.collection,
 					$id: req.monoxide.id,
+					$data: { // Set the data also so that the hooks don't complain
+						quz: 'qux',
+						corge: 456,
+					},
 					status: 'deleted',
 				}, function(err) {
 					if (err) return res.status(400).send(err).end();

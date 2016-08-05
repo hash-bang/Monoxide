@@ -117,6 +117,7 @@ function Monoxide() {
 	* @param {number} [q.$limit] Limit the return to this many rows
 	* @param {number} [q.$skip] Offset return by this number of rows
 	* @param {boolean=false} [q.$count=false] Only count the results - do not return them. If enabled a number of returned with the result
+	* @param {object|function} [q.$data] Set the user-defined data object, if this is a function the callback result is used
 	* @param {boolean} [q.$decorate=true] Add all Monoxide methods, functions and meta properties
 	* @param {boolean} [q.$plain=false] Return a plain object or object array. This is the equivelent of calling .toObject() on any resultant object. Implies $decorate=true
 	* @param {boolean} [q.$cacheFKs=true] Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
@@ -159,7 +160,7 @@ function Monoxide() {
 			$applySchema: true, // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
 			$errNotFound: true, // During $id / $one operations raise an error if the record is not found
 		});
-		if (!_.isEmpty(q.$select)) q.$applySchema = false; // Trun off schema application when using $select as we wont be grabbing the full object
+		if (!_.isEmpty(q.$select)) q.$applySchema = false; // Turn off schema application when using $select as we wont be grabbing the full object
 		// }}}
 
 		async()
@@ -272,6 +273,18 @@ function Monoxide() {
 					}
 				}
 				// }}}
+				next();
+			})
+			// }}}
+			// Calculate $data if it is a function {{{
+			.then('data', function(next) {
+				if (!q.$data) return next();
+				if (_.isFunction(q.$data)) {
+					q.$data(function(err, data) {
+						if (err) return next(err);
+						q.$data = data;
+					});
+				}
 				next();
 			})
 			// }}}
@@ -472,6 +485,18 @@ function Monoxide() {
 				next();
 			})
 			// }}}
+			// Calculate $data if it is a function {{{
+			.then(function(next) {
+				if (!q.$data) return next();
+				if (_.isFunction(q.$data)) {
+					q.$data(function(err, data) {
+						if (err) return next(err);
+						q.$data = data;
+					});
+				}
+				next();
+			})
+			// }}}
 			// Fire the 'save' hook on the model {{{
 			.then(function(next) {
 				self.models[q.$collection].fire('save', next, q);
@@ -574,6 +599,18 @@ function Monoxide() {
 				next();
 			})
 			// }}}
+			// Calculate $data if it is a function {{{
+			.then(function(next) {
+				if (!q.$data) return next();
+				if (_.isFunction(q.$data)) {
+					q.$data(function(err, data) {
+						if (err) return next(err);
+						q.$data = data;
+					});
+				}
+				next();
+			})
+			// }}}
 			// Fire the 'update' hook {{{
 			.then(function(next) {
 				self.models[q.$collection].fire('update', next, q);
@@ -648,6 +685,18 @@ function Monoxide() {
 				if (!q || _.isEmpty(q)) return next('No query given for save operation');
 				if (!q.$collection) return next('$collection must be specified for save operation');
 				if (!self.models[q.$collection]) return next('Model not initalized');
+				next();
+			})
+			// }}}
+			// Calculate $data if it is a function {{{
+			.then(function(next) {
+				if (!q.$data) return next();
+				if (_.isFunction(q.$data)) {
+					q.$data(function(err, data) {
+						if (err) return next(err);
+						q.$data = data;
+					});
+				}
 				next();
 			})
 			// }}}
@@ -769,6 +818,18 @@ function Monoxide() {
 
 				if (!self.settings.removeAll && _.isEmpty(_.omit(q, this.metaFields))) { // Apply extra checks to make sure we are not nuking everything if we're not allowed
 					return callback('delete operation not allowed with empty query');
+				}
+				next();
+			})
+			// }}}
+			// Calculate $data if it is a function {{{
+			.then(function(next) {
+				if (!q.$data) return next();
+				if (_.isFunction(q.$data)) {
+					q.$data(function(err, data) {
+						if (err) return next(err);
+						q.$data = data;
+					});
 				}
 				next();
 			})
@@ -2240,6 +2301,7 @@ function Monoxide() {
 				.value();
 
 			q.$collection = settings.collection;
+			q.$data = settings.$data;
 			q.$id = req.params.id;
 
 			self.get(q, function(err, doc) {
@@ -2345,6 +2407,7 @@ function Monoxide() {
 				.value();
 
 			q.$collection = settings.collection;
+			q.$data = settings.$data;
 
 			self.query(q, function(err, rows) {
 				// Apply omitFields {{{
@@ -2413,6 +2476,7 @@ function Monoxide() {
 
 			q.$collection = settings.collection;
 			q.$count = true;
+			q.$data = settings.$data;
 
 			self.query(q, function(err, count) {
 				if (settings.passThrough) { // Act as middleware
@@ -2468,6 +2532,7 @@ function Monoxide() {
 			var q = _.clone(req.body);
 
 			q.$collection = settings.collection;
+			q.$data = settings.$data;
 
 			if (req.params.id) q.$id = req.params.id;
 
@@ -2524,6 +2589,7 @@ function Monoxide() {
 			var q = _.clone(req.body);
 
 			q.$collection = settings.collection;
+			q.$data = settings.$data;
 
 			if (req.params.id) q.$id = req.params.id;
 
@@ -2580,6 +2646,7 @@ function Monoxide() {
 			var q = _.clone(req.body);
 
 			q.$collection = settings.collection;
+			q.$data = settings.$data;
 
 			if (req.params.id) q.$id = req.params.id;
 
