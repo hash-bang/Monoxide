@@ -162,9 +162,63 @@ API
 Below is the quick-reference API. For more detailed docs see the [API documentation](API.md) for the generated JSDoc output.
 
 
-monoxide.model.delete([query], [callback])
+Document creation
 -----------------
-Delete all records in a model by an optional query.
+Create a new document.
+
+	monoxide.create([data], [callback])
+	monoxide.models.MODEL.create([data], [callback])
+
+
+Document finding (single)
+-------------------------
+Find one document.
+
+	monoxide.get([query], [callback])
+	monoxide.models.MODEL.findOne([data], [callback])
+
+
+Document finding (multiple)
+---------------------------
+Find multiple documents.
+
+	monoxide.query([query], [callback])
+	monoxide.models.MODEL.find([query], [callback])
+
+
+Document counting
+-----------------
+Count documents.
+
+	monoxide.count([query], [callback])
+	monoxide.models.MODEL.count([query], [callback])
+
+
+Document saving (one)
+---------------------
+Save data to an existing document.
+
+	monoxide.save([data], [callback])
+	monoxide.models.MODEL.save([data], [callback])
+	document.save([data], [callback])
+
+
+Document saving (multiple)
+--------------------------
+Save data to multiple existing documents.
+
+	monoxide.update([data], [callback])
+	monoxide.models.MODEL.update([data], [callback])
+
+
+Document deletion
+-----------------
+Delete documents in a collection by an optional query.
+
+	monoxide.delete([query], [callback])
+	monoxide.models.MODEL.remove([query], [callback])
+	document.remove([callback])
+
 
 ```javascript
 // Delete a specific document by its ID
@@ -174,19 +228,20 @@ monoxide.delete({
 });
 
 // Delete a specific document by its ID
-monoxide.widgets.remove({
+monoxide.models.widgets.remove({
 	$id: someID,
 });
 
 
-// Delete all documents in the collection
+// Delete all documents in the collection where color='blue'
 monoxide.delete({
 	$collection: 'widgets',
 	$multiple: true,
+	color: 'blue',
 });
 
 // Delete all documents in the collection
-monoxide.widgets.delete();
+monoxide.models.widgets.delete();
 ```
 
 **Notes:**
