@@ -29,6 +29,7 @@ Key differences from Mongoose / MongoDB-Core:
 * **ReST field surpression** - By default all fields prefixed with `_` (excepting `_id` and `__v`) are removed from ReST server output. This can be changed by adjusting the `omitFields` setting for `monoxide.express.(middleware|query|get`.
 * **Document mapping** - Each output document can be run though the `map` function to decorate it before it leaves the server - this is useful to omit complex things the client doesn't need or otherwise glue information to the document.
 * **Callback error if no matching records** - If no matching records are found in a `get()` operation and `$errNotFound` is true (the default) Monoxide will populate the error property of the callback. This is useful to automatically abandon Async chains when an expected record is not found rather than having to do manual check for record existence later.
+* **Pass private data using `$data`** - The `$data` object can be specified in any operation (query, save, delete etc.) and is ignored by Monoxide but still passed into hooks. This can be used as a method to pass data to lower-level functions such as logging operations (e.g. pass the currently logged in user to the lower level hooks)
 
 
 See the [ideas list](ideas.md) for future ideas.
@@ -156,4 +157,38 @@ You can also pick-and-choose the handlers to be used:
 In the above the specified models are bound to their respective ReST end points (`GET /api/users` will return all users for example).
 
 
-See the [API documentation](API.md) for more detailed information.
+API
+===
+Below is the quick-reference API. For more detailed docs see the [API documentation](API.md) for the generated JSDoc output.
+
+
+monoxide.model.delete([query], [callback])
+-----------------
+Delete all records in a model by an optional query.
+
+```javascript
+// Delete a specific document by its ID
+monoxide.delete({
+	$collection: 'widgets',
+	$id: someID,
+});
+
+// Delete a specific document by its ID
+monoxide.widgets.remove({
+	$id: someID,
+});
+
+
+// Delete all documents in the collection
+monoxide.delete({
+	$collection: 'widgets',
+	$multiple: true,
+});
+
+// Delete all documents in the collection
+monoxide.widgets.delete();
+```
+
+**Notes:**
+
+* Deleting by an empty query (or not specifying the query at all, e.g. `monoxide.model.delete()`) will throw an error if the `monoxide.settings.removeAll` flag is true to allow nuking an entire collection.

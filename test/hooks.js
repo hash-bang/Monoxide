@@ -29,7 +29,10 @@ describe('monoxide.* (hooks)', function() {
 	};
 	it('should attach a hooks to users', function() {
 		monoxide.models.users
-			.hook('query', function(next) {
+			.hook('query', function(next, q) {
+				expect(q).to.have.property('$data');
+				expect(q.$data).to.be.deep.equal({foo: 'bar', baz: 123});
+
 				firedHooks.queryHook++;
 				next();
 			})
@@ -37,6 +40,9 @@ describe('monoxide.* (hooks)', function() {
 				firedHooks.queryEvent++;
 			})
 			.hook('save', function(next, doc) {
+				expect(doc).to.have.property('$data');
+				expect(doc.$data).to.be.deep.equal({foo: 'bar', baz: 123});
+
 				// We should only ever operate on user[0]
 				expect(doc._id).to.equal(users[0]._id);
 				firedHooks.saveHook++;
@@ -46,6 +52,9 @@ describe('monoxide.* (hooks)', function() {
 				firedHooks.saveEvent++;
 			})
 			.hook('postSave', function(next, doc) {
+				expect(doc).to.have.property('$data');
+				expect(doc.$data).to.be.deep.equal({foo: 'bar', baz: 123});
+
 				expect(doc._id).to.equal(users[0]._id);
 				firedHooks.postSaveHook++;
 				next();
@@ -58,6 +67,7 @@ describe('monoxide.* (hooks)', function() {
 	it('should fire hooks + events on query', function(finish) {
 		monoxide.query({
 			$collection: 'users',
+			$data: {foo: 'bar', baz: 123},
 			$sort: 'name',
 		}, function(err, res) {
 			expect(firedHooks.queryHook).to.equal(1);
@@ -67,7 +77,7 @@ describe('monoxide.* (hooks)', function() {
 	});
 
 	it('should fire hooks on save + postSave', function(finish) {
-		users[0].save(function(err, res) {
+		users[0].save({$data: {foo: 'bar', baz: 123}}, function(err, res) {
 			expect(firedHooks.saveHook).to.equal(1);
 			expect(firedHooks.saveEvent).to.equal(1);
 			expect(firedHooks.postSaveHook).to.equal(1);

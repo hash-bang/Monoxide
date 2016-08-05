@@ -89,6 +89,10 @@ describe('monoxide.delete() / monoxide.models[].remove() / monoxideDocument.remo
 		});
 	});
 
+	it('should delete a multiple items (with empty params)', function() {
+		expect(monoxide.models.widgets.remove).to.not.throw;
+	});
+
 	it('should refuse to delete all if monoxide.settings.removeAll==false', function(finish) {
 		monoxide.settings.removeAll = false;
 		monoxide.models.widgets.remove({}, function(err) {

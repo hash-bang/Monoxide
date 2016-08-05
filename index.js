@@ -165,6 +165,7 @@ function Monoxide() {
 		async()
 			.set('metaFields', [
 				'$collection', // Collection to query
+				'$data', // Meta user-defined data object
 				'$id', // If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
 				'$select', // Field selection criteria to apply
 				'$sort', // Sorting criteria to apply
@@ -455,6 +456,7 @@ function Monoxide() {
 				'$id', // Mandatory field to specify while record to update
 				'_id', // We also need to clip this from the output (as we cant write to it), but we need to pass it to hooks
 				'$collection', // Collection to query to find the original record
+				'$data', // Meta user-defined data
 				'$refetch',
 				'$errNoUpdate',
 				'$errBlankUpdate',
@@ -561,6 +563,7 @@ function Monoxide() {
 		async()
 			.set('metaFields', [
 				'$collection', // Collection to query to find the original record
+				'$data', // Meta user-defined data
 				'$refetch',
 			])
 			// Sanity checks {{{
@@ -637,6 +640,7 @@ function Monoxide() {
 		async()
 			.set('metaFields', [
 				'$collection', // Collection to query to find the original record
+				'$data', // Meta user-defined data
 				'$refetch',
 			])
 			// Sanity checks {{{
@@ -753,6 +757,7 @@ function Monoxide() {
 			.set('metaFields', [
 				'$id', // Mandatory field to specify while record to update
 				'$collection', // Collection to query to find the original record
+				'$data', // Meta user-defined data
 				'$multiple', // Whether to allow deletion by query
 				'$errNotFound',
 			])
@@ -1391,7 +1396,28 @@ function Monoxide() {
 			$MONOXIDE: true,
 			$collection: setup.$collection,
 			$populated: {},
-			save: function(callback) {
+
+			/**
+			* Save a document
+			* This function will only save back modfified data
+			* If `data` is specified this is merged with the modified data and can possibly override it
+			* @param {Object} [data] Optional data to save
+			* @param {function} [callback] The callback to invoke on saving
+			*/
+			save: function(data, callback) {
+				// Deal with arguments {{{
+				if (_.isObject(data) && _.isFunction(callback)) {
+					// All ok
+				} else if (_.isFunction(data)) { // Omit data
+					callback = data;
+					data = null;
+				} else if (!data && !callback) {
+					// Nothing specified - ok
+				} else {
+					throw new Error('Unknown function call pattern');
+				}
+				// }}}
+
 				var doc = this;
 				var mongoDoc = doc.toMongoObject();
 				var patch = {
@@ -1403,6 +1429,8 @@ function Monoxide() {
 				doc.isModified().forEach(function(path) {
 					patch[path] = _.get(mongoDoc, path);
 				});
+
+				if (_.isObject(data)) _.assign(patch, data); // Merge with incomming data
 
 				self.save(patch, function(err, newRec) {
 					doc = newRec;
