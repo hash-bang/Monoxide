@@ -538,7 +538,7 @@ function Monoxide() {
 			// }}}
 			// Fire the 'postSave' hook {{{
 			.then(function(next) {
-				self.models[q.$collection].fire('postSave', next, q);
+				self.models[q.$collection].fire('postSave', next, q, this.newRec);
 			})
 			// }}}
 			// End {{{
@@ -751,7 +751,7 @@ function Monoxide() {
 				self.models[q.$collection].$mongoModel.insertOne(this.createDoc.toMongoObject(), next);
 			})
 			.then(function(next) {
-				self.models[q.$collection].fire('postCreate', next, this.createDoc);
+				self.models[q.$collection].fire('postCreate', next, q, this.createDoc);
 			})
 			// }}}
 			// Refetch record {{{
