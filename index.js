@@ -1404,6 +1404,7 @@ function Monoxide() {
 		* @param {string} name The name of the hook to invoke
 		* @param {function} callback The callback to invoke on success
 		* @param {...*} parameters Any other parameters to be passed to each hook
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
 		mm.fire = function(name, callback) {
 			if (mm.listenerCount(name)) { // There is at least one event handler attached
@@ -1428,6 +1429,19 @@ function Monoxide() {
 					hook.apply(mm, hookArgs);
 				})
 				.end(callback);
+
+			return mm;
+		};
+
+		/**
+		* Run a third party plugin against a model
+		* This function is really just a shorthand way to pass a Monoxide model into a function
+		* @param {function} plugin The plugin to run. This gets the arguments (model, callback)
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*/
+		mm.use = function(plugin, callback) {
+			plugin.call(mm, mm, callback);
+			return mm;
 		};
 
 		return mm;
