@@ -122,6 +122,7 @@ function Monoxide() {
 	* @param {boolean} [q.$plain=false] Return a plain object or object array. This is the equivelent of calling .toObject() on any resultant object. Implies $decorate=true
 	* @param {boolean} [q.$cacheFKs=true] Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
 	* @param {boolean} [q.$applySchema=true] Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record
+	* @param {boolean} [q.$dirty=false] Whether the entire document contents should be marked as dirty (modified). If true this also skips the computation of modified fields
 	* @param {boolean} [q.$errNotFound] Raise an error if a specifically requested document is not found (requires $id)
 	* @param {...*} [q.filter] Any other field (not beginning with '$') is treated as filtering criteria
 	*
@@ -167,6 +168,7 @@ function Monoxide() {
 			.set('metaFields', [
 				'$collection', // Collection to query
 				'$data', // Meta user-defined data object
+				'$dirty', // Whether the document is unclean
 				'$id', // If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
 				'$select', // Field selection criteria to apply
 				'$sort', // Sorting criteria to apply
@@ -322,13 +324,23 @@ function Monoxide() {
 					next(null, undefined);
 				} else if (q.$one) {
 					if (q.$decorate) return next(null, this.result.toObject());
-					next(null, new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema, $decorate: q.$decorate}, this.result));
+					next(null, new self.monoxideDocument({
+						$collection: q.$collection,
+						$applySchema: q.$applySchema,
+						$decorate: q.$decorate,
+						$dirty: q.$dirty,
+					}, this.result));
 				} else if (q.$count) {
 					next(null, this.result);
 				} else {
 					next(null, this.result.map(function(doc) {
 						if (q.$decorate) return doc.toObject();
-						return new self.monoxideDocument({$collection: q.$collection, $applySchema: q.$applySchema, $decorate: q.$decorate}, doc.toObject());
+						return new self.monoxideDocument({
+							$collection: q.$collection,
+							$applySchema: q.$applySchema,
+							$decorate: q.$decorate,
+							$dirty: q.$dirty,
+						}, doc.toObject());
 					}));
 				}
 			})
@@ -642,7 +654,7 @@ function Monoxide() {
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
-	* @param {boolean} [options.$refetch=true] Return the newly create record
+	* @param {boolean} [q.$refetch=true] Return the newly create record
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
@@ -727,7 +739,10 @@ function Monoxide() {
 			// }}}
 			// Create record {{{
 			.then('createDoc', function(next) { // Compute the document we will create
-				next(null, new self.monoxideDocument({$collection: q.$collection}, _.omit(q, this.metaFields)));
+				next(null, new self.monoxideDocument({
+					$collection: q.$collection,
+					$dirty: true, // Mark all fields as modified (and not bother to compute the clean markers)
+				}, _.omit(q, this.metaFields)));
 			})
 			.then(function(next) {
 				self.models[q.$collection].fire('create', next, this.createDoc);
@@ -1457,6 +1472,7 @@ function Monoxide() {
 	* @name monoxide.monoxideDocument
 	* @param {Object} setup The prototype fields. Everything in this object is extended into the prototype
 	* @param {boolean} [setup.$applySchema=true] Whether to enforce the model schema on the object. This includes applying default values
+	* @param {boolean} [setup.$dirty=false] Whether the entire document contents should be marked as dirty (modified). If true this also skips the computation of modified fields
 	* @param {boolean [setup.decorate=true] Whether to apply any decoration. If false this function returns data undecorated (i.e. no custom Monoxide functionality)
 	* @param {string} setup.$collection The collection this document belongs to
 	* @param {Object} data The initial data
@@ -1464,6 +1480,7 @@ function Monoxide() {
 	*/
 	self.monoxideDocument = function monoxideDocument(setup, data) {
 		if (setup.$decorate === false) return data;
+		setup.$dirty = !!setup.$dirty;
 
 		var model = self.models[setup.$collection];
 
@@ -1647,7 +1664,6 @@ function Monoxide() {
 					return modified;
 				}
 			},
-
 
 			/**
 			* Expand given paths into objects
@@ -1884,22 +1900,25 @@ function Monoxide() {
 			enumerable: false,
 			value: {},
 		});
-		traverse(doc).forEach(function(v) {
-			// If its an object (or array) glue the `$clean` property to it to detect writes
-			if (_.isObject(v)) {
-				Object.defineProperty(v, '$clean', {
-					enumerable: false,
-					value: true,
-				});
-			} else if (!_.isPlainObject(v)) { // For everything else - stash the original value in this.parent.$originalValues
-				doc.$originalValues[this.path.join('.')] = self.utilities.isObjectID(v) ? v.toString() : v;
-			}
-		});
+
+		if (!setup.$dirty) {
+			traverse(doc).forEach(function(v) {
+				// If its an object (or array) glue the `$clean` property to it to detect writes
+				if (_.isObject(v)) {
+					Object.defineProperty(v, '$clean', {
+						enumerable: false,
+						value: true,
+					});
+				} else if (!_.isPlainObject(v)) { // For everything else - stash the original value in this.parent.$originalValues
+					doc.$originalValues[this.path.join('.')] = self.utilities.isObjectID(v) ? v.toString() : v;
+				}
+			});
+		}
 
 		// Apply population data
 		doc.getOIDs().forEach(function(node) {
 			doc.$populated[node.docPath] = self.utilities.isObjectID(node.docPath);
-			doc.$originalValues[node.docPath] = _.get(doc, node.docPath);
+			if (!setup.$dirty) doc.$originalValues[node.docPath] = _.get(doc, node.docPath);
 		});
 
 		return doc;
@@ -2134,7 +2153,7 @@ function Monoxide() {
 	/**
 	* Return an Express middleware binding
 	*
-	* See monoxide.express.defaults() to chanthe the default settings for this function globally
+	* See monoxide.express.defaults() to change the default settings for this function globally
 	*
 	* @name monoxide.express.middleware
 	*

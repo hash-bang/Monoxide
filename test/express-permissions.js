@@ -42,7 +42,7 @@ describe('monoxide.express (permission tests)', function() {
 				expect(doc.$data).to.have.property('quz', 'qux');
 				expect(doc.$data).to.have.property('corge', 456);
 				next();
-			});
+			})
 		// }}}
 
 		app.use('/api/widgets/:id?', monoxide.express.middleware('widgets', {

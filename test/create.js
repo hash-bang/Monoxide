@@ -36,6 +36,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 		});
 	});
 
+	var newUser;
 	it('create a new user (via monoxide.create)', function(finish) {
 		monoxide.create({
 			$collection: 'users',
@@ -50,6 +51,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
+			newUser = user;
 
 			mlog.log('created ID', user._id);
 
@@ -70,6 +72,11 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 			finish();
 		});
+	});
+
+	it('should mark no fields as modified', function() {
+		// This is a bit weird but logically the document has just been created therefore the document returned is as-stored (i.e. not modified)
+		expect(newUser.isModified()).to.have.length(0);
 	});
 
 	it('create a new user (via monoxide.create; without callback)', function() {
