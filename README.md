@@ -169,6 +169,29 @@ Create a new document.
 	monoxide.create([data], [callback])
 	monoxide.models.MODEL.create([data], [callback])
 
+```javascript
+	monoxide.create({
+		$collection: 'widgets',
+		name: 'My new widget',
+	}, function(err, widget) { // ... // });
+
+	monoxide.models.widgets.create({
+		name: 'My new widget',
+	}, function(err, widget) {
+		// widget = newly created document
+	});
+```
+
+In addition to regular document key/values the `data` object can also contain the following meta keys:
+
+| Key           | Type    | Default | Description                                                            |
+|---------------|---------|---------|------------------------------------------------------------------------|
+| `$collection` | String  | `null`  | The collection to create the document in                               |
+| `$refetch`    | Boolean | `true`  | Whether to refetch the document from the database again after creation |
+
+
+See the [create test scripts](test/create.js) for more complex examples.
+
 
 Document finding (single)
 -------------------------
@@ -247,3 +270,26 @@ monoxide.models.widgets.delete();
 **Notes:**
 
 * Deleting by an empty query (or not specifying the query at all, e.g. `monoxide.model.delete()`) will throw an error if the `monoxide.settings.removeAll` flag is true to allow nuking an entire collection.
+
+
+Hooks
+-----
+Hooks allow watching of models. Each Hook within monoxide accepts a callback that must be triggered for execution to continue.
+
+	monoxide.models.MODEL.hook('create, function(next, query) { // ... // });
+	monoxide.models.MODEL.hook('postCreate, function(next, query, newDoc) { // ... // });
+
+	monoxide.models.MODEL.hook('query, function(next, query) { // ... // });
+
+	monoxide.models.MODEL.hook('save, function(next, query) { // ... // });
+	monoxide.models.MODEL.hook('postSave, function(next, query, newDoc) { // ... // });
+
+	monoxide.models.MODEL.hook('update, function(next, query) { // ... // });
+
+	monoxide.models.MODEL.hook('delete, function(next, query) { // ... // });
+	monoxide.models.MODEL.hook('postDelete, function(next, query) { // ... // });
+
+
+**Notes:**
+
+* For post* hooks the `newDoc` parameter will only return the newly created document if `$refetch=true` within the create or save query. Query will always be present.
