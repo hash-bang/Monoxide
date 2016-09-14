@@ -26,6 +26,9 @@ function Monoxide() {
 	* @return {monoxide} The Monoxide chainable object
 	*/
 	self.connect = function(uri, callback) {
+		// Use native promises
+		mongoose.Promise = global.Promise;
+
 		mongoose.connect(uri, callback);
 		self.connection = mongoose.connection;
 		return self;
