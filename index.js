@@ -728,11 +728,16 @@ function Monoxide() {
 							break;
 						case 'objectIdArray': // Convert each item to an OID if it isn't already
 							if (_.has(q, schemaPath)) {
-								_.set(q, schemaPath, _.get(q, schemaPath).map(function(i, idx) {
-									return (!self.utilities.isObjectID(newVal))
-										? self.utilities.objectID(i)
-										: i;
-								}));
+								var gotOIDs = _.get(q, schemaPath);
+								if (_.isArray(gotOIDs)) {
+									_.set(q, schemaPath, gotOIDs.map(function(i, idx) {
+										return (!self.utilities.isObjectID(newVal))
+											? self.utilities.objectID(i)
+											: i;
+									}));
+								} else {
+									return next('Expected ' + schemaPath ' to contain an array of OIDs but got ' + (typeof gotOIDs));
+								}
 							}
 							break;
 					}
