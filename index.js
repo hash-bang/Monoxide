@@ -736,7 +736,7 @@ function Monoxide() {
 											: i;
 									}));
 								} else {
-									return next('Expected ' + schemaPath ' to contain an array of OIDs but got ' + (typeof gotOIDs));
+									return next('Expected ' + schemaPath + ' to contain an array of OIDs but got ' + (typeof gotOIDs));
 								}
 							}
 							break;
