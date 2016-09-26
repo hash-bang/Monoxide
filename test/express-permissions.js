@@ -518,12 +518,14 @@ describe('monoxide.express (permission tests)', function() {
 			superagent.delete(url + '/api/widgets/' + widgets[0]._id)
 				.end(function(err, res) {
 					expect(err).to.be.ok;
+					expect(res.statusCode).to.be.equal(403);
 					expect(res.body).to.be.empty;
 
 					superagent.delete(url + '/api/widgets/' + widgets[0]._id)
 						.query({force: 'confirm'})
 						.end(function(err, res) {
 							expect(err).to.be.not.ok;
+							expect(res.statusCode).to.be.equal(200);
 							widgets.shift(); // Remove first item so future tests dont access the deleted widget
 
 							server.close(finish);

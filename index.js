@@ -850,7 +850,7 @@ function Monoxide() {
 				if (!q.$collection) return next('$collection must be specified for delete operation');
 				if (!q.$id && !q.$multiple) return next('$id or $multiple must be speciied during delete operation');
 
-				if (!self.settings.removeAll && _.isEmpty(_.omit(q, this.metaFields))) { // Apply extra checks to make sure we are not nuking everything if we're not allowed
+				if (!self.settings.removeAll && !q.$id && _.isEmpty(_.omit(q, this.metaFields))) { // Apply extra checks to make sure we are not nuking everything if we're not allowed
 					return next('delete operation not allowed with empty query');
 				}
 				next();
