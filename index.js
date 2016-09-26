@@ -840,7 +840,7 @@ function Monoxide() {
 				if (!q.$id && !q.$multiple) return next('$id or $multiple must be speciied during delete operation');
 
 				if (!self.settings.removeAll && _.isEmpty(_.omit(q, this.metaFields))) { // Apply extra checks to make sure we are not nuking everything if we're not allowed
-					return callback('delete operation not allowed with empty query');
+					return next('delete operation not allowed with empty query');
 				}
 				next();
 			})
