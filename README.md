@@ -30,6 +30,7 @@ Key differences from Mongoose / MongoDB-Core:
 * **Document mapping** - Each output document can be run though the `map` function to decorate it before it leaves the server - this is useful to omit complex things the client doesn't need or otherwise glue information to the document.
 * **Callback error if no matching records** - If no matching records are found in a `get()` operation and `$errNotFound` is true (the default) Monoxide will populate the error property of the callback. This is useful to automatically abandon Async chains when an expected record is not found rather than having to do manual check for record existence later.
 * **Pass private data using `$data`** - The `$data` object can be specified in any operation (query, save, delete etc.) and is ignored by Monoxide but still passed into hooks. This can be used as a method to pass data to lower-level functions such as logging operations (e.g. pass the currently logged in user to the lower level hooks)
+* **DEBUG compatibility** - Setting the environment variable `DEBUG=monoxide` will output any errors raised by Monoxide to the console
 
 
 See the [ideas list](ideas.md) for future ideas.

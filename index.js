@@ -1,6 +1,7 @@
 var _ = require('lodash')
 	.mixin(require('lodash-deep'));
 var async = require('async-chainable');
+var debug = require('debug')('monoxide');
 var deepDiff = require('deep-diff');
 var events = require('events');
 var mongoose = require('mongoose');
@@ -365,6 +366,7 @@ function Monoxide() {
 			// End {{{
 			.end(function(err) {
 				if (err) {
+					debug('get() error - ' + err.toString());
 					return callback(err);
 				} else if (q.$count) {
 					callback(null, this.result);
@@ -546,9 +548,12 @@ function Monoxide() {
 			// }}}
 			// End {{{
 			.end(function(err) {
-				if (!_.isFunction(callback)) return; // Do nothing
-				if (err) return callback(err);
-				return callback(null, this.newRec);
+				if (err) {
+					debug('save() error - ' + err.toString());
+					if (_.isFunction(callback)) callback(err);
+				} else {
+					if (_.isFunction(callback)) callback(null, this.newRec);
+				}
 			});
 			// }}}
 
@@ -638,9 +643,12 @@ function Monoxide() {
 			// }}}
 			// End {{{
 			.end(function(err) {
-				if (!_.isFunction(callback)) return; // Do nothing
-				if (err) return callback(err);
-				return callback(null, this.newRec);
+				if (err) {
+					debug('update() error - ' + err.toString());
+					if (_.isFunction(callback)) callback(err);
+				} else {
+					if (_.isFunction(callback)) callback(null, this.newRec);
+				}
 			});
 			// }}}
 
@@ -776,9 +784,12 @@ function Monoxide() {
 			// }}}
 			// End {{{
 			.end(function(err) {
-				if (!_.isFunction(callback)) return; // Do nothing
-				if (err) return callback(err);
-				return callback(null, this.newRec);
+				if (err) {
+					debug('create() error - ' + err.toString());
+					if (_.isFunction(callback)) callback(err);
+				} else {
+					if (_.isFunction(callback)) callback(null, this.newRec);
+				}
 			});
 			// }}}
 
@@ -883,9 +894,12 @@ function Monoxide() {
 			// }}}
 			// End {{{
 			.end(function(err) {
-				if (!_.isFunction(callback)) return; // Do nothing
-				if (err) return callback(err);
-				return callback(null, this.newRec);
+				if (err) {
+					debug('delete() error - ' + err.toString());
+					if (_.isFunction(callback)) callback(err);
+				} else {
+					if (_.isFunction(callback)) callback(null, this.newRec);
+				}
 			});
 			// }}}
 

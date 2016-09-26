@@ -20,6 +20,7 @@
   "homepage": "https://github.com/hash-bang/Monoxide",
   "dependencies": {
     "async-chainable": "^1.8.1",
+    "debug": "^2.2.0",
     "deep-diff": "^0.3.4",
     "lodash": "^4.15.0",
     "lodash-deep": "^2.0.0",
