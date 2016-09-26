@@ -52,6 +52,6 @@ describe('monoxideDocument.getOIDs()', function() {
 		expect(docPaths).to.include('items.0');
 
 		expect(schemaPaths).to.have.length(6);
-		expect(docPaths).to.have.length(8);
+		expect(docPaths).to.have.length(9);
 	});
 });

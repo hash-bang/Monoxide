@@ -108,7 +108,7 @@ describe('monoxide.query() using $populate', function() {
 		});
 	});
 
-	it('should support deep population (with population objects)', function(finish) {
+	it.skip('should support deep population (with population objects)', function(finish) {
 		monoxide.query({
 			$collection: 'groups',
 			$sort: 'name',
