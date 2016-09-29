@@ -1416,20 +1416,7 @@ function Monoxide() {
 			* @param {Object} [data] Optional data to save
 			* @param {function} [callback] The callback to invoke on saving
 			*/
-			save: function(data, callback) {
-				// Deal with arguments {{{
-				if (_.isObject(data) && _.isFunction(callback)) {
-					// All ok
-				} else if (_.isFunction(data)) { // Omit data
-					callback = data;
-					data = null;
-				} else if (!data && !callback) {
-					// Nothing specified - ok
-				} else {
-					throw new Error('Unknown function call pattern');
-				}
-				// }}}
-
+			save: argy('[object] [function]', function(data, callback) {
 				var doc = this;
 				var mongoDoc = doc.toMongoObject();
 				var patch = {
@@ -1442,7 +1429,7 @@ function Monoxide() {
 					patch[path] = _.get(mongoDoc, path);
 				});
 
-				if (_.isObject(data)) _.assign(patch, data); // Merge with incomming data
+				if (data) _.assign(patch, data); // Merge with incomming data
 
 				self.save(patch, function(err, newRec) {
 					doc = newRec;
@@ -1450,7 +1437,7 @@ function Monoxide() {
 				});
 
 				return doc;
-			},
+			}),
 
 			/**
 			* Remove the document from the collection
@@ -1900,7 +1887,7 @@ function Monoxide() {
 	* });
 	*/
 	self.schema = function(model, spec) {
-		if (!_.isString(model) || !_.isObject(spec)) throw new Error('Schema construction requires a model ID + schema object');
+		if (!argy.isType(model, 'string') || !argy.isType(spec, 'object')) throw new Error('Schema construction requires a model ID + schema object');
 
 		var schema = new mongoose.Schema(_.deepMapValues(spec, function(value, path) {
 			// Rewrite .type leafs {{{
@@ -1984,18 +1971,8 @@ function Monoxide() {
 	*
 	* @return {Object} This chainable object
 	*/
-	self.aggregate = function MonoxideAggregate(q, callback) {
-		// Deal with arguments {{{
-		if (_.isObject(q) && _.isFunction(callback)) {
-			// All ok
-		} else if (_.isString(q) && _.isFunction(callback)) {
-			q = {$collection: q};
-		} else if (!_.isFunction(callback)) {
-			throw new Error('Callback parameter must be function');
-		} else {
-			throw new Error('Unknown function call pattern');
-		}
-		// }}}
+	self.aggregate = argy('string|object function', function MonoxideAggregate(q, callback) {
+		if (argy.isType(q, 'string')) q = {$collection: q};
 
 		async()
 			// Sanity checks {{{
@@ -2022,7 +1999,7 @@ function Monoxide() {
 			});
 			// }}}
 		return self;
-	};
+	});
 	// }}}
 
 	// .express structure {{{
