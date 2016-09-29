@@ -1,5 +1,6 @@
 var _ = require('lodash')
 	.mixin(require('lodash-deep'));
+var argy = require('argy');
 var async = require('async-chainable');
 var debug = require('debug')('monoxide');
 var deepDiff = require('deep-diff');
@@ -69,35 +70,26 @@ function Monoxide() {
 	* });
 	*/
 	self.get = function(q, id, callback) {
-		// Deal with arguments {{{
-		if (_.isObject(q) && _.isFunction(id)) {
-			callback = id;
-		} else if (_.isString(q) && _.isString(id) && _.isFunction(callback)) {
-			q = {
-				$collection: q,
-				$id: id,
-			};
-		} else if (_.isString(q) && _.isObject(id) && _.isFunction(callback)) { // Probably being passed a Mongoose objectId as the ID
-			q = {
-				$collection: q,
-				$id: id.toString(),
-			};
-		} else if (_.isString(q) && _.isObject(id)) { // Probably being passed a Mongoose objectId as the ID
-			q = {
-				$collection: q,
-				$id: id.toString(),
-			};
-		} else if (_.isString(q) && _.isString(id)) {
-			q = {
-				$collection: q,
-				$id: id,
-			};
-		} else if (!_.isFunction(callback)) {
-			throw new Error('Callback parameter must be function');
-		} else {
-			throw new Error('Unknown function call pattern');
-		}
-		// }}}
+		argy(arguments)
+			.ifForm('object function', function(aQ, aCallback) {
+				q = aQ;
+				callback = aCallback;
+			})
+			.ifForm('string string|number function', function(aCollection, aId, aCallback) {
+				q = {
+					$collection: aCollection,
+					$id: aId,
+				};
+			})
+			.ifForm('string object function', function(aCollection, aId, aCallback) { // Probably being passed a Mongoose objectId as the ID
+				q = {
+					$collection: aCollection,
+					$id: aId.toString(),
+				};
+			})
+			.ifFormElse(function(form) {
+				throw new Error('Unknown function call pattern:' + form);
+			});
 
 		if (!q.$id) return callback('No $id specified');
 		return self.query(q, callback);
@@ -145,20 +137,8 @@ function Monoxide() {
 	* 	console.log('Admin users:', res);
 	* });
 	*/
-	self.query = function MonoxideQuery(q, callback) {
-		// Deal with arguments {{{
-		if (_.isObject(q) && _.isFunction(callback)) {
-			// All ok
-		} else if (_.isString(q) && _.isFunction(callback)) {
-			q = {$collection: q};
-		} else if (_.isFunction(q)) {
-			callback = q;
-			q = {};
-		} else if (!_.isFunction(callback)) {
-			throw new Error('Callback parameter must be function');
-		} else {
-			throw new Error('Unknown function call pattern');
-		}
+	self.query = argy('[string|object] function', function MonoxideQuery(q, callback) {
+		if (argy.isType(q, 'string')) q = {$collection: q};
 
 		_.defaults(q || {}, {
 			$cacheFKs: true, // Cache model Foreign Keys (used for populates) or compute them every time
@@ -166,7 +146,6 @@ function Monoxide() {
 			$errNotFound: true, // During $id / $one operations raise an error if the record is not found
 		});
 		if (!_.isEmpty(q.$select)) q.$applySchema = false; // Turn off schema application when using $select as we wont be grabbing the full object
-		// }}}
 
 		async()
 			.set('metaFields', [
@@ -376,7 +355,7 @@ function Monoxide() {
 			});
 			// }}}
 		return self;
-	};
+	});
 	// }}}
 
 	// .count([q], callback) {{{
@@ -406,27 +385,14 @@ function Monoxide() {
 	* 	console.log('Number of Admin Users:', count);
 	* });
 	*/
-	self.count = function MonoxideCount(q, callback) {
-		// Deal with arguments {{{
-		if (_.isObject(q) && _.isFunction(callback)) {
-			// All ok
-		} else if (_.isString(q) && _.isFunction(callback)) {
-			q = {$collection: q};
-		} else if (!_.isFunction(q)) {
-			callback = q;
-			q = {};
-		} else if (_.isFunction(callback)) {
-			throw new Error('Callback parameter is mandatory');
-		} else {
-			throw new Error('Unknown function call pattern');
-		}
-		// }}}
+	self.count = argy('[string|object] function', function MonoxideCount(q, callback) {
+		if (argy.isType(q, 'string')) q = {$collection: q};
 
 		// Glue count functionality to query
 		q.$count = true;
 
 		return self.query(q, callback);
-	};
+	});
 	// }}}
 
 	// .save(item, [callback]) {{{
@@ -462,16 +428,8 @@ function Monoxide() {
 	* 	console.log('Saved widget is now', widget);
 	* });
 	*/
-	self.save = function(q, callback) {
+	self.save = argy('object function', function(q, callback) {
 		var self = this;
-		// Deal with arguments {{{
-		if (_.isObject(q) && _.isFunction(callback)) {
-			// All ok
-		} else if (_.isFunction(callback)) {
-			throw new Error('Callback parameter is mandatory');
-		} else {
-			throw new Error('Unknown function call pattern');
-		}
 
 		_.defaults(q || {}, {
 			$refetch: true, // Fetch and return the record when updated (false returns null)
@@ -479,7 +437,6 @@ function Monoxide() {
 			$errBlankUpdate: false,
 			$returnUpdated: true,
 		});
-		// }}}
 
 		async()
 			.set('metaFields', [
@@ -558,7 +515,7 @@ function Monoxide() {
 			// }}}
 
 			return self;
-	};
+	});
 	// }}}
 
 	// .update(q, [callback]) {{{
@@ -587,23 +544,13 @@ function Monoxide() {
 	* 	status: 'active',
 	* });
 	*/
-	self.update = function MonoxideUpdate(q, qUpdate, callback) {
+	self.update = argy('object|string [object] [function]', function MonoxideUpdate(q, qUpdate, callback) {
 		var self = this;
-		// Deal with arguments {{{
-		if (_.isObject(q) && _.isObject(qUpdate) && _.isFunction(callback)) {
-			// All ok
-		} else if (_.isString(q) && _.isObject(qUpdate) && _.isFunction(callback)) {
-			q = {$collection: q};
-		} else if (_.isFunction(callback)) {
-			throw new Error('Callback parameter is mandatory');
-		} else {
-			throw new Error('Unknown function call pattern');
-		}
+		if (argy.isType(q, 'string')) q = {$collection: q};
 
 		_.defaults(q || {}, {
 			$refetch: true, // Fetch and return the record when updated (false returns null)
 		});
-		// }}}
 
 		async()
 			.set('metaFields', [
@@ -645,15 +592,15 @@ function Monoxide() {
 			.end(function(err) {
 				if (err) {
 					debug('update() error - ' + err.toString());
-					if (_.isFunction(callback)) callback(err);
+					if (callback) callback(err);
 				} else {
-					if (_.isFunction(callback)) callback(null, this.newRec);
+					if (callback) callback(null, this.newRec);
 				}
 			});
 			// }}}
 
 			return self;
-	};
+	});
 	// }}}
 
 	// .create(item, [callback]) {{{
@@ -681,21 +628,11 @@ function Monoxide() {
 	* 	console.log('Created widget is', widget);
 	* });
 	*/
-	self.create = function MonoxideQuery(q, callback) {
+	self.create = argy('object function', function MonoxideQuery(q, callback) {
 		var self = this;
-		// Deal with arguments {{{
-		if (_.isObject(q) && _.isFunction(callback)) {
-			// All ok
-		} else if (!_.isFunction(callback)) {
-			// Callback is optional
-		} else {
-			throw new Error('Unknown function call pattern');
-		}
-
 		_.defaults(q || {}, {
 			$refetch: true, // Fetch and return the record when created (false returns null)
 		});
-		// }}}
 
 		async()
 			.set('metaFields', [
@@ -794,7 +731,7 @@ function Monoxide() {
 			// }}}
 
 			return self;
-	};
+	});
 	// }}}
 
 	// .delete(item, [callback]) {{{
@@ -821,20 +758,11 @@ function Monoxide() {
 	* 	console.log('Saved widget:', res);
 	* });
 	*/
-	self.delete = function MonoxideQuery(q, callback) {
+	self.delete = argy('object [function]', function MonoxideQuery(q, callback) {
 		var self = this;
-		// Deal with arguments {{{
-		if (_.isObject(q) && _.isFunction(callback)) {
-			// All ok
-		} else {
-			throw new Error('Unknown function call pattern');
-		}
-
 		_.defaults(q || {}, {
 			$errNotFound: true, // During raise an error if $id is specified but not found to delete
 		});
-
-		// }}}
 
 		async()
 			.set('metaFields', [
@@ -896,15 +824,15 @@ function Monoxide() {
 			.end(function(err) {
 				if (err) {
 					debug('delete() error - ' + err.toString());
-					if (_.isFunction(callback)) callback(err);
+					if (callback) callback(err);
 				} else {
-					if (_.isFunction(callback)) callback(null, this.newRec);
+					if (callback) callback(null, this.newRec);
 				}
 			});
 			// }}}
 
 			return self;
-	};
+	});
 	// }}}
 
 	// .queryBuilder() - query builder {{{
