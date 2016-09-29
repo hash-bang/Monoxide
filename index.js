@@ -2073,22 +2073,10 @@ function Monoxide() {
 	* // Bind an express method to serve users but disallow counting and querying (i.e. direct ID access only)
 	* app.use('/api/users/:id?', monoxide.express.middleware('users', {query: false, count: false}));
 	*/
-	self.express.middleware = function(model, settings) {
-		// Deal with incomming settings object {{{
-		if (_.isString(model) && _.isObject(settings)) {
-			settings.collection = model;
-		} else if (_.isString(model)) {
-			settings = {collection: model};
-		} else if (_.isObject(model)) {
-			settings = model;
-		} else if (!settings) {
-			settings = {};
-		}
-
-		_.defaults(settings, self.express._defaults);
-
+	self.express.middleware = argy('string object', function(model, settings) {
+		settings = _.defaults(settings || {}, self.express._defaults);
+		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.middleware(). Specify as a string or {collection: String}');
-		// }}}
 
 		return function(req, res, next) {
 			req.monoxide = { // Setup object to pass params to callback functions
@@ -2153,7 +2141,7 @@ function Monoxide() {
 			}
 			// }}}
 		};
-	};
+	});
 	// }}}
 
 	// .express.get(settings) {{{
@@ -2176,20 +2164,8 @@ function Monoxide() {
 	* // Bind an express method to serve widgets
 	* app.get('/api/widgets/:id?', monoxide.express.get('widgets'));
 	*/
-	self.express.get = function MonoxideExpressGet(model, settings) {
-		// Deal with incomming settings object {{{
-		if (_.isString(model) && _.isObject(settings)) {
-			settings.collection = model;
-		} else if (_.isString(model)) {
-			settings = {collection: model};
-		} else if (_.isObject(model)) {
-			settings = model;
-		} else if (!settings) {
-			settings = {};
-		}
-
-		_.defaults(settings, {
-			collection: null, // The collection to operate on
+	self.express.get = argy('[string] [object]', function MonoxideExpressGet(model, settings) {
+		settings = _.defaults(settings || {}, {
 			queryRemaps: { // Remap incomming values on left to keys on right
 				populate: '$populate',
 				select: '$select',
@@ -2201,6 +2177,7 @@ function Monoxide() {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 			omitFields: [/^_(?!id|_v)/], // Omit all fields prefixed with '_' that are not '_id' or '__v'
 		});
+		if (model) settings.collection = model;
 
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.get(). Specify as a string or {collection: String}');
 		// }}}
@@ -2255,7 +2232,7 @@ function Monoxide() {
 				}
 			});
 		};
-	};
+	});
 	// }}}
 
 	// .express.query(settings) {{{
@@ -2278,20 +2255,8 @@ function Monoxide() {
 	* // Bind an express method to serve widgets
 	* app.get('/api/widgets', monoxide.express.query('widgets'));
 	*/
-	self.express.query = function MonoxideExpressQuery(model, settings) {
-		// Deal with incomming settings object {{{
-		if (_.isString(model) && _.isObject(settings)) {
-			settings.collection = model;
-		} else if (_.isString(model)) {
-			settings = {collection: model};
-		} else if (_.isObject(model)) {
-			settings = model;
-		} else if (!settings) {
-			settings = {};
-		}
-
-		_.defaults(settings, {
-			collection: null, // The collection to operate on
+	self.express.query = argy('[string] [object]', function MonoxideExpressQuery(model, settings) {
+		settings = _.defaults(settings || {}, {
 			queryRemaps: { // Remap incomming values on left to keys on right
 				'limit': '$limit',
 				'populate': '$populate',
@@ -2309,7 +2274,7 @@ function Monoxide() {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 			omitFields: [/^_(?!id|_v)/], // Omit all fields prefixed with '_' that are not '_id' or '__v'
 		});
-
+		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.query(). Specify as a string or {collection: String}');
 		// }}}
 
@@ -2362,7 +2327,7 @@ function Monoxide() {
 				}
 			});
 		};
-	};
+	});
 	// }}}
 
 	// .express.count(settings) {{{
@@ -2381,25 +2346,12 @@ function Monoxide() {
 	* // Bind an express method to count widgets
 	* app.get('/api/widgets/count', monoxide.express.get('widgets'));
 	*/
-	self.express.count = function MonoxideExpressCount(model, settings) {
-		// Deal with incomming settings object {{{
-		if (_.isString(model) && _.isObject(settings)) {
-			settings.collection = model;
-		} else if (_.isString(model)) {
-			settings = {collection: model};
-		} else if (_.isObject(model)) {
-			settings = model;
-		} else if (!settings) {
-			settings = {};
-		}
-
-		_.defaults(settings, {
-			collection: null, // The collection to operate on
+	self.express.count = argy('[string] [object]', function MonoxideExpressCount(model, settings) {
+		settings = _.defaults(settings || {}, {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
-
+		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.count(). Specify as a string or {collection: String}');
-		// }}}
 
 		return function(req, res, next) {
 			var q = req.query;
@@ -2419,7 +2371,7 @@ function Monoxide() {
 				}
 			});
 		};
-	};
+	});
 	// }}}
 
 	// .express.save(settings) {{{
@@ -2438,25 +2390,12 @@ function Monoxide() {
 	* // Bind an express method to save widgets
 	* app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 	*/
-	self.express.save = function MonoxideExpressSave(model, settings) {
-		// Deal with incomming settings object {{{
-		if (_.isString(model) && _.isObject(settings)) {
-			settings.collection = model;
-		} else if (_.isString(model)) {
-			settings = {collection: model};
-		} else if (_.isObject(model)) {
-			settings = model;
-		} else if (!settings) {
-			settings = {};
-		}
-
-		_.defaults(settings || {}, {
-			collection: null, // The collection to operate on
+	self.express.save = argy('[string] [object]', function MonoxideExpressSave(model, settings) {
+		settings = _.defaults(settings || {}, {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
-
+		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.save(). Specify as a string or {collection: String}');
-		// }}}
 
 		return function(req, res, next) {
 			var q = _.clone(req.body);
@@ -2476,7 +2415,7 @@ function Monoxide() {
 				}
 			});
 		};
-	};
+	});
 	// }}}
 
 	// .express.create(settings) {{{
@@ -2495,25 +2434,13 @@ function Monoxide() {
 	* // Bind an express method to create widgets
 	* app.post('/api/widgets', monoxide.express.create('widgets'));
 	*/
-	self.express.create = function MonoxideExpressCreate(model, settings) {
-		// Deal with incomming settings object {{{
-		if (_.isString(model) && _.isObject(settings)) {
-			settings.collection = model;
-		} else if (_.isString(model)) {
-			settings = {collection: model};
-		} else if (_.isObject(model)) {
-			settings = model;
-		} else if (!settings) {
-			settings = {};
-		}
-
-		_.defaults(settings || {}, {
-			collection: null, // The collection to operate on
+	self.express.create = argy('[string] [object]', function MonoxideExpressCreate(model, settings) {
+		settings = _.defaults(settings || {}, {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
 
+		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.create(). Specify as a string or {collection: String}');
-		// }}}
 
 		return function(req, res, next) {
 			var q = _.clone(req.body);
@@ -2533,7 +2460,7 @@ function Monoxide() {
 				}
 			});
 		};
-	};
+	});
 	// }}}
 
 	// .express.delete(settings) {{{
@@ -2552,25 +2479,13 @@ function Monoxide() {
 	* // Bind an express method to delete widgets
 	* app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 	*/
-	self.express.delete = function MonoxideExpressDelete(model, settings) {
-		// Deal with incomming settings object {{{
-		if (_.isString(model) && _.isObject(settings)) {
-			settings.collection = model;
-		} else if (_.isString(model)) {
-			settings = {collection: model};
-		} else if (_.isObject(model)) {
-			settings = model;
-		} else if (!settings) {
-			settings = {};
-		}
-
-		_.defaults(settings, {
+	self.express.delete = argy('[string] [object]', function MonoxideExpressDelete(model, settings) {
+		settings = _.defaults(settings || {}, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
-
+		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.delete(). Specify as a string or {collection: String}');
-		// }}}
 
 		return function(req, res, next) {
 			var q = _.clone(req.body);
@@ -2590,7 +2505,7 @@ function Monoxide() {
 				}
 			});
 		};
-	};
+	});
 	// }}}
 
 	// .express - MISC functionality {{{
