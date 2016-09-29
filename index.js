@@ -856,12 +856,17 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.find = function(q, callback) {
-			if (_.isObject(q)) _.merge(qb.query, q);
-			if (_.isFunction(q)) return qb.exec(q);
-			if (_.isFunction(callback)) return qb.exec(callback);
+		qb.find = argy('[object|string] [function]', function(q, callback) {
+			if (argy.isType(q, 'object')) {
+				_.merge(qb.query, q);
+			} else {
+				q = {$id: q};
+			}
+
+			if (callback) qb.exec(callback);
+
 			return qb;
-		};
+		});
 		// }}}
 
 		// qb.select(q, cb) {{{
@@ -874,27 +879,27 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.select = function(q, callback) {
-			if (!q) {
-				return qb;
-			} else if (_.isString(q)) {
-				if (qb.query.$select) {
-					qb.query.$select.push(q);
-				} else {
-					qb.query.$select = [q];
-				}
-			} else if (_.isArray(q)) {
-				if (qb.query.$select) {
-					qb.query.$select.push.apply(this, q);
-				} else {
-					qb.query.$select = q;
-				}
-			} else {
-				throw new Error('Sort parameter type is unsupported');
-			}
-			if (_.isFunction(callback)) return qb.exec(callback);
+		qb.select = argy('string|array [function]', function(q, callback) {
+			argy(arguments)
+				.ifForm(['string', 'string function'], function(id, callback) {
+					if (qb.query.$select) {
+						qb.query.$select.push(id);
+					} else {
+						qb.query.$select = [id];
+					}
+					if (callback) q.exec(callback);
+				})
+				.ifForm(['array', 'array function'], function(ids, callback) {
+					if (qb.query.$select) {
+						qb.query.$select.push.apply(this, ids);
+					} else {
+						qb.query.$select = ids;
+					}
+					if (callback) q.exec(callback);
+				})
+
 			return qb;
-		};
+		});
 		// }}}
 
 		// qb.sort(q, cb) {{{
@@ -907,27 +912,30 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.sort = function(q, callback) {
-			if (!q) {
-				return qb;
-			} else if (_.isString(q)) {
-				if (qb.query.$sort) {
-					qb.query.$sort.push(q);
-				} else {
-					qb.query.$sort = [q];
-				}
-			} else if (_.isArray(q)) {
-				if (qb.query.$sort) {
-					qb.query.$sort.push.apply(this, q);
-				} else {
-					qb.query.$sort = q;
-				}
-			} else {
-				throw new Error('Sort parameter type is unsupported');
-			}
-			if (_.isFunction(callback)) return qb.exec(callback);
+		qb.sort = argy('string|array [function]', function(q, callback) {
+			argy(arguments)
+				.ifForm('', function() {})
+				.ifForm(['string', 'string function'], function(field, callback) {
+					if (qb.query.$sort) {
+						qb.query.$sort.push(field);
+					} else {
+						qb.query.$sort = [field];
+					}
+
+					if (callback) qb.exec(callback);
+				})
+				.ifForm(['array', 'array function'], function(fields, callback) {
+					if (qb.query.$sort) {
+						qb.query.$sort.push.apply(this, fields);
+					} else {
+						qb.query.$sort = fields;
+					}
+
+					if (callback) qb.exec(callback);
+				})
+
 			return qb;
-		};
+		});
 		// }}}
 
 		// qb.limit(q, cb) {{{
@@ -940,15 +948,17 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.limit = function(q, callback) {
+		qb.limit = argy('[falsy|number] [function]', function(q, callback) {
 			if (!q) {
 				delete qb.query.$limit;
 			} else {
 				qb.query.$limit = q;
-				if (_.isFunction(callback)) return qb.exec(callback);
 			}
+
+			if (callback) return qb.exec(callback);
+
 			return qb;
-		};
+		});
 		// }}}
 
 		// qb.skip(q, cb) {{{
@@ -961,15 +971,17 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.skip = function(q, callback) {
+		qb.skip = argy('[falsy|number] [function]', function(q, callback) {
 			if (!q) {
 				delete qb.query.$skip;
 			} else {
 				qb.query.$skip = q;
-				if (_.isFunction(callback)) return qb.exec(callback);
 			}
+
+			if (callback) return qb.exec(callback);
+
 			return qb;
-		};
+		});
 		// }}}
 
 		// qb.populate(q, cb) {{{
@@ -982,27 +994,30 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.populate = function(q, callback) {
-			if (!q) {
-				return qb;
-			} else if (_.isString(q)) {
-				if (qb.query.$populate) {
-					qb.query.$populate.push(q);
-				} else {
-					qb.query.$populate = [q];
-				}
-			} else if (_.isArray(q)) {
-				if (qb.query.$populate) {
-					qb.query.$populate.push.apply(this, q);
-				} else {
-					qb.query.$populate = q;
-				}
-			} else {
-				throw new Error('Populate parameter type is unsupported');
-			}
-			if (_.isFunction(callback)) return qb.exec(callback);
+		qb.populate = argy('string|array [function]', function(q, callback) {
+			argy(arguments)
+				.ifForm('', function() {})
+				.ifForm(['string', 'string function'], function(field, callback) {
+					if (qb.query.$populate) {
+						qb.query.$populate.push(field);
+					} else {
+						qb.query.$populate = [field];
+					}
+
+					if (callback) qb.exec(callback);
+				})
+				.ifForm(['array', 'array function'], function(fields, callback) {
+					if (qb.query.$populate) {
+						qb.query.$populate.push.apply(this, fields);
+					} else {
+						qb.query.$populate = fields;
+					}
+
+					if (callback) qb.exec(callback);
+				})
+
 			return qb;
-		};
+		});
 		// }}}
 
 		// qb.exec(cb) {{{
@@ -1013,11 +1028,9 @@ function Monoxide() {
 		* @param {function} callback(err,result)
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.exec = function(callback) {
-			if (!_.isFunction(callback)) throw new Error('Callback to exec() is not a function');
-
+		qb.exec = argy('function', function(callback) {
 			return self.query(qb.query, callback);
-		};
+		});
 		// }}}
 
 		// qb.optional() {{{
@@ -1029,18 +1042,17 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.optional = function(isOptional, callback) {
-			if (_.isBoolean(isOptional)) {
-				qb.query.$errNotFound = !isOptional;
-				return _.isFunction(callback) ? qb.exec() : qb;
-			} else if (_.isFunction(isOptional)) {
+		qb.optional = argy('[boolean|null|undefined] [function]', function(isOptional, callback) {
+			if (argy.isType(isOptional, ['null', 'undefined'])) {
 				qb.query.$errNotFound = false;
-				return qb.exec();
 			} else {
-				qb.query.$errNotFound = false;
-				return qb;
+				qb.query.$errNotFound = !! isOptional;
 			}
-		};
+
+			if (callback) qb.exec(callback);
+
+			return qb;
+		});
 		// }}}
 
 		return qb;
