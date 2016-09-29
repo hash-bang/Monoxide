@@ -1063,18 +1063,10 @@ function Monoxide() {
 	/**
 	* @class
 	*/
-	self.monoxideModel = function monoxideModel(settings) {
-		// Deal with arguments {{{
-		if (_.isString(settings)) {
-			settings = {$collection: settings};
-		} else if (_.isObject(settings)) {
-			// All ok
-		} else {
-			throw new Error('Unknown function call pattern');
-		}
-		// }}}
-
+	self.monoxideModel = argy('string|object', function monoxideModel(settings) {
 		var mm = this;
+
+		if (argy.isType(settings, 'string')) settings = {$collection: settings};
 
 		// Sanity checks {{{
 		if (!settings.$collection) throw new Error('new MonoxideModel({$collection: <name>}) requires at least \'$collection\' to be specified');
@@ -1155,7 +1147,7 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder}
 		*/
 		mm.findOne = function(q, callback) {
-			if (_.isString(q)) throw new Error('Refusing to allow findOne(String). Use findOneByID if you wish to specify only the ID');
+			if (argy.isType(q, 'string')) throw new Error('Refusing to allow findOne(String). Use findOneByID if you wish to specify only the ID');
 
 			return (new self.queryBuilder())
 				.find({
@@ -1178,9 +1170,9 @@ function Monoxide() {
 		*/
 		mm.findOneByID = function(q, callback) {
 			// Deal with arguments {{{
-			if (_.isString(q)) {
+			if (argy.isType(q, 'string')) {
 				// All ok
-			} else if (_.isObject(q) && q.toString().length) { // Input is an object but we can convert it to something useful
+			} else if (argy.isType(q, 'object') && q.toString().length) { // Input is an object but we can convert it to something useful
 				q = q.toString();
 			} else {
 				throw new Error('Unknown function call pattern');
@@ -1211,23 +1203,11 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
-		mm.create = function(q, callback) {
-			// Deal with arguments {{{
-			if (_.isObject(q)) {
-				// Also ok
-			} else if (_.isFunction(q)) {
-				callback = q;
-				q = {};
-			} else {
-				throw new Error('Unknown function call pattern');
-			}
-
+		mm.create = argy('object [function]', function(q, callback) {
 			q.$collection = mm.$collection;
-			// }}}
-
 			self.create(q, callback);
 			return mm;
-		};
+		});
 
 
 		/**
@@ -1239,20 +1219,11 @@ function Monoxide() {
 		* @param {function} [callback(err,result)] Optional callback to call on completion or error
 		* @return {Object} This chainable object
 		*/
-		mm.update = function(q, qUpdate, callback) {
-			// Deal with arguments {{{
-			if (_.isObject(q) && _.isObject(qUpdate)) {
-				// All ok
-			} else {
-				throw new Error('Unknown function call pattern');
-			}
-
+		mm.update = argy('object object [function]', function(q, qUpdate, callback) {
 			q.$collection = mm.$collection;
-			// }}}
-
 			self.update(q, qUpdate, callback);
 			return mm;
-		};
+		});
 
 
 		/**
@@ -1302,32 +1273,14 @@ function Monoxide() {
 		* @param {function} setCallback The set function to call when the virtual value changes
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
-		mm.virtual = function(name, getCallback, setCallback) {
-			// Deal with arguments {{{
+		mm.virtual = argy('string [function] [function]', function(name, getCallback, setCallback) {
 			var q = {};
-			if (_.isObject(name)) {
-				q = name;
-			} else if (_.isString(name) && _.isFunction(getCallback) && _.isFunction(setCallback)) {
-				q = {
-					get: getCallback,
-					set: setCallback,
-				};
-			} else if (_.isString(name) && _.isFunction(getCallback)) {
-				q = {
-					get: getCallback,
-				};
-			} else if (_.isString(name) && _.isEmpty(getCallback) && _.isFunction(setCallback)) {
-				q = {
-					set: setCallback,
-				};
-			} else {
-				throw new Error('Unknown function call pattern');
-			}
-			// }}}
+			if (argy.isType(getCallback, 'function')) q.get = getCallback;
+			if (argy.isType(setCallback, 'function')) q.set = setCallback;
 
 			mm.$virtuals[name] = q;
 			return mm;
-		};
+		});
 
 
 		/**
@@ -1359,19 +1312,24 @@ function Monoxide() {
 		* @param {string|array|undefined|null} hooks The hook(s) to query, if undefined or null this returns if any hooks are present
 		* @return {boolean} Whether the hook(s) is present
 		*/
-		mm.hasHook = function(hooks) {
-			if (_.isEmpty(hooks)) {
-				return !_.isEmpty(mm.$hooks);
-			} else if (_.isString(hooks)) {
-				return (mm.$hooks[hooks] && mm.$hooks[hooks].length);
-			} else if (_.isArray(hooks)) {
-				return hooks.every(function(hook) {
-					return (mm.$hooks[hook] && mm.$hooks[hook].length);
+		mm.hasHook = argy('[string|array]', function(hooks) {
+			var out;
+
+			argy(arguments)
+				.ifForm('', function() {
+					out = !_.isEmpty(mm.$hooks);
+				})
+				.ifForm('string', function(hook) {
+					out = mm.$hooks[hook] && mm.$hooks[hook].length;
+				})
+				.ifForm('array', function(hooks) {
+					out = hooks.every(function(hook) {
+						return (mm.$hooks[hook] && mm.$hooks[hook].length);
+					});
 				});
-			} else {
-				throw new Error('Unknown function call pattern');
-			}
-		};
+
+			return out;
+		});
 
 
 		/**
@@ -1422,7 +1380,7 @@ function Monoxide() {
 		};
 
 		return mm;
-	};
+	});
 	util.inherits(self.monoxideModel, events.EventEmitter);
 
 	// }}}
