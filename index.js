@@ -69,7 +69,7 @@ function Monoxide() {
 	* 	console.log('Widget:', res);
 	* });
 	*/
-	self.get = function(q, id, callback) {
+	self.get = argy('[object|string|number] [string|number|object] function', function(q, id, callback) {
 		argy(arguments)
 			.ifForm('object function', function(aQ, aCallback) {
 				q = aQ;
@@ -86,14 +86,11 @@ function Monoxide() {
 					$collection: aCollection,
 					$id: aId.toString(),
 				};
-			})
-			.ifFormElse(function(form) {
-				throw new Error('Unknown function call pattern:' + form);
 			});
 
 		if (!q.$id) return callback('No $id specified');
 		return self.query(q, callback);
-	};
+	});
 	// }}}
 
 	// .query([q], callback) {{{
