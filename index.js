@@ -2273,7 +2273,6 @@ function Monoxide() {
 		});
 		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.query(). Specify as a string or {collection: String}');
-		// }}}
 
 		return function(req, res, next) {
 			var q = _(req.query)
