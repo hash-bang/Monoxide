@@ -1266,11 +1266,11 @@ function Monoxide() {
 		/**
 		* Define a virtual (a handler when a property gets set or read)
 		* @param {string|Object} name The virtual name to apply or the full virtual object (must pretain to the Object.defineProperty descriptor)
-		* @param {function} getCallback The get fnution to call when the virtual value is read
+		* @param {function} getCallback The get function to call when the virtual value is read
 		* @param {function} setCallback The set function to call when the virtual value changes
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
-		mm.virtual = argy('string [function] [function]', function(name, getCallback, setCallback) {
+		mm.virtual = argy('string [function|falsy] [function|falsy]', function(name, getCallback, setCallback) {
 			var q = {};
 			if (argy.isType(getCallback, 'function')) q.get = getCallback;
 			if (argy.isType(setCallback, 'function')) q.set = setCallback;
