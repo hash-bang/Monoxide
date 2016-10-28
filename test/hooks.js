@@ -29,9 +29,9 @@ describe('monoxide.* (hooks)', function() {
 	};
 	it('should attach a hooks to users', function() {
 		monoxide.models.users
-			.hook('query', function(next, q) {
-				expect(q).to.have.property('$data');
-				expect(q.$data).to.be.deep.equal({foo: 'bar', baz: 123});
+			.hook('query', function(next, q, d) {
+				//expect(q).to.have.property('$data');
+				//expect(q.$data).to.be.deep.equal({foo: 'bar', baz: 123});
 
 				firedHooks.queryHook++;
 				next();
@@ -39,22 +39,26 @@ describe('monoxide.* (hooks)', function() {
 			.on('query', function(next) {
 				firedHooks.queryEvent++;
 			})
-			.hook('save', function(next, doc) {
-				expect(doc).to.have.property('$data');
-				expect(doc.$data).to.be.deep.equal({foo: 'bar', baz: 123});
+			.hook('save', function(next, q) {
+				expect(q).to.have.property('$data');
+				expect(q.$data).to.be.deep.equal({foo: 'bar', baz: 123});
 
 				// We should only ever operate on user[0]
-				expect(doc._id).to.equal(users[0]._id);
+				expect(q._id).to.equal(users[0]._id);
 				firedHooks.saveHook++;
 				next();
 			})
 			.on('save', function(next) {
 				firedHooks.saveEvent++;
 			})
-			.hook('postSave', function(next, doc) {
-				expect(doc).to.have.property('$data');
-				expect(doc.$data).to.be.deep.equal({foo: 'bar', baz: 123});
+			.hook('postSave', function(next, q, doc) {
+				expect(q).to.have.deep.property('$data');
+				expect(q.$data).to.be.deep.equal({foo: 'bar', baz: 123});
 
+				expect(doc).to.have.property('isModified'); // Check for a random Monoxide function
+				expect(doc.isModified).to.be.a.function;
+
+				expect(q._id).to.equal(users[0]._id);
 				expect(doc._id).to.equal(users[0]._id);
 				firedHooks.postSaveHook++;
 				next();
@@ -78,6 +82,7 @@ describe('monoxide.* (hooks)', function() {
 
 	it('should fire hooks on save + postSave', function(finish) {
 		users[0].save({$data: {foo: 'bar', baz: 123}}, function(err, res) {
+			expect(err).to.be.not.ok;
 			expect(firedHooks.saveHook).to.equal(1);
 			expect(firedHooks.saveEvent).to.equal(1);
 			expect(firedHooks.postSaveHook).to.equal(1);

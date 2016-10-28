@@ -478,7 +478,11 @@ function Monoxide() {
 				var patch = _.omit(q, this.metaFields);
 				if (_.isEmpty(patch)) {
 					if (q.$errBlankUpdate) return next('Nothing to update');
-					return next(null, q);
+					if (q.$refetch) {
+						return self.get({$collection: q.$collection, $id: q.$id}, next);
+					} else {
+						return next(null, {});
+					}
 				}
 
 				self.models[q.$collection].$mongoModel.findOneAndUpdate(
