@@ -425,7 +425,7 @@ function Monoxide() {
 	* 	console.log('Saved widget is now', widget);
 	* });
 	*/
-	self.save = argy('object function', function(q, callback) {
+	self.save = argy('object [function]', function(q, callback) {
 		var self = this;
 
 		_.defaults(q || {}, {
@@ -515,7 +515,7 @@ function Monoxide() {
 	});
 	// }}}
 
-	// .update(q, [callback]) {{{
+	// .update(q, [with], [callback]) {{{
 	/**
 	* Update multiple documents
 	*
@@ -625,7 +625,7 @@ function Monoxide() {
 	* 	console.log('Created widget is', widget);
 	* });
 	*/
-	self.create = argy('object function', function MonoxideQuery(q, callback) {
+	self.create = argy('object [function]', function MonoxideQuery(q, callback) {
 		var self = this;
 		_.defaults(q || {}, {
 			$refetch: true, // Fetch and return the record when created (false returns null)
