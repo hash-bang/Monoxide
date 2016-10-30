@@ -656,9 +656,11 @@ function Monoxide() {
 					q.$data(function(err, data) {
 						if (err) return next(err);
 						q.$data = data;
+						next();
 					});
+				} else {
+					next();
 				}
-				next();
 			})
 			// }}}
 			// Coherse all OIDs (or arrays of OIDs) into their correct internal type {{{
