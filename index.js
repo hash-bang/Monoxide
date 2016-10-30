@@ -2585,6 +2585,7 @@ function Monoxide() {
 	*/
 	self.utilities.objectID = function(str) {
 		if (!str) return undefined;
+		if (_.isObject(str) && str._id) return new mongoose.Types.ObjectId(str._id); // Is a sub-document - extract its _id and use that
 		return new mongoose.Types.ObjectId(str);
 	};
 	// }}}
