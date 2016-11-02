@@ -2115,7 +2115,7 @@ function Monoxide() {
 			};
 
 			// Count {{{
-			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && _.isFunction(settings.count)) {
+			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && !_.isBoolean(settings.count)) {
 				self.utilities.runMiddleware(req, res, settings.count, function() {
 					self.express.count(settings)(req, res, next);
 				}, settings);
