@@ -485,6 +485,34 @@ function Monoxide() {
 					}
 				}
 
+				_.forEach(self.models[q.$collection].$oids, function(fkType, schemaPath) {
+					if (!_.has(patch, schemaPath)) return; // Not patching this field anyway
+
+					switch(fkType.type) {
+						case 'objectId': // Convert the field to an OID if it isn't already
+							if (_.has(q, schemaPath)) {
+								var newVal = _.get(q, schemaPath);
+								if (!self.utilities.isObjectID(newVal))
+									_.set(patch, schemaPath, self.utilities.objectID(newVal));
+							}
+							break;
+						case 'objectIdArray': // Convert each item to an OID if it isn't already
+							if (_.has(q, schemaPath)) {
+								var gotOIDs = _.get(q, schemaPath);
+								if (_.isArray(gotOIDs)) {
+									_.set(patch, schemaPath, gotOIDs.map(function(i, idx) {
+										return (!self.utilities.isObjectID(newVal))
+											? self.utilities.objectID(i)
+											: i;
+									}));
+								} else {
+									throw new Error('Expected ' + schemaPath + ' to contain an array of OIDs but got ' + (typeof gotOIDs));
+								}
+							}
+							break;
+					}
+				});
+
 				self.models[q.$collection].$mongoModel.findOneAndUpdate(
 					{ _id: self.utilities.objectID(q.$id) }, // What we are writing to
 					{ $set: patch }, // What we are saving
