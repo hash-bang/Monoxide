@@ -2,6 +2,7 @@ var bodyParser = require('body-parser');
 var expect = require('chai').expect;
 var express = require('express');
 var expressLogger = require('express-log-url');
+var mongoose = require('mongoose');
 var monoxide = require('..');
 var superagent = require('superagent');
 var testSetup = require('./setup');
@@ -78,6 +79,32 @@ describe('monoxide.express - create, read, update, destroy', function() {
 				finish();
 			});
 	});
+
+	it('should have created the user (raw DB checks)', function(finish) {
+		monoxide.models.users.$mongooseModel.findOne({name: 'Diziet Sma'}, function(err, doc) {
+			expect(err).to.be.not.ok;
+
+			expect(doc).to.have.property('favourite');
+			expect(doc.favourite.toString()).to.be.equal(widgets[0]._id);
+			expect(doc.favourite).to.be.an.instanceOf(mongoose.Types.ObjectId);
+
+			expect(doc.mostPurchased).to.be.an.array;
+			expect(doc.mostPurchased).to.have.length(2);
+
+			expect(doc.mostPurchased[0]).to.have.property('number', 72);
+			expect(doc.mostPurchased[0]).to.have.property('item');
+			expect(doc.mostPurchased[0].item.toString()).to.be.equal(widgets[1]._id);
+			expect(doc.mostPurchased[0].item).to.be.an.instanceOf(mongoose.Types.ObjectId);
+
+			expect(doc.mostPurchased[1]).to.have.property('number', 89);
+			expect(doc.mostPurchased[1]).to.have.property('item');
+			expect(doc.mostPurchased[1].item.toString()).to.be.equal(widgets[2]._id);
+			expect(doc.mostPurchased[1].item).to.be.an.instanceOf(mongoose.Types.ObjectId);
+
+
+			finish();
+		});
+	});
 	// }}}
 
 	// Read (get + query) {{{
@@ -129,6 +156,26 @@ describe('monoxide.express - create, read, update, destroy', function() {
 				finish();
 			});
 	});
+
+	it('should have updated the user (raw DB checks)', function(finish) {
+		monoxide.models.users.$mongooseModel.findOne({name: 'Cheradenine Zakalwe'}, function(err, doc) {
+			expect(err).to.be.not.ok;
+
+			expect(doc).to.have.property('favourite');
+			expect(doc.favourite.toString()).to.be.equal(widgets[2]._id);
+			expect(doc.favourite).to.be.an.instanceOf(mongoose.Types.ObjectId);
+
+			expect(doc.mostPurchased).to.be.an.array;
+			expect(doc.mostPurchased).to.have.length(1);
+
+			expect(doc.mostPurchased[0]).to.have.property('number', 5);
+			expect(doc.mostPurchased[0]).to.have.property('item');
+			expect(doc.mostPurchased[0].item.toString()).to.be.equal(widgets[0]._id);
+			expect(doc.mostPurchased[0].item).to.be.an.instanceOf(mongoose.Types.ObjectId);
+
+			finish();
+		});
+	});
 	// }}}
 
 	// Delete {{{
@@ -138,6 +185,15 @@ describe('monoxide.express - create, read, update, destroy', function() {
 				expect(err).to.be.not.ok;
 				finish();
 			});
+	});
+
+	it('should have deleted the user (raw DB checks)', function(finish) {
+		monoxide.models.users.$mongooseModel.findOne({name: 'Cheradenine Zakalwe'}, function(err, doc) {
+			expect(err).to.be.not.ok;
+			expect(doc).to.be.not.ok;
+
+			finish();
+		});
 	});
 	// }}}
 
