@@ -41,12 +41,15 @@ describe('monoxide.express.*', function() {
 
 		app.get('/api/widgets', monoxide.express.query('widgets'));
 		app.get('/api/widgets/count', monoxide.express.count('widgets'));
+		app.get('/api/widgets/meta', monoxide.express.meta('widgets'));
 		app.get('/api/widgets/:id', monoxide.express.get('widgets'));
 		app.post('/api/widgets', monoxide.express.create('widgets'));
 		app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 		app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 
-		app.use('/api/groups/:id?', monoxide.express.middleware('groups'));
+		app.use('/api/groups/:id?', monoxide.express.middleware('groups', {
+			meta: true, // Have to enable this as its off by default
+		}));
 
 		server = app.listen(port, null, function(err) {
 			if (err) return finish(err);
@@ -260,6 +263,45 @@ describe('monoxide.express.*', function() {
 				expect(res.body).to.have.property('count');
 				expect(res.body.count).to.be.a.number;
 				expect(res.body.count).to.be.equal(3);
+
+				finish();
+			});
+	});
+	// }}}
+
+	// GET (meta) {{{
+	it('should not be allowed to get meta information on users via ReST', function(finish) {
+		superagent.get(url + '/api/users/meta')
+			.end(function(err, res) {
+				expect(err).to.be.ok;
+
+				expect(res.body).to.be.an.object;
+
+				finish();
+			});
+	});
+
+	it('should get meta information on widgets via ReST', function(finish) {
+		superagent.get(url + '/api/widgets/meta')
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				expect(res.body).to.be.an.object;
+				expect(res.body).to.have.property('_id');
+				expect(res.body._id).to.have.property('type', 'objectid');
+
+				finish();
+			});
+	});
+
+	it('should get meta information on groups via ReST', function(finish) {
+		superagent.get(url + '/api/groups/meta')
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				expect(res.body).to.be.an.object;
+				expect(res.body).to.have.property('_id');
+				expect(res.body._id).to.have.property('type', 'objectid');
 
 				finish();
 			});

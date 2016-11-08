@@ -51,6 +51,7 @@ describe('monoxide.express (permission tests)', function() {
 			count: true,
 			save: false,
 			delete: false,
+			meta: false,
 			$data: function(next, doc) {
 				return next(null, { // Junk data to attach to $data in the downstream DB calls
 					quz: 'qux',

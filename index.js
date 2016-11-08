@@ -866,6 +866,124 @@ function Monoxide() {
 	});
 	// }}}
 
+	// .meta(item, [callback]) {{{
+	/**
+	* Return information about a Mongo collection schema
+	*
+	* @name monoxide.meta
+	*
+	* @param {Object} q The object to process
+	* @param {string} q.$collection The collection / model to examine
+	*
+	* @param {function} [callback(err,result)] Optional callback to call on completion or error
+	*
+	* @return {Object} This chainable object
+	*
+	* @example
+	* // Describe a collection
+	* monoxide.meta({$collection: 'widgets'}, function(err, res) {
+	* 	console.log('About the widget collection:', res);
+	* });
+	*/
+	self.meta = argy('object [function]', function MonoxideMeta(q, callback) {
+		var self = this;
+		_.defaults(q || {}, {
+			$filterPrivate: true,
+		});
+
+		async()
+			.set('metaFields', [
+				'$collection', // Collection to query to find the original record
+				'$data', // Meta user-defined data
+				'$filterPrivate', // Filter out /^_/ fields
+				'$collectionEnums', // Convert enums into a collection (with `id` + `title` fields per object)
+			])
+			// Sanity checks {{{
+			.then(function(next) {
+				if (!q || _.isEmpty(q)) return next('No query given for meta operation');
+				if (!q.$collection) return next('$collection must be specified for meta operation');
+				if (!self.models[q.$collection]) return next('Cannot find collection to extract its meta information: ' + q.$collection);
+				next();
+			})
+			// }}}
+			// Retrieve the meta information {{{
+			.then('meta', function(next) {
+				var sortedPaths = _(self.models[q.$collection].$mongooseModel.schema.paths)
+					.map((v,k) => v)
+					.sortBy('path')
+					.value();
+
+				var meta = {
+					_id: {type: 'objectid'}, // FIXME: Is it always the case that a doc has an ID?
+				};
+
+				_.forEach(sortedPaths, function(path) {
+					var id = path.path;
+
+					if (q.$filterPrivate && _.last(path.path.split('.')).startsWith('_')) return; // Skip private fields
+
+					var info = {};
+					switch (path.instance.toLowerCase()) {
+						case 'string':
+							info.type = 'string';
+							if (path.enumValues && path.enumValues.length) {
+								if (q.$collectionEnums) {
+									info.enum = path.enumValues.map(e => { return ({
+										id: e,
+										title: e.substr(0, 1).toUpperCase() + e.substr(1)
+									})});
+								} else {
+									info.enum = path.enumValues;
+								}
+							}
+							break;
+						case 'number':
+							info.type = 'number';
+							break;
+						case 'date':
+							info.type = 'date';
+							break;
+						case 'boolean':
+							info.type = 'boolean';
+							break;
+						case 'array':
+							info.type = 'array';
+							break;
+						case 'object':
+							info.type = 'object';
+							break;
+						case 'objectid':
+							info.type = 'objectid';
+							if (_.has(path, 'options.ref')) info.ref = path.options.ref;
+							break;
+						default:
+							debug('Unknown Mongo data type during meta extract on ' + q.$collection + ':', path.instance.toLowerCase());
+					}
+
+					// Extract default value if its not a function (otherwise return [DYNAMIC])
+					if (path.defaultValue) info.default = argy.isType(path.defaultValue, 'scalar') ? path.defaultValue : '[DYNAMIC]';
+
+					meta[id] = info;
+				});
+
+				next(null, meta);
+			})
+			// }}}
+			// End {{{
+			.end(function(err) {
+				if (err) {
+					debug('meta() error - ' + err.toString());
+					if (callback) callback(err);
+				} else {
+					if (callback) callback(null, this.meta);
+				}
+			});
+			// }}}
+
+			return self;
+	});
+	// }}}
+
 	// .queryBuilder() - query builder {{{
 	/**
 	* Returns data from a Monoxide model
@@ -2045,6 +2163,7 @@ function Monoxide() {
 		create: false,
 		save: false,
 		delete: false,
+		meta: false,
 	};
 
 	/**
@@ -2094,6 +2213,7 @@ function Monoxide() {
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.create=false] Allow the creation of records via the POST method
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.save=false] Allow saving of records via the POST method
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.delete=false] Allow deleting of records via the DELETE method
+	* @param {boolean|monoxide.express.middlewareCallback} [settings.meta=false] Allow retrival of meta information
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example
@@ -2121,6 +2241,14 @@ function Monoxide() {
 				}, settings);
 			} else if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
 				self.express.count(settings)(req, res, next);
+			// }}}
+			// Meta {{{
+			} else if (settings.meta && req.method == 'GET' && req.params.id && req.params.id == 'meta' && !_.isBoolean(settings.meta)) {
+				self.utilities.runMiddleware(req, res, settings.meta, function() {
+					self.express.meta(settings)(req, res, next);
+				}, settings);
+			} else if (settings.meta && req.method == 'GET' && req.params.id && req.params.id == 'meta') {
+				self.express.meta(settings)(req, res, next);
 			// }}}
 			// Get {{{
 			} else if (settings.get && req.method == 'GET' && req.params.id && !_.isBoolean(settings.get)) {
@@ -2526,6 +2654,77 @@ function Monoxide() {
 			if (req.params.id) q.$id = req.params.id;
 
 			self.delete(q, function(err, rows) {
+				if (settings.passThrough) { // Act as middleware
+					next(err, rows);
+				} else if (err) { // Act as endpoint and there was an error
+					res.status(400).end();
+				} else { // Act as endpoint and result is ok
+					res.send(rows).end();
+				}
+			});
+		};
+	});
+	// }}}
+
+	// .express.meta(settings) {{{
+	/**
+	* Return an Express middleware binding for meta information about a schema
+	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
+	*
+	* @name monoxide.express.meta
+	*
+	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
+	* @param {Object} [settings] Middleware settings
+	* @param {string} [settings.collection] The model name to bind to
+	* @returns {function} callback(req, res, next) Express compatible middleware function
+	*
+	* @example
+	* // Bind an express method provide meta information
+	* app.delete('/api/widgets/meta', monoxide.express.meta('widgets'));
+	*/
+	self.express.meta = argy('[string] [object]', function MonoxideExpressMeta(model, settings) {
+		settings = _.defaults(settings || {}, {
+			collection: null, // The collection to operate on
+			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
+			queryRemaps: { // Remap incomming values on left to keys on right
+				'collectionEnums': '$collectionEnums',
+			},
+			queryAllowed: { // Fields and their allowed contents (post remap)
+				'$collectionEnums': {scalar: true},
+			},
+		});
+		if (model) settings.collection = model;
+		if (!settings.collection) throw new Error('No collection specified for monoxide.express.meta(). Specify as a string or {collection: String}');
+
+		return function(req, res, next) {
+			var q = _(req.query)
+				.mapKeys(function(val, key) {
+					if (settings.queryRemaps[key]) return settings.queryRemaps[key];
+					return key;
+				})
+				.mapValues(function(val, key) {
+					if (settings.queryAllowed[key]) {
+						var allowed = settings.queryAllowed[key];
+						if (!_.isString(val) && !allowed.scalar) {
+							return null;
+						} else if (_.isString(val) && allowed.scalarCSV) {
+							return val.split(/\s*,\s*/);
+						} else if (_.isArray(val) && allowed.array) {
+							return val;
+						} else {
+							return val;
+						}
+					}
+					return val;
+				})
+				.value();
+
+			q.$collection = settings.collection;
+			q.$data = settings.$data;
+
+			if (req.params.id) q.$id = req.params.id;
+
+			self.meta(q, function(err, rows) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
