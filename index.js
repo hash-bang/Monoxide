@@ -327,7 +327,7 @@ function Monoxide() {
 			// }}}
 			// Apply populates {{{
 			.then(function(next) {
-				if (!q.$populate || !q.$populate.length || q.$count || !q.decorate || q.$plain || this.result === undefined) return next(); // Skip
+				if (!q.$populate || !q.$populate.length || q.$count || q.$decorate === false || q.$plain === false || this.result === undefined) return next(); // Skip
 				if (q.$one) {
 					this.result.populate(q.$populate, next);
 				} else {
