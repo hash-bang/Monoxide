@@ -2343,29 +2343,7 @@ function Monoxide() {
 
 		return function(req, res, next) {
 			if (!req.params.id) return res.send('No ID specified').status(404).end();
-
-			var q = _(req.query)
-				.mapKeys(function(val, key) {
-					if (settings.queryRemaps[key]) return settings.queryRemaps[key];
-					return key;
-				})
-				.mapValues(function(val, key) {
-					if (settings.queryAllowed[key]) {
-						var allowed = settings.queryAllowed[key];
-						if (!_.isString(val) && !allowed.scalar) {
-							return null;
-						} else if (_.isString(val) && allowed.scalarCSV) {
-							return val.split(/\s*,\s*/);
-						} else if (_.isArray(val) && allowed.array) {
-							return val;
-						} else {
-							return val;
-						}
-					}
-					return val;
-				})
-				.value();
-
+			var q = self.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
 			q.$id = req.params.id;
@@ -2437,28 +2415,7 @@ function Monoxide() {
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.query(). Specify as a string or {collection: String}');
 
 		return function(req, res, next) {
-			var q = _(req.query)
-				.mapKeys(function(val, key) {
-					if (settings.queryRemaps[key]) return settings.queryRemaps[key];
-					return key;
-				})
-				.mapValues(function(val, key) {
-					if (settings.queryAllowed[key]) {
-						var allowed = settings.queryAllowed[key];
-						if (!_.isString(val) && !allowed.scalar) {
-							return null;
-						} else if (_.isString(val) && allowed.scalarCSV) {
-							return val.split(/\s*,\s*/);
-						} else if (_.isArray(val) && allowed.array) {
-							return val;
-						} else {
-							return val;
-						}
-					}
-					return val;
-				})
-				.value();
-
+			var q = self.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
 
@@ -2512,8 +2469,7 @@ function Monoxide() {
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.count(). Specify as a string or {collection: String}');
 
 		return function(req, res, next) {
-			var q = req.query;
-
+			var q = self.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$count = true;
 			q.$data = settings.$data;
@@ -2682,43 +2638,22 @@ function Monoxide() {
 	* // Bind an express method provide meta information
 	* app.delete('/api/widgets/meta', monoxide.express.meta('widgets'));
 	*/
-	self.express.meta = argy('[string] [object]', function MonoxideExpressMeta(model, settings) {
-		settings = _.defaults(settings || {}, {
+	self.express.meta = argy('[string] [object]', function MonoxideExpressMeta(model, options) {
+		var settings = _.defaults({}, options, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 			queryRemaps: { // Remap incomming values on left to keys on right
 				'collectionEnums': '$collectionEnums',
 			},
 			queryAllowed: { // Fields and their allowed contents (post remap)
-				'$collectionEnums': {scalar: true},
+				'$collectionEnums': {boolean: true},
 			},
 		});
 		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.meta(). Specify as a string or {collection: String}');
 
 		return function(req, res, next) {
-			var q = _(req.query)
-				.mapKeys(function(val, key) {
-					if (settings.queryRemaps[key]) return settings.queryRemaps[key];
-					return key;
-				})
-				.mapValues(function(val, key) {
-					if (settings.queryAllowed[key]) {
-						var allowed = settings.queryAllowed[key];
-						if (!_.isString(val) && !allowed.scalar) {
-							return null;
-						} else if (_.isString(val) && allowed.scalarCSV) {
-							return val.split(/\s*,\s*/);
-						} else if (_.isArray(val) && allowed.array) {
-							return val;
-						} else {
-							return val;
-						}
-					}
-					return val;
-				})
-				.value();
-
+			var q = self.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
 
@@ -2939,6 +2874,45 @@ function Monoxide() {
 		return patch;
 	};
 	// }}}
+
+	// .utilities.rewriteQuery(query, settings) {{{
+	/**
+	* Returns a rewritten version of an incomming query that obeys various rules
+	* This usually accepts req.query as a parameter and a complex settings object as a secondary
+	* This function is used internally by middleware functions to clean up the incomming query
+	*
+	* @name monoxide.utilities.rewriteQuery
+	* @see monoxide.middleware
+	*
+	* @param {Object} query The user-provided query object
+	* @param {Object} settings The settings object to apply (see middleware functions)
+	* @return {Object} The rewritten query object
+	*/
+	self.utilities.rewriteQuery = function(query, settings) {
+		return _(query)
+			.mapKeys(function(val, key) {
+				if (_.has(settings.queryRemaps, key)) return settings.queryRemaps[key];
+				return key;
+			})
+			.mapValues(function(val, key) {
+				if (settings.queryAllowed[key]) {
+					var allowed = settings.queryAllowed[key];
+					if (!_.isString(val) && !allowed.scalar) {
+						return null;
+					} else if (allowed.boolean) {
+						return (val == 'true' || val == '1');
+					} else if (_.isString(val) && allowed.scalarCSV) {
+						return val.split(/\s*,\s*/);
+					} else if (_.isArray(val) && allowed.array) {
+						return val;
+					} else {
+						return val;
+					}
+				}
+				return val;
+			})
+			.value();
+	};
 
 	return self;
 }
