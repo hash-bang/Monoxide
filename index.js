@@ -2224,8 +2224,8 @@ function Monoxide() {
 	* // Bind an express method to serve users but disallow counting and querying (i.e. direct ID access only)
 	* app.use('/api/users/:id?', monoxide.express.middleware('users', {query: false, count: false}));
 	*/
-	self.express.middleware = argy('string object', function(model, settings) {
-		settings = _.defaults(settings || {}, self.express._defaults);
+	self.express.middleware = argy('string object', function(model, options) {
+		var settings = _.defaults({}, options, self.express._defaults);
 		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.middleware(). Specify as a string or {collection: String}');
 
@@ -2323,8 +2323,8 @@ function Monoxide() {
 	* // Bind an express method to serve widgets
 	* app.get('/api/widgets/:id?', monoxide.express.get('widgets'));
 	*/
-	self.express.get = argy('[string] [object]', function MonoxideExpressGet(model, settings) {
-		settings = _.defaults(settings || {}, {
+	self.express.get = argy('[string] [object]', function MonoxideExpressGet(model, options) {
+		var settings = _.defaults({}, options, {
 			queryRemaps: { // Remap incomming values on left to keys on right
 				populate: '$populate',
 				select: '$select',
@@ -2414,8 +2414,8 @@ function Monoxide() {
 	* // Bind an express method to serve widgets
 	* app.get('/api/widgets', monoxide.express.query('widgets'));
 	*/
-	self.express.query = argy('[string] [object]', function MonoxideExpressQuery(model, settings) {
-		settings = _.defaults(settings || {}, {
+	self.express.query = argy('[string] [object]', function MonoxideExpressQuery(model, options) {
+		var settings = _.defaults({}, options, {
 			queryRemaps: { // Remap incomming values on left to keys on right
 				'limit': '$limit',
 				'populate': '$populate',
@@ -2504,8 +2504,8 @@ function Monoxide() {
 	* // Bind an express method to count widgets
 	* app.get('/api/widgets/count', monoxide.express.get('widgets'));
 	*/
-	self.express.count = argy('[string] [object]', function MonoxideExpressCount(model, settings) {
-		settings = _.defaults(settings || {}, {
+	self.express.count = argy('[string] [object]', function MonoxideExpressCount(model, options) {
+		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
 		if (model) settings.collection = model;
@@ -2548,8 +2548,8 @@ function Monoxide() {
 	* // Bind an express method to save widgets
 	* app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 	*/
-	self.express.save = argy('[string] [object]', function MonoxideExpressSave(model, settings) {
-		settings = _.defaults(settings || {}, {
+	self.express.save = argy('[string] [object]', function MonoxideExpressSave(model, options) {
+		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
 		if (model) settings.collection = model;
@@ -2592,8 +2592,8 @@ function Monoxide() {
 	* // Bind an express method to create widgets
 	* app.post('/api/widgets', monoxide.express.create('widgets'));
 	*/
-	self.express.create = argy('[string] [object]', function MonoxideExpressCreate(model, settings) {
-		settings = _.defaults(settings || {}, {
+	self.express.create = argy('[string] [object]', function MonoxideExpressCreate(model, options) {
+		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
 
@@ -2637,8 +2637,8 @@ function Monoxide() {
 	* // Bind an express method to delete widgets
 	* app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 	*/
-	self.express.delete = argy('[string] [object]', function MonoxideExpressDelete(model, settings) {
-		settings = _.defaults(settings || {}, {
+	self.express.delete = argy('[string] [object]', function MonoxideExpressDelete(model, options) {
+		var settings = _.defaults({}, options, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
