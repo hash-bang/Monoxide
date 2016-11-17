@@ -770,11 +770,12 @@ function Monoxide() {
 	* Delete a Mongo document by its ID
 	* This function has two behaviours - it will, by default, only delete a single record by its ID. If `q.$multiple` is true it will delete by query.
 	* If `q.$multiple` is false and the document is not found (by `q.$id`) this function will execute the callback with an error
+	* Delete will only work with no parameters if monoxide.settings.removeAll is truthy as an extra safety check
 	*
 	* @name monoxide.delete
 	*
-	* @param {Object} q The object to process
-	* @param {string} q.$collection The collection / model to query
+	* @param {Object} [q] The object to process
+	* @param {string} [q.$collection] The collection / model to query
 	* @param {string} [q.$id] The ID of the document to delete (if you wish to do a remove based on query set q.$query=true)
 	* @param {boolean} [q.$multiple] Allow deletion of multiple records by query
 	* @param {boolean} [q.$errNotFound] Raise an error if a specifically requested document is not found (requires $id)
@@ -789,7 +790,7 @@ function Monoxide() {
 	* 	console.log('Saved widget:', res);
 	* });
 	*/
-	self.delete = argy('object [function]', function MonoxideQuery(q, callback) {
+	self.delete = argy('[object] [function]', function MonoxideQuery(q, callback) {
 		var self = this;
 		_.defaults(q || {}, {
 			$errNotFound: true, // During raise an error if $id is specified but not found to delete
@@ -1387,6 +1388,13 @@ function Monoxide() {
 		mm.remove = function(q, callback) {
 			return self.delete(_.merge(q, {$collection: mm.$collection, $multiple: true}), callback);
 		};
+
+
+		/**
+		* Alias of remove()
+		* @see monoxide.remove()
+		*/
+		mm.delete = mm.remove;
 
 
 		/**
