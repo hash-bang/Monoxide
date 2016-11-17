@@ -806,7 +806,6 @@ function Monoxide() {
 			])
 			// Sanity checks {{{
 			.then(function(next) {
-				if (!q || _.isEmpty(q)) return next('No query given for delete operation');
 				if (!q.$collection) return next('$collection must be specified for delete operation');
 				if (!q.$id && !q.$multiple) return next('$id or $multiple must be speciied during delete operation');
 
