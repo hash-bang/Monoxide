@@ -790,7 +790,7 @@ function Monoxide() {
 	* 	console.log('Saved widget:', res);
 	* });
 	*/
-	self.delete = argy('[object] [function]', function MonoxideQuery(q, callback) {
+	self.delete = argy('object [function]', function MonoxideQuery(q, callback) {
 		var self = this;
 		_.defaults(q || {}, {
 			$errNotFound: true, // During raise an error if $id is specified but not found to delete
@@ -1386,7 +1386,7 @@ function Monoxide() {
 		* @return {monoxide}
 		*/
 		mm.remove = function(q, callback) {
-			return self.delete(_.merge(q, {$collection: mm.$collection, $multiple: true}), callback);
+			return self.delete(_.merge({}, q, {$collection: mm.$collection, $multiple: true}), callback);
 		};
 
 
