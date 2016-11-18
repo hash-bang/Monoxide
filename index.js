@@ -2903,7 +2903,7 @@ function Monoxide() {
 				return key;
 			})
 			.mapValues(function(val, key) {
-				if (settings.queryAllowed[key]) {
+				if (settings.queryAllowed && settings.queryAllowed[key]) {
 					var allowed = settings.queryAllowed[key];
 					if (!_.isString(val) && !allowed.scalar) {
 						return null;
