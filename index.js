@@ -2371,6 +2371,7 @@ function Monoxide() {
 					req.document = doc;
 					next(err, doc);
 				} else if (err) { // Act as endpoint and there was an error
+					if (err == 'Not found') return res.status(404).end();
 					res.status(400).end();
 				} else { // Act as endpoint and result is ok
 					res.send(doc).end();
