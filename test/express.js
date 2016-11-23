@@ -290,6 +290,24 @@ describe('monoxide.express.*', function() {
 				expect(res.body).to.have.property('_id');
 				expect(res.body._id).to.have.property('type', 'objectid');
 
+				expect(res.body).to.have.property('name');
+				expect(res.body.name).to.have.property('type', 'string');
+
+				expect(res.body).to.have.property('content');
+				expect(res.body.content).to.have.property('type', 'string');
+
+				expect(res.body).to.have.property('status');
+				expect(res.body.status).to.have.property('type', 'string');
+				expect(res.body.status).to.have.property('default', 'active');
+				expect(res.body.status).to.have.property('enum');
+				expect(res.body.status.enum).to.be.deep.equal(['active', 'deleted']);
+
+				expect(res.body).to.have.property('color');
+				expect(res.body.color).to.have.property('default', 'blue');
+				expect(res.body.color).to.have.property('type', 'string');
+				expect(res.body.color).to.have.property('enum');
+				expect(res.body.color.enum).to.be.deep.equal(['red', 'green', 'blue', 'yellow']);
+
 				finish();
 			});
 	});
@@ -302,6 +320,43 @@ describe('monoxide.express.*', function() {
 				expect(res.body).to.be.an.object;
 				expect(res.body).to.have.property('_id');
 				expect(res.body._id).to.have.property('type', 'objectid');
+
+				finish();
+			});
+	});
+
+	it('should get meta information on widgets via ReST (?collectionEnums=true)', function(finish) {
+		superagent.get(url + '/api/widgets/meta?collectionEnums=true')
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				expect(res.body).to.be.an.object;
+
+				expect(res.body).to.have.property('status');
+				expect(res.body.status).to.have.property('enum');
+				expect(res.body.status.enum).to.be.deep.equal([{id: 'active', title: 'Active'}, {id: 'deleted', title: 'Deleted'}]);
+
+				expect(res.body).to.have.property('color');
+				expect(res.body.color).to.have.property('enum');
+				expect(res.body.color.enum).to.be.deep.equal([{id: 'red', title: 'Red'}, {id: 'green', title: 'Green'}, {id: 'blue', title: 'Blue'}, {id: 'yellow', title: 'Yellow'}]);
+
+				finish();
+			});
+	});
+
+
+	it('should get meta information on widgets via ReST (?prototype=true)', function(finish) {
+		superagent.get(url + '/api/widgets/meta?prototype=true')
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				expect(res.body).to.be.an.object;
+
+				expect(res.body).to.have.property('$prototype');
+				expect(res.body.$prototype).to.be.deep.equal({
+					status: 'active',
+					color: 'blue',
+				});
 
 				finish();
 			});

@@ -2673,9 +2673,11 @@ function Monoxide() {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 			queryRemaps: { // Remap incomming values on left to keys on right
 				'collectionEnums': '$collectionEnums',
+				'prototype': '$prototype',
 			},
 			queryAllowed: { // Fields and their allowed contents (post remap)
 				'$collectionEnums': {boolean: true},
+				'$prototype': {boolean: true},
 			},
 		});
 		if (model) settings.collection = model;
