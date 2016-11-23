@@ -126,4 +126,24 @@ describe('monoxide.meta()', function() {
 		});
 	});
 
+	it('should get the meta information of the users model (with prototype)', function(finish) {
+		monoxide.meta({
+			$collection: 'users',
+			$prototype: true,
+		}, function(err, meta) {
+			expect(err).to.not.be.ok;
+			expect(meta).to.be.an.object;
+
+			expect(meta).to.have.property('$prototype');
+			expect(meta.$prototype).to.be.an.object;
+			expect(meta.$prototype).to.be.deep.equal({
+				role: 'user',
+				settings: {
+					lang: 'en',
+				},
+			});
+
+			finish();
+		});
+	});
 });

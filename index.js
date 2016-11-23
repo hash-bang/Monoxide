@@ -875,6 +875,9 @@ function Monoxide() {
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to examine
+	* @param {boolean} [q.$collectionEnums=false] Provide all enums as a collection object instead of an array
+	* @param {boolean} [q.$filterPrivate=true] Ignore all private fields
+	* @param {boolean} [q.$prototype=false] Provide the $prototype meta object
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -890,6 +893,7 @@ function Monoxide() {
 		var self = this;
 		_.defaults(q || {}, {
 			$filterPrivate: true,
+			$prototype: false,
 		});
 
 		async()
@@ -898,6 +902,7 @@ function Monoxide() {
 				'$data', // Meta user-defined data
 				'$filterPrivate', // Filter out /^_/ fields
 				'$collectionEnums', // Convert enums into a collection (with `id` + `title` fields per object)
+				'$prototype',
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -968,6 +973,21 @@ function Monoxide() {
 				});
 
 				next(null, meta);
+			})
+			// }}}
+			// Construct the prototype if $prototype=true {{{
+			.then(function(next) {
+				if (!q.$prototype) return next();
+
+				var prototype = this.meta.$prototype = {};
+
+				_.forEach(this.meta, function(v, k) {
+					if (!_.has(v, 'default')) return;
+					if (v.default == '[DYNAMIC]') return; // Ignore dynamic values
+					_.set(prototype, k, v.default);
+				});
+
+				next();
 			})
 			// }}}
 			// End {{{
