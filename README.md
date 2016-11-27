@@ -41,34 +41,36 @@ Schema Setup
 ============
 Monoxide supports setting the `type` property via a string instead of using pointers to types within the `mongoose.Types` structure. Its also really easy to add methods, statics and virtuals using chainable syntax.
 
-	var Users = monoxide
-		.schema('users', {
-			name: String,
-			role: {type: String, enum: ['user', 'admin'], default: 'user'},
-			favourite: {type: 'pointer', ref: 'widgets'},
-			items: [{type: 'pointer', ref: 'widgets'}],
-			mostPurchased: [{
-				number: {type: 'number', default: 0},
-				item: {type: 'pointer', ref: 'widgets'},
-			}],
-		})
-		.static('countByType', function(type, next) { // Adds User.countByType(TYPE, callback) as a model method
-			Users.count({
-				$collection: 'users',
-				role: type,
-			}, next);
-		})
-		.method('splitNames', function() { // Adds UserDocument.splitNames() as a method
-			return this.name.split(/\s+/);
-		})
-		.virtual('password', function() { return 'RESTRICTED' }, function(pass) { // Adds a password handling virtual
-			// Replace this with your own impressive password hashing kung-fu
-			this._password = pass;
-		})
-		.hook('save', function(next, doc) { // Adds a hook for when a document is saved (must fire callback to accept changes)
-			console.log('User', doc._id, 'has been modified');
-			next();
-		})
+```javascript
+var Users = monoxide
+	.schema('users', {
+		name: String,
+		role: {type: String, enum: ['user', 'admin'], default: 'user'},
+		favourite: {type: 'pointer', ref: 'widgets'},
+		items: [{type: 'pointer', ref: 'widgets'}],
+		mostPurchased: [{
+			number: {type: 'number', default: 0},
+			item: {type: 'pointer', ref: 'widgets'},
+		}],
+	})
+	.static('countByType', function(type, next) { // Adds User.countByType(TYPE, callback) as a model method
+		Users.count({
+			$collection: 'users',
+			role: type,
+		}, next);
+	})
+	.method('splitNames', function() { // Adds UserDocument.splitNames() as a method
+		return this.name.split(/\s+/);
+	})
+	.virtual('password', function() { return 'RESTRICTED' }, function(pass) { // Adds a password handling virtual
+		// Replace this with your own impressive password hashing kung-fu
+		this._password = pass;
+	})
+	.hook('save', function(next, doc) { // Adds a hook for when a document is saved (must fire callback to accept changes)
+		console.log('User', doc._id, 'has been modified');
+		next();
+	})
+```
 
 Note that the awkward `mongoose.Schema.ObjectId` type is replaced with the nicer `'pointer'` type specified as a string. All other types can be similarly specified (e.g. `"number"`, `"string"` etc.).
 
@@ -80,83 +82,91 @@ ReST Server
 ===========
 The primary interface to Monoxide is the ReST server interface for Express:
 
-	var express = require('express');
-	var monoxide = require('monoxide');
+```javascript
+var express = require('express');
+var monoxide = require('monoxide');
 
-	var app = express();
+var app = express();
 
-	app.use('/api/users/:id?', monoxide.express.middleware({
-		collection: 'users',
+app.use('/api/users/:id?', monoxide.express.middleware({
+	collection: 'users',
 
-		get: true, // Allow retrieval by ID
-		query: true, // Allow retrieval of multiple records as a query
-		count: true, // Allow record counting via query
-		create: false, // Alow record creation via POST / PUT
-		save: false, // Allow saving via POST / PATCH
-		delete: false, // Allow record deletion via DELETE
-		meta: false, // Allow retrieval of collection meta information
+	get: true, // Allow retrieval by ID
+	query: true, // Allow retrieval of multiple records as a query
+	count: true, // Allow record counting via query
+	create: false, // Alow record creation via POST / PUT
+	save: false, // Allow saving via POST / PATCH
+	delete: false, // Allow record deletion via DELETE
+	meta: false, // Allow retrieval of collection meta information
 
-		// ... other options here ... //
-	}));
+	// ... other options here ... //
+}));
+```
 
 
 OR you can also bring in only the specific Express middleware thats required:
 
-	var express = require('express');
-	var monoxide = require('monoxide');
+```javascript
+var express = require('express');
+var monoxide = require('monoxide');
 
-	var app = express();
+var app = express();
 
-	app.use('/api/doodads/:id?', monoxide.express.middleware('doodads'));
-	app.use('/api/widgets/:id?', monoxide.express.middleware('widgets'));
+app.use('/api/doodads/:id?', monoxide.express.middleware('doodads'));
+app.use('/api/widgets/:id?', monoxide.express.middleware('widgets'));
+```
 
 
 You can also secure the various methods by passing in middleware:
 
-	app.use('/api/users/:id?', monoxide.express.middleware('users', {
-		get: true, // Allow retrieval by ID
-		create: false, // Dont allow record creation
-		query: false, // Dont allow querying of users (direct ID addressing is ok though)
-		count: false, // Disable counting
+```javascript
+app.use('/api/users/:id?', monoxide.express.middleware('users', {
+	get: true, // Allow retrieval by ID
+	create: false, // Dont allow record creation
+	query: false, // Dont allow querying of users (direct ID addressing is ok though)
+	count: false, // Disable counting
 
-		query: true, // Allow retrieval of multiple records as a query
+	query: true, // Allow retrieval of multiple records as a query
 
-		save: function(req, res, next) {
-			// User must be logged in AND be either the right user OR an admin to save user info
-			if (
-				(req.user && req.user._id) && // Logged in AND
-				(
-					req.user._id == req.user._id || // Is the same user thats being saved (saving own profile) OR
-					req.user.role == 'admin' // User is an admin
-				)
-			) return next();
-			return res.status(403).send('Not logged in').end();
-		},
+	save: function(req, res, next) {
+		// User must be logged in AND be either the right user OR an admin to save user info
+		if (
+			(req.user && req.user._id) && // Logged in AND
+			(
+				req.user._id == req.user._id || // Is the same user thats being saved (saving own profile) OR
+				req.user.role == 'admin' // User is an admin
+			)
+		) return next();
+		return res.status(403).send('Not logged in').end();
+	},
 
-		delete: function(req, res, next) {
-			// Only allow delete if the query contains 'force' as a string
-			if (req.query.force && req.query.force === 'confirm') return next();
-			return res.status(403).send('Nope!').end();
-		},
-	}));
+	delete: function(req, res, next) {
+		// Only allow delete if the query contains 'force' as a string
+		if (req.query.force && req.query.force === 'confirm') return next();
+		return res.status(403).send('Nope!').end();
+	},
+}));
+```
 
 
 Cherry-picking middleware
 -------------------------
 You can also pick-and-choose the handlers to be used:
 
-	var express = require('express');
-	var monoxide = require('monoxide');
+```javascript
+var express = require('express');
+var monoxide = require('monoxide');
 
-	var app = express();
+var app = express();
 
-	app.get('/api/users', monoxide.express.query('users'));
-	app.get('/api/users/count', monoxide.express.count('users'));
-	app.meta('/api/users/meta', monoxide.express.meta('users'));
-	app.get('/api/users/:id', monoxide.express.get('users'));
-	app.post('/api/users', monoxide.express.create('users'));
-	app.post('/api/users/:id', monoxide.express.save('users'));
-	app.delete('/api/users/:id', monoxide.express.delete('users'));
+app.get('/api/users', monoxide.express.query('users'));
+app.get('/api/users/count', monoxide.express.count('users'));
+app.meta('/api/users/meta', monoxide.express.meta('users'));
+app.get('/api/users/:id', monoxide.express.get('users'));
+app.post('/api/users', monoxide.express.create('users'));
+app.post('/api/users/:id', monoxide.express.save('users'));
+app.delete('/api/users/:id', monoxide.express.delete('users'));
+```
 
 In the above the specified models are bound to their respective ReST end points (`GET /api/users` will return all users for example).
 
@@ -170,8 +180,10 @@ Document creation
 -----------------
 Create a new document.
 
+```javascript
 	monoxide.create([data], [callback])
 	monoxide.models.MODEL.create([data], [callback])
+```
 
 ```javascript
 	monoxide.create({
@@ -201,51 +213,66 @@ Document finding (single)
 -------------------------
 Find one document.
 
-	monoxide.get([query], [callback])
-	monoxide.models.MODEL.findOne([data], [callback])
+```javascript
+monoxide.get([query], [callback])
+monoxide.models.MODEL.findOne([data], [callback])
+```
 
 
 Document finding (multiple)
 ---------------------------
 Find multiple documents.
 
-	monoxide.query([query], [callback])
-	monoxide.models.MODEL.find([query], [callback])
+```javascript
+monoxide.query([query], [callback])
+monoxide.models.MODEL.find([query], [callback])
+```
 
 
 Document counting
 -----------------
 Count documents.
 
-	monoxide.count([query], [callback])
-	monoxide.models.MODEL.count([query], [callback])
+```javascript
+monoxide.count([query], [callback])
+monoxide.models.MODEL.count([query], [callback])
+```
 
 
 Document saving (one)
 ---------------------
 Save data to an existing document.
 
-	monoxide.save([data], [callback])
-	monoxide.models.MODEL.save([data], [callback])
-	document.save([data], [callback])
+```javascript
+monoxide.save([data], [callback])
+monoxide.models.MODEL.save([data], [callback])
+```
 
 
 Document saving (multiple)
 --------------------------
 Save data to multiple existing documents.
 
-	monoxide.update([data], [callback])
-	monoxide.models.MODEL.update([data], [callback])
+```javascript
+monoxide.update([data], [callback])
+monoxide.models.MODEL.update([data], [callback])
+```
 
 
 Document deletion
 -----------------
 Delete documents in a collection by an optional query.
 
-	monoxide.delete([query], [callback])
-	monoxide.models.MODEL.remove([query], [callback])
-	document.remove([callback])
 
+```javascript
+monoxide.delete([query], [callback])
+monoxide.models.MODEL.delete([query], [callback])
+document.delete([callback])
+
+monoxide.remove([query], [callback])
+monoxide.models.MODEL.remove([query], [callback])
+document.remove([callback])
+```
 
 ```javascript
 // Delete a specific document by its ID
@@ -274,24 +301,27 @@ monoxide.models.widgets.delete();
 **Notes:**
 
 * Deleting by an empty query (or not specifying the query at all, e.g. `monoxide.model.delete()`) will throw an error if the `monoxide.settings.removeAll` flag is true to allow nuking an entire collection.
+* `delete` and `remove` functions are interchangable, the other is just provided for convenience
 
 
 Hooks
 -----
 Hooks allow watching of models. Each Hook within monoxide accepts a callback that must be triggered for execution to continue.
 
-	monoxide.models.MODEL.hook('create, function(next, query) { // ... // });
-	monoxide.models.MODEL.hook('postCreate, function(next, query, newDoc) { // ... // });
+```javascript
+monoxide.models.MODEL.hook('create, function(next, query) { // ... // });
+monoxide.models.MODEL.hook('postCreate, function(next, query, newDoc) { // ... // });
 
-	monoxide.models.MODEL.hook('query, function(next, query) { // ... // });
+monoxide.models.MODEL.hook('query, function(next, query) { // ... // });
 
-	monoxide.models.MODEL.hook('save, function(next, query) { // ... // });
-	monoxide.models.MODEL.hook('postSave, function(next, query, newDoc) { // ... // });
+monoxide.models.MODEL.hook('save, function(next, query) { // ... // });
+monoxide.models.MODEL.hook('postSave, function(next, query, newDoc) { // ... // });
 
-	monoxide.models.MODEL.hook('update, function(next, query) { // ... // });
+monoxide.models.MODEL.hook('update, function(next, query) { // ... // });
 
-	monoxide.models.MODEL.hook('delete, function(next, query) { // ... // });
-	monoxide.models.MODEL.hook('postDelete, function(next, query) { // ... // });
+monoxide.models.MODEL.hook('delete, function(next, query) { // ... // });
+monoxide.models.MODEL.hook('postDelete, function(next, query) { // ... // });
+```
 
 
 **Notes:**
