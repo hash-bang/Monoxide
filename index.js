@@ -176,7 +176,7 @@ function Monoxide() {
 			.then('query', function(next) {
 				var me = this;
 				var fields;
-				
+
 				if (q.$id) { // Search by one ID only - ignore other fields
 					fields = {_id: q.$id};
 					q.$one = true;
@@ -790,7 +790,7 @@ function Monoxide() {
 	* 	console.log('Saved widget:', res);
 	* });
 	*/
-	self.delete = argy('object [function]', function MonoxideQuery(q, callback) {
+	self.delete = self.remove = argy('object [function]', function MonoxideQuery(q, callback) {
 		var self = this;
 		_.defaults(q || {}, {
 			$errNotFound: true, // During raise an error if $id is specified but not found to delete
@@ -866,6 +866,7 @@ function Monoxide() {
 			return self;
 	});
 	// }}}
+
 
 	// .meta(item, [callback]) {{{
 	/**
@@ -1633,7 +1634,6 @@ function Monoxide() {
 
 			/**
 			* Remove certain fields from the document object
-			* This has the same 
 			* This method is really just a thin wrapper around monoxide.delete()
 			* @param {string|regexp|array} fields Either a single field name, regular expression or array of strings/regexps to filter by. Any key matching will be removed from the object
 			* @return {monoxide.monoxideDocument} This object after the fields have been removed
@@ -1927,6 +1927,8 @@ function Monoxide() {
 
 			$applySchema: true,
 		};
+
+		proto.delete = proto.remove;
 
 		_.extend(
 			proto, // INPUT: Basic prototype
