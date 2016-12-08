@@ -783,12 +783,6 @@ function Monoxide() {
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
 	* @return {Object} This chainable object
-	*
-	* @example
-	* // Save a Widgets
-	* monoxide.query({$collection: 'widgets', name: 'New name'}, function(err, res) {
-	* 	console.log('Saved widget:', res);
-	* });
 	*/
 	self.delete = self.remove = argy('object [function]', function MonoxideQuery(q, callback) {
 		var self = this;
@@ -866,7 +860,6 @@ function Monoxide() {
 			return self;
 	});
 	// }}}
-
 
 	// .meta(item, [callback]) {{{
 	/**
