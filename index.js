@@ -1258,7 +1258,7 @@ function Monoxide() {
 		* @see monoxide.utilities.extractFKs
 		* @var {Object}
 		*/
-		mm.$oids = self.utilities.extractFKs(mm.$mongooseModel.schema);
+		mm.$oids = _.has(mm, '$mongooseModel.schema') ? self.utilities.extractFKs(mm.$mongooseModel.schema) : {};
 
 		mm.$collection = settings.$collection;
 		mm.$methods = {};
