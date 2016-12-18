@@ -1582,9 +1582,9 @@ function Monoxide() {
 
 			/**
 			* Save a document
-			* This function will only save back modfified data
-			* If `data` is specified this is merged with the modified data and can possibly override it
-			* @param {Object} [data] Optional data to save
+			* By default this function will only save back modfified data
+			* If `data` is specified this is used instead of the modified fields
+			* @param {Object} [data] An optional data patch to save
 			* @param {function} [callback] The callback to invoke on saving
 			*/
 			save: argy('[object] [function]', function(data, callback) {
@@ -1596,11 +1596,14 @@ function Monoxide() {
 					$errNoUpdate: true, // Throw an error if we fail to update (i.e. record removed before save)
 					$returnUpdated: true,
 				};
-				doc.isModified().forEach(function(path) {
-					patch[path] = _.get(mongoDoc, path);
-				});
 
-				if (data) _.assign(patch, data); // Merge with incomming data
+				if (data) {
+					_.assign(patch, data);
+				} else {
+					doc.isModified().forEach(function(path) {
+						patch[path] = _.get(mongoDoc, path);
+					});
+				}
 
 				self.save(patch, function(err, newRec) {
 					doc = newRec;
