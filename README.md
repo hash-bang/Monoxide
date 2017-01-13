@@ -309,18 +309,18 @@ Hooks
 Hooks allow watching of models. Each Hook within monoxide accepts a callback that must be triggered for execution to continue.
 
 ```javascript
-monoxide.models.MODEL.hook('create, function(next, query) { // ... // });
-monoxide.models.MODEL.hook('postCreate, function(next, query, newDoc) { // ... // });
+monoxide.models.MODEL.hook('create', function(next, query) { // ... // });
+monoxide.models.MODEL.hook('postCreate', function(next, query, newDoc) { // ... // });
 
-monoxide.models.MODEL.hook('query, function(next, query) { // ... // });
+monoxide.models.MODEL.hook('query', function(next, query) { // ... // });
 
-monoxide.models.MODEL.hook('save, function(next, query) { // ... // });
-monoxide.models.MODEL.hook('postSave, function(next, query, newDoc) { // ... // });
+monoxide.models.MODEL.hook('save', function(next, query) { // ... // });
+monoxide.models.MODEL.hook('postSave', function(next, query, newDoc) { // ... // });
 
-monoxide.models.MODEL.hook('update, function(next, query) { // ... // });
+monoxide.models.MODEL.hook('update', function(next, query) { // ... // });
 
-monoxide.models.MODEL.hook('delete, function(next, query) { // ... // });
-monoxide.models.MODEL.hook('postDelete, function(next, query) { // ... // });
+monoxide.models.MODEL.hook('delete', function(next, query) { // ... // });
+monoxide.models.MODEL.hook('postDelete', function(next, query) { // ... // });
 ```
 
 
