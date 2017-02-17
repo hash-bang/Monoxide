@@ -132,6 +132,27 @@ describe('monoxide.express.*', function() {
 			});
 	});
 
+	it('should query widgets via ReST (array OR notation)', function(finish) {
+		superagent.get(url + '/api/widgets')
+			.query({
+				color: ['red', 'blue'], // This should be remapped to {$in: ARRAY} automatically
+				sort: '-name',
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var widgets = res.body;
+				expect(widgets).to.be.an.array;
+				expect(widgets).to.have.length(3);
+
+				expect(widgets[0]).to.have.property('name', 'Widget whollop');
+				expect(widgets[1]).to.have.property('name', 'Widget crash');
+				expect(widgets[2]).to.have.property('name', 'Widget bang');
+
+				finish();
+			});
+	});
+
 	it('should query groups via ReST', function(finish) {
 		superagent.get(url + '/api/groups')
 			.query({

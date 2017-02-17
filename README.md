@@ -149,6 +149,12 @@ app.use('/api/users/:id?', monoxide.express.middleware('users', {
 ```
 
 
+**NOTES:**
+
+* Sort keys prefixed with `-` are inverted. For example `sort=-name` means 'sort by names in reverse order'
+* Multiple query keys are automatically converted into arrays as a '$in' query type. For example `key=val1&key=val2` becomes `key={$in:[val1,val2]}`. If you do not want this behaviour disable `shorthandArrays` in the ReST options.
+
+
 Cherry-picking middleware
 -------------------------
 You can also pick-and-choose the handlers to be used:

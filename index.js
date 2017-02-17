@@ -2411,6 +2411,7 @@ function Monoxide() {
 	* @param {string} [settings.collection] The model name to bind to
 	* @param {string} [settings.queryRemaps=Object] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
 	* @param {string} [settings.queryAllowed=Object] Optional specification on what types of values should be permitted for query fields (keys can be: 'scalar', 'scalarCSV', 'array')
+	* @param {boolean} [settings.shorthandArrays=true] Remap simple arrays (e.g. `key=val1&key=val2` into `key:{$in:[val1,val2]}`) automatically
 	* @param {array|string|regexp} [settings.omitFields] Run all results though monoxideDocument.omit() before returning to remove the stated fields
 	* @param {function} [settings.map] Run all documents though this map function before returning
 	* @returns {function} callback(req, res, next) Express compatible middleware function
@@ -2421,6 +2422,7 @@ function Monoxide() {
 	*/
 	self.express.query = argy('[string] [object]', function MonoxideExpressQuery(model, options) {
 		var settings = _.defaults({}, options, {
+			shorthandArrays: true,
 			queryRemaps: { // Remap incomming values on left to keys on right
 				'limit': '$limit',
 				'populate': '$populate',
@@ -2445,6 +2447,13 @@ function Monoxide() {
 			var q = self.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
+
+			if (settings.shorthandArrays) {
+				q = _.mapValues(q, function(val, key) {
+					if (!settings.queryAllowed[key] && _.isArray(val)) return val = {$in: val}
+					return val;
+				});
+			}
 
 			self.query(q, function(err, rows) {
 				// Apply omitFields {{{
