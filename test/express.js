@@ -421,6 +421,9 @@ describe('monoxide.express.*', function() {
 			.send({
 				name: 'New Widget',
 				content: 'This is a new widget, there are many like it but this one is my own',
+				mostPurchased: [
+					{number: 7},
+				],
 			})
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
@@ -431,6 +434,7 @@ describe('monoxide.express.*', function() {
 				expect(newWidget).to.have.property('name', 'New Widget');
 				expect(newWidget).to.have.property('content', 'This is a new widget, there are many like it but this one is my own');
 				expect(newWidget).to.have.property('status', 'active');
+				expect(newWidget).to.have.deep.property('mostPurchased.0.number', 7);
 
 				finish();
 			});
@@ -438,7 +442,7 @@ describe('monoxide.express.*', function() {
 	// }}}
 
 	// POST - update {{{
-	it('should save over an existing record via ReST', function(finish) {
+	it('should save over an existing record via ReST (simple update)', function(finish) {
 		superagent.post(url + '/api/widgets/' + newWidget._id)
 			.send({
 				status: 'deleted',
@@ -451,6 +455,24 @@ describe('monoxide.express.*', function() {
 
 				expect(widget).to.have.property('name', 'New Widget');
 				expect(widget).to.have.property('status', 'deleted');
+
+				finish();
+			});
+	});
+
+	it('should save over an existing record via ReST (dotted notation)', function(finish) {
+		superagent.post(url + '/api/widgets/' + newWidget._id)
+			.send({
+				'mostPurchased.0.number': 109,
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var widget = res.body;
+				expect(widget).to.be.an.object;
+
+				expect(widget).to.have.property('name', 'New Widget');
+				expect(widget).to.have.deep.property('mostPurchased.0.number', 109);
 
 				finish();
 			});

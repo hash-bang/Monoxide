@@ -293,4 +293,29 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 				finish();
 			});
 	});
+
+	it('create a new widget (via monoxide.create)', function(finish) {
+		monoxide.create({
+			$collection: 'widgets',
+			created: new Date(2016, 07, 01, 12, 0, 0),
+			name: 'New Widget',
+			content: 'Hello world',
+			status: 'deleted',
+			color: 'yellow',
+		}, function(err, widget) {
+			expect(err).to.not.be.ok;
+			expect(widget).to.be.an.object;
+
+			mlog.log('created ID', widget._id);
+
+			expect(widget).to.have.property('created');
+			expect(widget.created).to.be.an.instanceOf(Date);
+			expect(widget).to.have.property('name', 'New Widget');
+			expect(widget).to.have.property('content', 'Hello world');
+			expect(widget).to.have.property('status', 'deleted');
+			expect(widget).to.have.property('color', 'yellow');
+
+			finish();
+		});
+	});
 });

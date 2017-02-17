@@ -78,6 +78,22 @@ describe('monoxide.query()', function() {
 		});
 	});
 
+	it('should query the widgets model, by date', function(finish) {
+		monoxide.query({
+			$collection: 'widgets',
+			$sort: 'created',
+			created: {$lte: new Date(2016, 02, 01, 10, 0, 0)},
+		}, function(err, widgets) {
+			expect(err).to.not.be.ok;
+			expect(widgets).to.be.an.array;
+			expect(widgets).to.have.length(1);
+
+			expect(widgets[0]).to.have.property('name', 'Widget bang');
+
+			finish();
+		});
+	});
+
 	it('should query by a sub-document array of OIDs ($in)', function(finish) {
 		monoxide.query({
 			$collection: 'widgets',
