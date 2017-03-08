@@ -1583,8 +1583,9 @@ function Monoxide() {
 			/**
 			* Save a document
 			* By default this function will only save back modfified data
-			* If `data` is specified this is used instead of the modified fields
+			* If `data` is specified this is used as well as the modified fields (unless `data.$ignoreModified` is falsy, in which case modified fields are ignored)
 			* @param {Object} [data] An optional data patch to save
+			* @param {boolean} [data.$ignoreModified=false] Ignore all modified fields and only process save data being passed in the `data` object (use this to directly address what should be saved, ignoring everything else). Setting this drastically speeds up the save operation but at the cost of having to be specific as to what to save
 			* @param {function} [callback] The callback to invoke on saving
 			*/
 			save: argy('[object] [function]', function(data, callback) {
@@ -1597,7 +1598,13 @@ function Monoxide() {
 					$returnUpdated: true,
 				};
 
-				if (data) {
+				if (data && data.$ignoreModified) { // Only save incomming data
+					delete data.$ignoreModified;
+					_.assign(patch, data);
+				} else if (data) { // Data is specified as an object but $ignoreModified is not set - use both inputs
+					doc.isModified().forEach(function(path) {
+						patch[path] = _.get(mongoDoc, path);
+					});
 					_.assign(patch, data);
 				} else {
 					doc.isModified().forEach(function(path) {
