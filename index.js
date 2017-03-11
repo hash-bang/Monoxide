@@ -2438,10 +2438,10 @@ function Monoxide() {
 				'sort': '$sort',
 			},
 			queryAllowed: { // Fields and their allowed contents (post remap)
-				'$limit': {scalar: true},
+				'$limit': {number: true},
 				'$populate': {scalar: true, scalarCSV: true, array: true},
 				'$select': {scalar: true, scalarCSV: true, array: true},
-				'$skip': {scalar: true},
+				'$skip': {number: true},
 				'$sort': {scalar: true},
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
