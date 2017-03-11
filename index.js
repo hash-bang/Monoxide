@@ -2463,18 +2463,21 @@ function Monoxide() {
 			}
 
 			self.query(q, function(err, rows) {
-				// Apply omitFields {{{
-				if (!err && !_.isEmpty(settings.omitFields)) {
-					rows.forEach(function(row) {
-						row.omit(settings.omitFields);
-					});
+				if (!err) { // Apply post operations
+					// Apply omitFields {{{
+					if (!_.isEmpty(settings.omitFields)) {
+						rows.forEach(function(row) {
+							row.omit(settings.omitFields);
+						});
+					}
+					// }}}
+					// Apply map {{{
+					if (_.isFunction(settings.map)) {
+						rows = rows.map(settings.map);
+					}
+					// }}}
 				}
-				// }}}
-				// Apply map {{{
-				if (!err && _.isFunction(settings.map)) {
-					rows = rows.map(settings.map);
-				}
-				// }}}
+
 				if (settings.passThrough) { // Act as middleware
 					req.document = rows;
 					next(err, rows);
