@@ -2464,7 +2464,7 @@ function Monoxide() {
 
 			self.query(q, function(err, rows) {
 				// Apply omitFields {{{
-				if (!_.isEmpty(settings.omitFields)) {
+				if (!err && !_.isEmpty(settings.omitFields)) {
 					rows.forEach(function(row) {
 						row.omit(settings.omitFields);
 					});
