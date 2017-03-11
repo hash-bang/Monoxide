@@ -1781,7 +1781,7 @@ function Monoxide() {
 							try {
 								doc.getNodesBySchemaPath(population.path, true).forEach(function(node) {
 									if (!population.ref) {
-										population.ref = _.get(model, ['$mongooseModel', 'schema', 'paths', node.schemaPath, 'options', 'ref']);
+										population.ref = _.get(model, '$mongooseModel.schema.paths.' + node.schemaPath.split('.').join('.schema.paths.') + '.options.ref');
 										if (!population.ref) throw new Error('Cannot determine collection to use for schemaPath ' + node.schemaPath + '! Specify this is in model with {ref: <collection>}');
 									}
 
