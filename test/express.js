@@ -112,6 +112,7 @@ describe('monoxide.express.*', function() {
 			});
 	});
 
+	var widgets;
 	it('should query widgets via ReST', function(finish) {
 		superagent.get(url + '/api/widgets')
 			.query({
@@ -120,7 +121,7 @@ describe('monoxide.express.*', function() {
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
-				var widgets = res.body;
+				widgets = res.body;
 				expect(widgets).to.be.an.array;
 				expect(widgets).to.have.length(3);
 
@@ -168,6 +169,24 @@ describe('monoxide.express.*', function() {
 				expect(widgets[0]).to.have.property('name', 'Group Bar');
 				expect(widgets[1]).to.have.property('name', 'Group Baz');
 				expect(widgets[2]).to.have.property('name', 'Group Foo');
+
+				finish();
+			});
+	});
+
+	it('should query users via ReST (query an array)', function(finish) {
+		superagent.get(url + '/api/users')
+			.query({
+				items: widgets[0]._id,
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var users = res.body;
+				expect(users).to.be.an.array;
+				expect(users).to.have.length(1);
+
+				expect(users[0].items).to.be.deep.equal([widgets[0]._id]);
 
 				finish();
 			});
