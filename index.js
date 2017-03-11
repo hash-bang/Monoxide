@@ -2471,7 +2471,7 @@ function Monoxide() {
 				}
 				// }}}
 				// Apply map {{{
-				if (_.isFunction(settings.map)) {
+				if (!err && _.isFunction(settings.map)) {
 					rows = rows.map(settings.map);
 				}
 				// }}}
