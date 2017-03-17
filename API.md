@@ -53,6 +53,12 @@ All hooks must return non-errors to proceed with the operation
 
 Returns **monoxide.monoxideModel** The chainable monoxideModel
 
+# meta
+
+Return meta information above a model.
+This is a shortcut to calling the main `monoxide.meta()` function while specifiying the `$collection` id.
+
+
 # method
 
 Add a method to a all documents returned from this model

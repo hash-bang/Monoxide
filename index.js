@@ -1539,6 +1539,21 @@ function Monoxide() {
 			return mm;
 		};
 
+
+		/**
+		* Return the meta structure for a specific model
+		* @param {Object} Options to return when computing the meta object. See the main meta() function for details
+		* @param {function} callback The callback to call with (err, layout)
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		* @see monoxide.meta()
+		*/
+		mm.meta = argy('[object] function', function(options, callback) {
+			var settings = options || {};
+			settings.$collection = mm.$collection;
+			self.meta(settings, callback);
+			return mm;
+		});
+
 		/**
 		* Run a third party plugin against a model
 		* This function is really just a shorthand way to pass a Monoxide model into a function
