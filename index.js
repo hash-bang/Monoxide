@@ -2968,6 +2968,8 @@ function Monoxide() {
 						return val.split(/\s*,\s*/);
 					} else if (_.isArray(val) && allowed.array) {
 						return val;
+					} else if (_.isString(val) && allowed.number) {
+						return parseInt(val);
 					} else {
 						return val;
 					}
