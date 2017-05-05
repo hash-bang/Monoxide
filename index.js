@@ -13,10 +13,10 @@ var util = require('util');
 * @static monoxide
 */
 function Monoxide() {
-	var self = this;
-	self.models = {};
-	self.connection;
-	self.settings = {
+	var o = this;
+	o.models = {};
+	o.connection;
+	o.settings = {
 		removeAll: true, // Allow db.model.delete() calls with no arguments
 	};
 
@@ -27,13 +27,13 @@ function Monoxide() {
 	* @param {function} callback Optional callback when connected, if omitted this function is syncronous
 	* @return {monoxide} The Monoxide chainable object
 	*/
-	self.connect = function(uri, callback) {
+	o.connect = function(uri, callback) {
 		// Use native promises
 		mongoose.Promise = global.Promise;
 
 		mongoose.connect(uri, callback);
-		self.connection = mongoose.connection;
-		return self;
+		o.connection = mongoose.connection;
+		return o;
 	};
 	// }}}
 
@@ -69,7 +69,7 @@ function Monoxide() {
 	* 	console.log('Widget:', res);
 	* });
 	*/
-	self.get = argy('[object|string|number] [string|number|object] function', function(q, id, callback) {
+	o.get = argy('[object|string|number] [string|number|object] function', function(q, id, callback) {
 		argy(arguments)
 			.ifForm('object function', function(aQ, aCallback) {
 				q = aQ;
@@ -89,7 +89,7 @@ function Monoxide() {
 			});
 
 		if (!q.$id) return callback('No $id specified');
-		return self.query(q, callback);
+		return o.query(q, callback);
 	});
 	// }}}
 
@@ -134,7 +134,7 @@ function Monoxide() {
 	* 	console.log('Admin users:', res);
 	* });
 	*/
-	self.query = argy('[string|object] function', function MonoxideQuery(q, callback) {
+	o.query = argy('[string|object] function', function MonoxideQuery(q, callback) {
 		if (argy.isType(q, 'string')) q = {$collection: q};
 
 		_.defaults(q || {}, {
@@ -167,7 +167,7 @@ function Monoxide() {
 			.then(function(next) {
 				if (!q || _.isEmpty(q)) return next('No query given for get operation');
 				if (!q.$collection) return next('$collection must be specified for get operation');
-				if (!self.models[q.$collection]) return next('Model not initalized');
+				if (!o.models[q.$collection]) return next('Model not initalized');
 				next();
 			})
 			// }}}
@@ -198,14 +198,14 @@ function Monoxide() {
 				}
 
 				//console.log('FIELDS', fields);
-				//console.log('POSTPOPFIELDS', self.filterPostPopulate);
+				//console.log('POSTPOPFIELDS', o.filterPostPopulate);
 
 				if (q.$count) {
-					next(null, self.models[q.$collection].$mongooseModel.count(fields));
+					next(null, o.models[q.$collection].$mongooseModel.count(fields));
 				} else if (q.$one) {
-					next(null, self.models[q.$collection].$mongooseModel.findOne(fields));
+					next(null, o.models[q.$collection].$mongooseModel.findOne(fields));
 				} else {
-					next(null, self.models[q.$collection].$mongooseModel.find(fields));
+					next(null, o.models[q.$collection].$mongooseModel.find(fields));
 				}
 			})
 			// }}}
@@ -272,7 +272,7 @@ function Monoxide() {
 			// }}}
 			// Fire hooks {{{
 			.then(function(next) {
-				self.models[q.$collection].fire('query', next, q);
+				o.models[q.$collection].fire('query', next, q);
 			})
 			// }}}
 			// Execute and capture return {{{
@@ -304,7 +304,7 @@ function Monoxide() {
 					next(null, undefined);
 				} else if (q.$one) {
 					if (q.$decorate) return next(null, this.result.toObject());
-					next(null, new self.monoxideDocument({
+					next(null, new o.monoxideDocument({
 						$collection: q.$collection,
 						$applySchema: q.$applySchema,
 						$decorate: q.$decorate,
@@ -315,7 +315,7 @@ function Monoxide() {
 				} else {
 					next(null, this.result.map(function(doc) {
 						if (q.$decorate) return doc.toObject();
-						return new self.monoxideDocument({
+						return new o.monoxideDocument({
 							$collection: q.$collection,
 							$applySchema: q.$applySchema,
 							$decorate: q.$decorate,
@@ -351,7 +351,7 @@ function Monoxide() {
 				}
 			});
 			// }}}
-		return self;
+		return o;
 	});
 	// }}}
 
@@ -382,13 +382,13 @@ function Monoxide() {
 	* 	console.log('Number of Admin Users:', count);
 	* });
 	*/
-	self.count = argy('[string|object] function', function MonoxideCount(q, callback) {
+	o.count = argy('[string|object] function', function MonoxideCount(q, callback) {
 		if (argy.isType(q, 'string')) q = {$collection: q};
 
 		// Glue count functionality to query
 		q.$count = true;
 
-		return self.query(q, callback);
+		return o.query(q, callback);
 	});
 	// }}}
 
@@ -425,9 +425,7 @@ function Monoxide() {
 	* 	console.log('Saved widget is now', widget);
 	* });
 	*/
-	self.save = argy('object [function]', function(q, callback) {
-		var self = this;
-
+	o.save = argy('object [function]', function(q, callback) {
 		_.defaults(q || {}, {
 			$refetch: true, // Fetch and return the record when updated (false returns null)
 			$errNoUpdate: false,
@@ -451,7 +449,7 @@ function Monoxide() {
 				if (!q || _.isEmpty(q)) return next('No query given for save operation');
 				if (!q.$collection) return next('$collection must be specified for save operation');
 				if (!q.$id) return next('ID not specified');
-				if (!self.models[q.$collection]) return next('Model not initalized');
+				if (!o.models[q.$collection]) return next('Model not initalized');
 				q._id = q.$id;
 				next();
 			})
@@ -470,7 +468,7 @@ function Monoxide() {
 			// }}}
 			// Fire the 'save' hook on the model {{{
 			.then(function(next) {
-				self.models[q.$collection].fire('save', next, q);
+				o.models[q.$collection].fire('save', next, q);
 			})
 			// }}}
 			// Peform the update {{{
@@ -479,21 +477,21 @@ function Monoxide() {
 				if (_.isEmpty(patch)) {
 					if (q.$errBlankUpdate) return next('Nothing to update');
 					if (q.$refetch) {
-						return self.get({$collection: q.$collection, $id: q.$id}, next);
+						return o.get({$collection: q.$collection, $id: q.$id}, next);
 					} else {
 						return next(null, {});
 					}
 				}
 
-				_.forEach(self.models[q.$collection].$oids, function(fkType, schemaPath) {
+				_.forEach(o.models[q.$collection].$oids, function(fkType, schemaPath) {
 					if (!_.has(patch, schemaPath)) return; // Not patching this field anyway
 
 					switch(fkType.type) {
 						case 'objectId': // Convert the field to an OID if it isn't already
 							if (_.has(q, schemaPath)) {
 								var newVal = _.get(q, schemaPath);
-								if (!self.utilities.isObjectID(newVal))
-									_.set(patch, schemaPath, self.utilities.objectID(newVal));
+								if (!o.utilities.isObjectID(newVal))
+									_.set(patch, schemaPath, o.utilities.objectID(newVal));
 							}
 							break;
 						case 'objectIdArray': // Convert each item to an OID if it isn't already
@@ -501,8 +499,8 @@ function Monoxide() {
 								var gotOIDs = _.get(q, schemaPath);
 								if (_.isArray(gotOIDs)) {
 									_.set(patch, schemaPath, gotOIDs.map(function(i, idx) {
-										return (!self.utilities.isObjectID(newVal))
-											? self.utilities.objectID(i)
+										return (!o.utilities.isObjectID(newVal))
+											? o.utilities.objectID(i)
 											: i;
 									}));
 								} else {
@@ -513,8 +511,8 @@ function Monoxide() {
 					}
 				});
 
-				self.models[q.$collection].$mongoModel.findOneAndUpdate(
-					{ _id: self.utilities.objectID(q.$id) }, // What we are writing to
+				o.models[q.$collection].$mongoModel.findOneAndUpdate(
+					{ _id: o.utilities.objectID(q.$id) }, // What we are writing to
 					{ $set: patch }, // What we are saving
 					{ returnOriginal: !q.$returnUpdated }, // Options passed to Mongo
 					function(err, res) {
@@ -522,14 +520,14 @@ function Monoxide() {
 						// This would only really happen if the record has gone away since we started updating
 						if (q.$errNoUpdate && !res.ok) return next('No documents updated');
 						if (!q.$refetch) return next(null, null);
-						next(null, new self.monoxideDocument({$collection: q.$collection}, res.value));
+						next(null, new o.monoxideDocument({$collection: q.$collection}, res.value));
 					}
 				);
 			})
 			// }}}
 			// Fire the 'postSave' hook {{{
 			.then(function(next) {
-				self.models[q.$collection].fire('postSave', next, q, this.newRec);
+				o.models[q.$collection].fire('postSave', next, q, this.newRec);
 			})
 			// }}}
 			// End {{{
@@ -543,7 +541,7 @@ function Monoxide() {
 			});
 			// }}}
 
-			return self;
+			return o;
 	});
 	// }}}
 
@@ -573,8 +571,8 @@ function Monoxide() {
 	* 	status: 'active',
 	* });
 	*/
-	self.update = argy('object|string [object] [function]', function MonoxideUpdate(q, qUpdate, callback) {
-		var self = this;
+	o.update = argy('object|string [object] [function]', function MonoxideUpdate(q, qUpdate, callback) {
+		var o = this;
 		if (argy.isType(q, 'string')) q = {$collection: q};
 
 		_.defaults(q || {}, {
@@ -591,7 +589,7 @@ function Monoxide() {
 			.then(function(next) {
 				if (!q || _.isEmpty(q)) return next('No query given for get operation');
 				if (!q.$collection) return next('$collection must be specified for get operation');
-				if (!self.models[q.$collection]) return next('Model not initalized');
+				if (!o.models[q.$collection]) return next('Model not initalized');
 				next();
 			})
 			// }}}
@@ -609,12 +607,12 @@ function Monoxide() {
 			// }}}
 			// Fire the 'update' hook {{{
 			.then(function(next) {
-				self.models[q.$collection].fire('update', next, q);
+				o.models[q.$collection].fire('update', next, q);
 			})
 			// }}}
 			// Peform the update {{{
 			.then('rawResponse', function(next) {
-				self.models[q.$collection].$mongooseModel.update(_.omit(q, this.metaFields), _.omit(qUpdate, this.metaFields), {multi: true}, next);
+				o.models[q.$collection].$mongooseModel.update(_.omit(q, this.metaFields), _.omit(qUpdate, this.metaFields), {multi: true}, next);
 			})
 			// }}}
 			// End {{{
@@ -628,7 +626,7 @@ function Monoxide() {
 			});
 			// }}}
 
-			return self;
+			return o;
 	});
 	// }}}
 
@@ -657,8 +655,7 @@ function Monoxide() {
 	* 	console.log('Created widget is', widget);
 	* });
 	*/
-	self.create = argy('object [function]', function MonoxideQuery(q, callback) {
-		var self = this;
+	o.create = argy('object [function]', function MonoxideQuery(q, callback) {
 		_.defaults(q || {}, {
 			$refetch: true, // Fetch and return the record when created (false returns null)
 		});
@@ -673,7 +670,7 @@ function Monoxide() {
 			.then(function(next) {
 				if (!q || _.isEmpty(q)) return next('No query given for save operation');
 				if (!q.$collection) return next('$collection must be specified for save operation');
-				if (!self.models[q.$collection]) return next('Model not initalized');
+				if (!o.models[q.$collection]) return next('Model not initalized');
 				next();
 			})
 			// }}}
@@ -693,13 +690,13 @@ function Monoxide() {
 			// }}}
 			// Coherse all OIDs (or arrays of OIDs) into their correct internal type {{{
 			.then(function(next) {
-				_.forEach(self.models[q.$collection].$oids, function(fkType, schemaPath) {
+				_.forEach(o.models[q.$collection].$oids, function(fkType, schemaPath) {
 					switch(fkType.type) {
 						case 'objectId': // Convert the field to an OID if it isn't already
 							if (_.has(q, schemaPath)) {
 								var newVal = _.get(q, schemaPath);
-								if (!self.utilities.isObjectID(newVal))
-									_.set(q, schemaPath, self.utilities.objectID(newVal));
+								if (!o.utilities.isObjectID(newVal))
+									_.set(q, schemaPath, o.utilities.objectID(newVal));
 							}
 							break;
 						case 'objectIdArray': // Convert each item to an OID if it isn't already
@@ -707,8 +704,8 @@ function Monoxide() {
 								var gotOIDs = _.get(q, schemaPath);
 								if (_.isArray(gotOIDs)) {
 									_.set(q, schemaPath, gotOIDs.map(function(i, idx) {
-										return (!self.utilities.isObjectID(newVal))
-											? self.utilities.objectID(i)
+										return (!o.utilities.isObjectID(newVal))
+											? o.utilities.objectID(i)
 											: i;
 									}));
 								} else {
@@ -723,25 +720,25 @@ function Monoxide() {
 			// }}}
 			// Create record {{{
 			.then('createDoc', function(next) { // Compute the document we will create
-				next(null, new self.monoxideDocument({
+				next(null, new o.monoxideDocument({
 					$collection: q.$collection,
 					$dirty: true, // Mark all fields as modified (and not bother to compute the clean markers)
 				}, _.omit(q, this.metaFields)));
 			})
 			.then(function(next) {
-				self.models[q.$collection].fire('create', next, this.createDoc);
+				o.models[q.$collection].fire('create', next, this.createDoc);
 			})
 			.then('rawResponse', function(next) {
-				self.models[q.$collection].$mongoModel.insertOne(this.createDoc.toMongoObject(), next);
+				o.models[q.$collection].$mongoModel.insertOne(this.createDoc.toMongoObject(), next);
 			})
 			.then(function(next) {
-				self.models[q.$collection].fire('postCreate', next, q, this.createDoc);
+				o.models[q.$collection].fire('postCreate', next, q, this.createDoc);
 			})
 			// }}}
 			// Refetch record {{{
 			.then('newRec', function(next) {
 				if (!q.$refetch) return next(null, null);
-				self.query({
+				o.query({
 					$collection: q.$collection,
 					$id: this.rawResponse.insertedId.toString(),
 				}, function(err, res) {
@@ -761,7 +758,7 @@ function Monoxide() {
 			});
 			// }}}
 
-			return self;
+			return o;
 	});
 	// }}}
 
@@ -784,8 +781,7 @@ function Monoxide() {
 	*
 	* @return {Object} This chainable object
 	*/
-	self.delete = self.remove = argy('object [function]', function MonoxideQuery(q, callback) {
-		var self = this;
+	o.delete = o.remove = argy('object [function]', function MonoxideQuery(q, callback) {
 		_.defaults(q || {}, {
 			$errNotFound: true, // During raise an error if $id is specified but not found to delete
 		});
@@ -804,7 +800,7 @@ function Monoxide() {
 				if (!q.$collection) return next('$collection must be specified for delete operation');
 				if (!q.$id && !q.$multiple) return next('$id or $multiple must be speciied during delete operation');
 
-				if (!self.settings.removeAll && !q.$id && _.isEmpty(_.omit(q, this.metaFields))) { // Apply extra checks to make sure we are not nuking everything if we're not allowed
+				if (!o.settings.removeAll && !q.$id && _.isEmpty(_.omit(q, this.metaFields))) { // Apply extra checks to make sure we are not nuking everything if we're not allowed
 					return next('delete operation not allowed with empty query');
 				}
 				next();
@@ -825,22 +821,22 @@ function Monoxide() {
 			// Delete record {{{
 			.then(function(next) {
 				if (q.$multiple) { // Multiple delete operation
-					self.query(_.merge(_.omit(q, this.metaFields), {$collection: q.$collection, $select: 'id'}), function(err, rows) {
+					o.query(_.merge(_.omit(q, this.metaFields), {$collection: q.$collection, $select: 'id'}), function(err, rows) {
 						async()
 							.forEach(rows, function(next, row) {
-								self.delete({$collection: q.$collection, $id: row._id}, next);
+								o.delete({$collection: q.$collection, $id: row._id}, next);
 							})
 							.end(next);
 					});
 				} else { // Single item delete
 					// Check that the hook returns ok
-					self.models[q.$collection].fire('delete', function(err) {
+					o.models[q.$collection].fire('delete', function(err) {
 						// Now actually delete the item
-						self.models[q.$collection].$mongoModel.deleteOne({_id: self.utilities.objectID(q.$id)}, function(err, res) {
+						o.models[q.$collection].$mongoModel.deleteOne({_id: o.utilities.objectID(q.$id)}, function(err, res) {
 							if (err) return next(err);
 							if (q.$errNotFound && !res.result.ok) return next('Not found');
 							// Delete was sucessful - call event then move next
-							self.models[q.$collection].fire('postDelete', next, {_id: q.$id});
+							o.models[q.$collection].fire('postDelete', next, {_id: q.$id});
 						});
 					}, {_id: q.$id});
 				}
@@ -857,7 +853,7 @@ function Monoxide() {
 			});
 			// }}}
 
-			return self;
+			return o;
 	});
 	// }}}
 
@@ -883,8 +879,7 @@ function Monoxide() {
 	* 	console.log('About the widget collection:', res);
 	* });
 	*/
-	self.meta = argy('object [function]', function MonoxideMeta(q, callback) {
-		var self = this;
+	o.meta = argy('object [function]', function MonoxideMeta(q, callback) {
 		_.defaults(q || {}, {
 			$filterPrivate: true,
 			$prototype: false,
@@ -902,13 +897,13 @@ function Monoxide() {
 			.then(function(next) {
 				if (!q || _.isEmpty(q)) return next('No query given for meta operation');
 				if (!q.$collection) return next('$collection must be specified for meta operation');
-				if (!self.models[q.$collection]) return next('Cannot find collection to extract its meta information: ' + q.$collection);
+				if (!o.models[q.$collection]) return next('Cannot find collection to extract its meta information: ' + q.$collection);
 				next();
 			})
 			// }}}
 			// Retrieve the meta information {{{
 			.then('meta', function(next) {
-				var sortedPaths = _(self.models[q.$collection].$mongooseModel.schema.paths)
+				var sortedPaths = _(o.models[q.$collection].$mongooseModel.schema.paths)
 					.map((v,k) => v)
 					.sortBy('path')
 					.value();
@@ -995,7 +990,7 @@ function Monoxide() {
 			});
 			// }}}
 
-			return self;
+			return o;
 	});
 	// }}}
 
@@ -1010,9 +1005,9 @@ function Monoxide() {
 	* @return {Object} This chainable object
 	* @example
 	*/
-	self.runCommand = argy('object [function]', function MonoxideRunCommand(cmd, callback) {
-		self.connection.db.command(cmd, callback);
-		return self;
+	o.runCommand = argy('object [function]', function MonoxideRunCommand(cmd, callback) {
+		o.connection.db.command(cmd, callback);
+		return o;
 	});
 	// }}}
 
@@ -1023,7 +1018,7 @@ function Monoxide() {
 	* @name monoxide.queryBuilder
 	* @return {monoxide.queryBuilder}
 	*/
-	self.queryBuilder = function monoxideQueryBuilder() {
+	o.queryBuilder = function monoxideQueryBuilder() {
 		var qb = this;
 		qb.$MONOXIDE = true;
 		qb.query = {};
@@ -1210,7 +1205,7 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
 		qb.exec = argy('function', function(callback) {
-			return self.query(qb.query, callback);
+			return o.query(qb.query, callback);
 		});
 		// }}}
 
@@ -1244,22 +1239,22 @@ function Monoxide() {
 	/**
 	* @class
 	*/
-	self.monoxideModel = argy('string|object', function monoxideModel(settings) {
+	o.monoxideModel = argy('string|object', function monoxideModel(settings) {
 		var mm = this;
 
 		if (argy.isType(settings, 'string')) settings = {$collection: settings};
 
 		// Sanity checks {{{
 		if (!settings.$collection) throw new Error('new MonoxideModel({$collection: <name>}) requires at least \'$collection\' to be specified');
-		if (!self.connection) throw new Error('Trying to create a MonoxideModel before a connection has been established');
-		if (!self.connection.db) throw new Error('Connection does not look like a MongoDB-Core object');
+		if (!o.connection) throw new Error('Trying to create a MonoxideModel before a connection has been established');
+		if (!o.connection.db) throw new Error('Connection does not look like a MongoDB-Core object');
 		// }}}
 
 		/**
 		* The raw MongoDB-Core model
 		* @var {Object}
 		*/
-		mm.$mongoModel = self.connection.db.collection(settings.$collection.toLowerCase());
+		mm.$mongoModel = o.connection.db.collection(settings.$collection.toLowerCase());
 		if (!mm.$mongoModel) throw new Error('Model not found in MongoDB-Core - did you forget to call monoxide.schema(\'name\', <schema>) first?');
 
 		/**
@@ -1267,7 +1262,7 @@ function Monoxide() {
 		* @depreciated This will eventually go away and be replaced with raw `mm.$mongoModel` calls
 		* @var {Object}
 		*/
-		mm.$mongooseModel = self.connection.base.models[settings.$collection.toLowerCase()];
+		mm.$mongooseModel = o.connection.base.models[settings.$collection.toLowerCase()];
 
 		/**
 		* Holder for all OID information
@@ -1275,7 +1270,7 @@ function Monoxide() {
 		* @see monoxide.utilities.extractFKs
 		* @var {Object}
 		*/
-		mm.$oids = _.has(mm, '$mongooseModel.schema') ? self.utilities.extractFKs(mm.$mongooseModel.schema) : {};
+		mm.$oids = _.has(mm, '$mongooseModel.schema') ? o.utilities.extractFKs(mm.$mongooseModel.schema) : {};
 
 		mm.$collection = settings.$collection;
 		mm.$methods = {};
@@ -1293,7 +1288,7 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder}
 		*/
 		mm.count = function(q, callback) {
-			return (new self.queryBuilder())
+			return (new o.queryBuilder())
 				.find({
 					$collection: mm.$collection, // Set the collection from the model
 					$count: true,
@@ -1311,7 +1306,7 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder}
 		*/
 		mm.find = function(q, callback) {
-			return (new self.queryBuilder())
+			return (new o.queryBuilder())
 				.find({$collection: mm.$collection}) // Set the collection from the model
 				.find(q, callback); // Then re-parse the find query into the new queryBuilder
 		};
@@ -1330,7 +1325,7 @@ function Monoxide() {
 		mm.findOne = function(q, callback) {
 			if (argy.isType(q, 'string')) throw new Error('Refusing to allow findOne(String). Use findOneByID if you wish to specify only the ID');
 
-			return (new self.queryBuilder())
+			return (new o.queryBuilder())
 				.find({
 					$collection: mm.$collection, // Set the collection from the model
 					$one: true, // Return a single object
@@ -1360,7 +1355,7 @@ function Monoxide() {
 			}
 			// }}}
 
-			return (new self.queryBuilder())
+			return (new o.queryBuilder())
 				.find({
 					$collection: mm.$collection, // Set the collection from the model
 					$id: q,
@@ -1386,7 +1381,7 @@ function Monoxide() {
 		*/
 		mm.create = argy('object [function]', function(q, callback) {
 			q.$collection = mm.$collection;
-			self.create(q, callback);
+			o.create(q, callback);
 			return mm;
 		});
 
@@ -1402,7 +1397,7 @@ function Monoxide() {
 		*/
 		mm.update = argy('object object [function]', function(q, qUpdate, callback) {
 			q.$collection = mm.$collection;
-			self.update(q, qUpdate, callback);
+			o.update(q, qUpdate, callback);
 			return mm;
 		});
 
@@ -1417,7 +1412,7 @@ function Monoxide() {
 		* @return {monoxide}
 		*/
 		mm.remove = function(q, callback) {
-			return self.delete(_.merge({}, q, {$collection: mm.$collection, $multiple: true}), callback);
+			return o.delete(_.merge({}, q, {$collection: mm.$collection, $multiple: true}), callback);
 		};
 
 
@@ -1567,7 +1562,7 @@ function Monoxide() {
 		mm.meta = argy('[object] function', function(options, callback) {
 			var settings = options || {};
 			settings.$collection = mm.$collection;
-			self.meta(settings, callback);
+			o.meta(settings, callback);
 			return mm;
 		});
 
@@ -1589,7 +1584,7 @@ function Monoxide() {
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
 		mm.distinct = function(field, callback) {
-			self.runCommand({
+			o.runCommand({
 				distinct: mm.$collection,
 				key: field,
 			}, function(err, res) {
@@ -1602,7 +1597,7 @@ function Monoxide() {
 
 		return mm;
 	});
-	util.inherits(self.monoxideModel, events.EventEmitter);
+	util.inherits(o.monoxideModel, events.EventEmitter);
 
 	// }}}
 
@@ -1619,11 +1614,11 @@ function Monoxide() {
 	* @param {Object} data The initial data
 	* @return {monoxide.monoxideDocument}
 	*/
-	self.monoxideDocument = function monoxideDocument(setup, data) {
+	o.monoxideDocument = function monoxideDocument(setup, data) {
 		if (setup.$decorate === false) return data;
 		setup.$dirty = !!setup.$dirty;
 
-		var model = self.models[setup.$collection];
+		var model = o.models[setup.$collection];
 
 		var proto = {
 			$MONOXIDE: true,
@@ -1662,7 +1657,7 @@ function Monoxide() {
 					});
 				}
 
-				self.save(patch, function(err, newRec) {
+				o.save(patch, function(err, newRec) {
 					doc = newRec;
 					if (_.isFunction(callback)) callback(err, newRec);
 				});
@@ -1678,7 +1673,7 @@ function Monoxide() {
 			*/
 			remove: function(callback) {
 				var doc = this;
-				self.delete({
+				o.delete({
 					$collection: doc.$collection,
 					$id: doc._id,
 				}, callback);
@@ -1737,18 +1732,18 @@ function Monoxide() {
 							var oidLeaf = _.get(doc, node.docPath);
 							if (_.isUndefined(oidLeaf)) return; // Ignore undefined
 
-							if (!self.utilities.isObjectID(oidLeaf)) {
+							if (!o.utilities.isObjectID(oidLeaf)) {
 								if (_.has(oidLeaf, '_id')) { // Already populated?
-									_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf._id));
+									_.set(outDoc, node.docPath, o.utilities.objectID(oidLeaf._id));
 								} else { // Convert to an OID
-									_.set(outDoc, node.docPath, self.utilities.objectID(oidLeaf));
+									_.set(outDoc, node.docPath, o.utilities.objectID(oidLeaf));
 								}
 							}
 							break;
 						case 'objectIdArray':
 							var oidLeaf = _.get(doc, node.schemaPath);
 							_.set(outDoc, node.schemaPath, oidLeaf.map(function(leaf) {
-								return self.utilities.isObjectID(leaf) ? leaf : self.utilities.objectID(leaf);
+								return o.utilities.isObjectID(leaf) ? leaf : o.utilities.objectID(leaf);
 							}));
 							break;
 						default:
@@ -1764,7 +1759,7 @@ function Monoxide() {
 				if (path) {
 					var v = _.get(doc, path);
 					var pathJoined = _.isArray(path) ? path.join('.') : path;
-					if (self.utilities.isObjectID(v)) {
+					if (o.utilities.isObjectID(v)) {
 						if (doc.$populated[pathJoined]) { // Has been populated
 							// FIXME; What happens if a populated document changes
 							throw new Error('Changing populated document objects is not yet supported');
@@ -1774,7 +1769,7 @@ function Monoxide() {
 								return doc.$originalValues[pathJoined] != v.toString();
 							} else if (doc.$originalValues[pathJoined + '.id'] && doc.$originalValues[pathJoined + '._bsontype']) { // Known but its stored as a Mongo OID - look into its values to determine its real comparitor string
 								// When the lookup is a raw OID we need to pass the binary junk into the objectID THEN get its string value before we can compare it to the one we last saw when we fetched the object
-								return self.utilities.objectID(doc.$originalValues[pathJoined + '.id']).toString() != v.toString(); // Compare against the string value
+								return o.utilities.objectID(doc.$originalValues[pathJoined + '.id']).toString() != v.toString(); // Compare against the string value
 							} else {
 								return true; // Otherwise declare it modified
 							}
@@ -1790,7 +1785,7 @@ function Monoxide() {
 						if (!this.path.length) return; // Root node
 						if (_.startsWith(this.key, '$') || this.key == '_id') { // Don't scan down hidden elements
 							return this.remove(true);
-						} else if (self.utilities.isObjectID(v)) { // Leaf is an object ID
+						} else if (o.utilities.isObjectID(v)) { // Leaf is an object ID
 							if (doc.isModified(this.path)) modified.push(this.path.join('.'));
 							this.remove(true); // Don't scan any deeper
 						} else if (doc.isModified(this.path)) {
@@ -1841,10 +1836,10 @@ function Monoxide() {
 										// Node is falsy - nothing to populate here
 									} else {
 										populator.defer(function(next) {
-											self.query({
+											o.query({
 												$errNotFound: false,
 												$collection: population.ref,
-												$id: self.utilities.isObjectID(node.node) ? node.node.toString() : node.node,
+												$id: o.utilities.isObjectID(node.node) ? node.node.toString() : node.node,
 											}, function(err, res) {
 												if (err) return next(err);
 												_.set(doc, node.docPath, res);
@@ -2018,13 +2013,13 @@ function Monoxide() {
 		doc.getOIDs().forEach(function(node) {
 			if (node.fkType == 'objectId') {
 				var singleOid = _.get(doc, node.docPath);
-				if (self.utilities.isObjectID(singleOid))
+				if (o.utilities.isObjectID(singleOid))
 					_.set(doc, node.docPath, singleOid.toString());
 			} else if (node.fkType == 'objectIdArray') {
 				var oidArray = _.get(doc, node.docPath);
-				if (self.utilities.isObjectID(oidArray)) {
+				if (o.utilities.isObjectID(oidArray)) {
 					_.set(doc, node.docPath, oidArray.toString());
-				} else if (_.isObject(oidArray) && oidArray._id && self.utilities.isObjectID(oidArray._id)) {
+				} else if (_.isObject(oidArray) && oidArray._id && o.utilities.isObjectID(oidArray._id)) {
 					// FIXME: Rather crappy sub-document flattening for now
 					// This needs to actually scope into the sub-object schema and flatten each ID and not just the _id element
 
@@ -2049,14 +2044,14 @@ function Monoxide() {
 						value: true,
 					});
 				} else if (!_.isPlainObject(v)) { // For everything else - stash the original value in this.parent.$originalValues
-					doc.$originalValues[this.path.join('.')] = self.utilities.isObjectID(v) ? v.toString() : v;
+					doc.$originalValues[this.path.join('.')] = o.utilities.isObjectID(v) ? v.toString() : v;
 				}
 			});
 		}
 
 		// Apply population data
 		doc.getOIDs().forEach(function(node) {
-			doc.$populated[node.docPath] = self.utilities.isObjectID(node.docPath);
+			doc.$populated[node.docPath] = o.utilities.isObjectID(node.docPath);
 			if (!setup.$dirty) doc.$originalValues[node.docPath] = _.get(doc, node.docPath);
 		});
 
@@ -2076,8 +2071,8 @@ function Monoxide() {
 	* @param {string} model The model name (generally lowercase plurals e.g. 'users', 'widgets', 'favouriteItems' etc.)
 	* @returns {Object} The monoxide model of the generated schema
 	*/
-	self.model = function(model) {
-		return self.models[model];
+	o.model = function(model) {
+		return o.models[model];
 	};
 	// }}}
 
@@ -2118,7 +2113,7 @@ function Monoxide() {
 	* 	],
 	* });
 	*/
-	self.schema = function(model, spec) {
+	o.schema = function(model, spec) {
 		if (!argy.isType(model, 'string') || !argy.isType(spec, 'object')) throw new Error('Schema construction requires a model ID + schema object');
 
 		var schema = new mongoose.Schema(_.deepMapValues(spec, function(value, path) {
@@ -2165,12 +2160,12 @@ function Monoxide() {
 		}));
 
 		// Add to model storage
-		self.models[model] = new self.monoxideModel({
+		o.models[model] = new o.monoxideModel({
 			$collection: model,
 			$mongoose: mongoose.model(model.toLowerCase(), schema), // FIXME: When we implement our own schema def system we can remove the toLowerCase() component that Mongoose insists on using. We can also remove all of the other toLowerCase() calls when we're trying to find the Mongoose schema
 		});
 
-		return self.models[model];
+		return o.models[model];
 	};
 	// }}}
 
@@ -2203,7 +2198,7 @@ function Monoxide() {
 	*
 	* @return {Object} This chainable object
 	*/
-	self.aggregate = argy('string|object function', function MonoxideAggregate(q, callback) {
+	o.aggregate = argy('string|object function', function MonoxideAggregate(q, callback) {
 		if (argy.isType(q, 'string')) q = {$collection: q};
 
 		async()
@@ -2212,13 +2207,13 @@ function Monoxide() {
 				if (!q || _.isEmpty(q)) return next('No query given for save operation');
 				if (!q.$stages || !_.isArray(q.$stages)) return next('$stages must be specified as an array');
 				if (!q.$collection) return next('$collection must be specified for save operation');
-				if (!self.models[q.$collection]) return next('Model not initalized');
+				if (!o.models[q.$collection]) return next('Model not initalized');
 				next();
 			})
 			// }}}
 			// Execute and capture return {{{
 			.then('result', function(next) {
-				self.models[q.$collection].$mongoModel.aggregate(q.$stages, next);
+				o.models[q.$collection].$mongoModel.aggregate(q.$stages, next);
 			})
 			// }}}
 			// End {{{
@@ -2230,7 +2225,7 @@ function Monoxide() {
 				}
 			});
 			// }}}
-		return self;
+		return o;
 	});
 	// }}}
 
@@ -2238,8 +2233,8 @@ function Monoxide() {
 	/**
 	* @static monoxide.express
 	*/
-	self.express = {};
-	self.express._defaults = {
+	o.express = {};
+	o.express._defaults = {
 		count: true,
 		get: true,
 		query: true,
@@ -2257,7 +2252,7 @@ function Monoxide() {
 	* @param {number} code A valida HTTP return code
 	* @param {*} [err] Optional error text to report
 	*/
-	self.express.sendError = function(res, code, err) {
+	o.express.sendError = function(res, code, err) {
 		if (res.sendError) {
 			res.sendError(code, err);
 		} else {
@@ -2290,9 +2285,9 @@ function Monoxide() {
 	* 	},
 	* });
 	*/
-	self.express.defaults = function(settings) {
-		_.merge(self.express._defaults, settings);
-		return self;
+	o.express.defaults = function(settings) {
+		_.merge(o.express._defaults, settings);
+		return o;
 	};
 
 	// .express.middleware(settings) {{{
@@ -2323,8 +2318,8 @@ function Monoxide() {
 	* // Bind an express method to serve users but disallow counting and querying (i.e. direct ID access only)
 	* app.use('/api/users/:id?', monoxide.express.middleware('users', {query: false, count: false}));
 	*/
-	self.express.middleware = argy('string object', function(model, options) {
-		var settings = _.defaults({}, options, self.express._defaults);
+	o.express.middleware = argy('string object', function(model, options) {
+		var settings = _.defaults({}, options, o.express._defaults);
 		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.middleware(). Specify as a string or {collection: String}');
 
@@ -2335,63 +2330,63 @@ function Monoxide() {
 
 			// Count {{{
 			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && !_.isBoolean(settings.count)) {
-				self.utilities.runMiddleware(req, res, settings.count, function() {
-					self.express.count(settings)(req, res, next);
+				o.utilities.runMiddleware(req, res, settings.count, function() {
+					o.express.count(settings)(req, res, next);
 				}, settings);
 			} else if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
-				self.express.count(settings)(req, res, next);
+				o.express.count(settings)(req, res, next);
 			// }}}
 			// Meta {{{
 			} else if (settings.meta && req.method == 'GET' && req.params.id && req.params.id == 'meta' && !_.isBoolean(settings.meta)) {
-				self.utilities.runMiddleware(req, res, settings.meta, function() {
-					self.express.meta(settings)(req, res, next);
+				o.utilities.runMiddleware(req, res, settings.meta, function() {
+					o.express.meta(settings)(req, res, next);
 				}, settings);
 			} else if (settings.meta && req.method == 'GET' && req.params.id && req.params.id == 'meta') {
-				self.express.meta(settings)(req, res, next);
+				o.express.meta(settings)(req, res, next);
 			// }}}
 			// Get {{{
 			} else if (settings.get && req.method == 'GET' && req.params.id && !_.isBoolean(settings.get)) {
 				req.monoxide.id = req.params.id;
-				self.utilities.runMiddleware(req, res, settings.get, function() {
-					self.express.get(settings)(req, res, next);
+				o.utilities.runMiddleware(req, res, settings.get, function() {
+					o.express.get(settings)(req, res, next);
 				}, settings);
 			} else if (settings.get && req.method == 'GET' && req.params.id) {
-				self.express.get(settings)(req, res, next);
+				o.express.get(settings)(req, res, next);
 			// }}}
 			// Query {{{
 			} else if (settings.query && req.method == 'GET' && !_.isBoolean(settings.query)) {
-				self.utilities.runMiddleware(req, res, settings.query, function() {
-					self.express.query(settings)(req, res, next);
+				o.utilities.runMiddleware(req, res, settings.query, function() {
+					o.express.query(settings)(req, res, next);
 				}, settings);
 			} else if (settings.query && req.method == 'GET') {
-				self.express.query(settings)(req, res, next);
+				o.express.query(settings)(req, res, next);
 			// }}}
 			// Save {{{
 			} else if (settings.save && req.method == 'POST' && req.params.id && !_.isBoolean(settings.save)) {
 				req.monoxide.id = req.params.id;
-				self.utilities.runMiddleware(req, res, settings.save, function() {
-					self.express.save(settings)(req, res, next);
+				o.utilities.runMiddleware(req, res, settings.save, function() {
+					o.express.save(settings)(req, res, next);
 				}, settings);
 			} else if (settings.save && req.method == 'POST' && req.params.id) {
-				self.express.save(settings)(req, res, next);
+				o.express.save(settings)(req, res, next);
 			// }}}
 			// Create {{{
 			} else if (settings.create && req.method == 'POST' && !_.isBoolean(settings.create)) {
 				req.monoxide.id = req.params.id;
-				self.utilities.runMiddleware(req, res, settings.create, function() {
-					self.express.create(settings)(req, res, next);
+				o.utilities.runMiddleware(req, res, settings.create, function() {
+					o.express.create(settings)(req, res, next);
 				}, settings);
 			} else if (settings.create && req.method == 'POST') {
-				self.express.create(settings)(req, res, next);
+				o.express.create(settings)(req, res, next);
 			// }}}
 			// Delete {{{
 			} else if (settings.delete && req.method == 'DELETE' && !_.isBoolean(settings.delete)) {
 				req.monoxide.id = req.params.id;
-				self.utilities.runMiddleware(req, res, settings.delete, function() {
-					self.express.delete(settings)(req, res, next);
+				o.utilities.runMiddleware(req, res, settings.delete, function() {
+					o.express.delete(settings)(req, res, next);
 				}, settings);
 			} else if (settings.delete && req.method == 'DELETE') {
-				self.express.delete(settings)(req, res, next);
+				o.express.delete(settings)(req, res, next);
 			// }}}
 			// Unknown {{{
 			} else {
@@ -2422,7 +2417,7 @@ function Monoxide() {
 	* // Bind an express method to serve widgets
 	* app.get('/api/widgets/:id?', monoxide.express.get('widgets'));
 	*/
-	self.express.get = argy('[string] [object]', function MonoxideExpressGet(model, options) {
+	o.express.get = argy('[string] [object]', function MonoxideExpressGet(model, options) {
 		var settings = _.defaults({}, options, {
 			queryRemaps: { // Remap incomming values on left to keys on right
 				populate: '$populate',
@@ -2440,13 +2435,13 @@ function Monoxide() {
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.get(). Specify as a string or {collection: String}');
 
 		return function(req, res, next) {
-			if (!req.params.id) return self.express.sendError(res, 404, 'No ID specified');
-			var q = self.utilities.rewriteQuery(req.query, settings);
+			if (!req.params.id) return o.express.sendError(res, 404, 'No ID specified');
+			var q = o.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
 			q.$id = req.params.id;
 
-			self.get(q, function(err, doc) {
+			o.get(q, function(err, doc) {
 				// Apply omitFields {{{
 				if (!_.isEmpty(settings.omitFields) && _.isObject(doc)) {
 					doc.omit(settings.omitFields);
@@ -2461,8 +2456,8 @@ function Monoxide() {
 					req.document = doc;
 					next(err, doc);
 				} else if (err) { // Act as endpoint and there was an error
-					if (err == 'Not found') return self.express.sendError(res, 404);
-					self.express.sendError(res, 400);
+					if (err == 'Not found') return o.express.sendError(res, 404);
+					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(doc).end();
 				}
@@ -2492,7 +2487,7 @@ function Monoxide() {
 	* // Bind an express method to serve widgets
 	* app.get('/api/widgets', monoxide.express.query('widgets'));
 	*/
-	self.express.query = argy('[string] [object]', function MonoxideExpressQuery(model, options) {
+	o.express.query = argy('[string] [object]', function MonoxideExpressQuery(model, options) {
 		var settings = _.defaults({}, options, {
 			shorthandArrays: true,
 			queryRemaps: { // Remap incomming values on left to keys on right
@@ -2516,7 +2511,7 @@ function Monoxide() {
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.query(). Specify as a string or {collection: String}');
 
 		return function(req, res, next) {
-			var q = self.utilities.rewriteQuery(req.query, settings);
+			var q = o.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
 
@@ -2527,7 +2522,7 @@ function Monoxide() {
 				});
 			}
 
-			self.query(q, function(err, rows) {
+			o.query(q, function(err, rows) {
 				if (!err) { // Apply post operations
 					// Apply omitFields {{{
 					if (!_.isEmpty(settings.omitFields)) {
@@ -2547,7 +2542,7 @@ function Monoxide() {
 					req.document = rows;
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					self.express.sendError(res, 400);
+					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows).end();
 				}
@@ -2572,7 +2567,7 @@ function Monoxide() {
 	* // Bind an express method to count widgets
 	* app.get('/api/widgets/count', monoxide.express.get('widgets'));
 	*/
-	self.express.count = argy('[string] [object]', function MonoxideExpressCount(model, options) {
+	o.express.count = argy('[string] [object]', function MonoxideExpressCount(model, options) {
 		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 		});
@@ -2580,17 +2575,17 @@ function Monoxide() {
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.count(). Specify as a string or {collection: String}');
 
 		return function(req, res, next) {
-			var q = self.utilities.rewriteQuery(req.query, settings);
+			var q = o.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$count = true;
 			q.$data = settings.$data;
 
-			self.query(q, function(err, count) {
+			o.query(q, function(err, count) {
 				if (settings.passThrough) { // Act as middleware
 					req.document = count;
 					next(err, {count: count});
 				} else if (err) { // Act as endpoint and there was an error
-					self.express.sendError(res, 400);
+					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send({count: count}).end();
 				}
@@ -2615,7 +2610,7 @@ function Monoxide() {
 	* // Bind an express method to save widgets
 	* app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 	*/
-	self.express.save = argy('[string] [object]', function MonoxideExpressSave(model, options) {
+	o.express.save = argy('[string] [object]', function MonoxideExpressSave(model, options) {
 		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
@@ -2630,11 +2625,11 @@ function Monoxide() {
 
 			if (req.params.id) q.$id = req.params.id;
 
-			self.save(q, function(err, rows) {
+			o.save(q, function(err, rows) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					self.express.sendError(res, 400);
+					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows).end();
 				}
@@ -2659,7 +2654,7 @@ function Monoxide() {
 	* // Bind an express method to create widgets
 	* app.post('/api/widgets', monoxide.express.create('widgets'));
 	*/
-	self.express.create = argy('[string] [object]', function MonoxideExpressCreate(model, options) {
+	o.express.create = argy('[string] [object]', function MonoxideExpressCreate(model, options) {
 		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
@@ -2675,11 +2670,11 @@ function Monoxide() {
 
 			if (req.params.id) q.$id = req.params.id;
 
-			self.create(q, function(err, rows) {
+			o.create(q, function(err, rows) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					self.express.sendError(res, 400);
+					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows).end();
 				}
@@ -2704,7 +2699,7 @@ function Monoxide() {
 	* // Bind an express method to delete widgets
 	* app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 	*/
-	self.express.delete = argy('[string] [object]', function MonoxideExpressDelete(model, options) {
+	o.express.delete = argy('[string] [object]', function MonoxideExpressDelete(model, options) {
 		var settings = _.defaults({}, options, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
@@ -2720,11 +2715,11 @@ function Monoxide() {
 
 			if (req.params.id) q.$id = req.params.id;
 
-			self.delete(q, function(err, rows) {
+			o.delete(q, function(err, rows) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					self.express.sendError(res, 400);
+					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows).end();
 				}
@@ -2749,7 +2744,7 @@ function Monoxide() {
 	* // Bind an express method provide meta information
 	* app.delete('/api/widgets/meta', monoxide.express.meta('widgets'));
 	*/
-	self.express.meta = argy('[string] [object]', function MonoxideExpressMeta(model, options) {
+	o.express.meta = argy('[string] [object]', function MonoxideExpressMeta(model, options) {
 		var settings = _.defaults({}, options, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
@@ -2766,17 +2761,17 @@ function Monoxide() {
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.meta(). Specify as a string or {collection: String}');
 
 		return function(req, res, next) {
-			var q = self.utilities.rewriteQuery(req.query, settings);
+			var q = o.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
 
 			if (req.params.id) q.$id = req.params.id;
 
-			self.meta(q, function(err, rows) {
+			o.meta(q, function(err, rows) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					self.express.sendError(res, 400);
+					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows).end();
 				}
@@ -2812,7 +2807,7 @@ function Monoxide() {
 	// }}}
 
 	// .utilities structure {{{
-	self.utilities = {};
+	o.utilities = {};
 
 	// .utilities.extractFKs(schema, prefix, base) {{{
 	/**
@@ -2825,7 +2820,7 @@ function Monoxide() {
 	* @param {Object} base Base object to append flat paths to (internal use only)
 	* @return {Object} A dictionary of foreign keys for the schema (each key will be the info of the object)
 	*/
-	self.utilities.extractFKs = function(schema, prefix, base) {
+	o.utilities.extractFKs = function(schema, prefix, base) {
 		var FKs = {};
 		if (!prefix) prefix = '';
 		if (!base) base = FKs;
@@ -2839,7 +2834,7 @@ function Monoxide() {
 				FKs[prefix + id] = {type: 'objectIdArray'};
 			} else if (path.schema) {
 				FKs[prefix + id] = {type: 'subDocument'};
-				_.forEach(self.utilities.extractFKs(path.schema, prefix + id + '.', base), function(val, key) {
+				_.forEach(o.utilities.extractFKs(path.schema, prefix + id + '.', base), function(val, key) {
 					base[key] = val;
 				});
 			}
@@ -2858,7 +2853,7 @@ function Monoxide() {
 	* @param {string} str The string to convert into an ObjectID
 	* @return {Object} A MongoDB-Core compatible ObjectID object instance
 	*/
-	self.utilities.objectID = function(str) {
+	o.utilities.objectID = function(str) {
 		if (!str) return undefined;
 		if (_.isObject(str) && str._id) return new mongoose.Types.ObjectId(str._id); // Is a sub-document - extract its _id and use that
 		return new mongoose.Types.ObjectId(str);
@@ -2873,7 +2868,7 @@ function Monoxide() {
 	* @param {mixed} subject The item to examine
 	* @return {boolean} Whether the subject is a MongoDB-Core compatible ObjectID object instance
 	*/
-	self.utilities.isObjectID = function(subject) {
+	o.utilities.isObjectID = function(subject) {
 		return (subject instanceof mongoose.Types.ObjectId);
 	};
 
@@ -2881,7 +2876,7 @@ function Monoxide() {
 	* Alias of isObjectID
 	* @see monoxide.utilities.isObjectId
 	*/
-	self.utilities.isObjectId = self.utilities.isObjectID;
+	o.utilities.isObjectId = o.utilities.isObjectID;
 	// }}}
 
 	// .utilities.runMiddleware(middleware) {{{
@@ -2911,7 +2906,7 @@ function Monoxide() {
 	* }));
 
 	*/
-	self.utilities.runMiddleware = function(req, res, middleware, callback, obj) {
+	o.utilities.runMiddleware = function(req, res, middleware, callback, obj) {
 		var thisContext = this;
 		var runnable; // The middleware ARRAY to run
 
@@ -2924,7 +2919,7 @@ function Monoxide() {
 		} else if (_.isArray(middleware)) {
 			runnable = middleware;
 		} else if (_.isString(middleware) && _.has(obj, middleware)) {
-			return self.utilities.runMiddleware(req, res, _.get(obj, middleware), callback, obj); // Defer to the pointer
+			return o.utilities.runMiddleware(req, res, _.get(obj, middleware), callback, obj); // Defer to the pointer
 		}
 
 		async()
@@ -2934,7 +2929,7 @@ function Monoxide() {
 			})
 			.end(function(err) {
 				if (err) {
-					self.express.sendError(res, 403, err);
+					o.express.sendError(res, 403, err);
 				} else {
 					callback();
 				}
@@ -2970,7 +2965,7 @@ function Monoxide() {
 	* 	// => should only return {title: 'Hello World'}
 	* });
 	*/
-	self.utilities.diff = function(originalDoc, newDoc) {
+	o.utilities.diff = function(originalDoc, newDoc) {
 		var patch = {};
 
 		deepDiff.observableDiff(originalDoc, newDoc, function(diff) {
@@ -3001,7 +2996,7 @@ function Monoxide() {
 	* @param {Object} settings The settings object to apply (see middleware functions)
 	* @return {Object} The rewritten query object
 	*/
-	self.utilities.rewriteQuery = function(query, settings) {
+	o.utilities.rewriteQuery = function(query, settings) {
 		return _(query)
 			.mapKeys(function(val, key) {
 				if (_.has(settings.queryRemaps, key)) return settings.queryRemaps[key];
@@ -3031,7 +3026,7 @@ function Monoxide() {
 	// }}}
 	// }}}
 
-	return self;
+	return o;
 }
 
 util.inherits(Monoxide, events.EventEmitter);
