@@ -20,7 +20,7 @@ describe('monoxide.schema()', function() {
 	});
 
 	it('should call a static method', function() {
-		monoxide.models.users.countByType('users', function(err, res) {
+		monoxide.models.users.countByType('user', function(err, res) {
 			expect(err).to.be.not.ok;
 			expect(res).to.be.a.number;
 			expect(res).to.be.equal(2);
