@@ -2249,6 +2249,22 @@ function Monoxide() {
 		meta: false,
 	};
 
+
+	/**
+	* Function to use when sending an error to the browser
+	* NOTE: This function will first look for a res.sendError(code, text) function and use that if it finds one. Otherwise it will default to res.status(code).send(text).end()
+	* @param {Object} res The response object
+	* @param {number} code A valida HTTP return code
+	* @param {*} [err] Optional error text to report
+	*/
+	self.express.sendError = function(res, code, err) {
+		if (res.sendError) {
+			res.sendError(code, err);
+		} else {
+			res.status(code).send(err);
+		}
+	};
+
 	/**
 	* Set the default settings used when calling other monoxide.express.middleware functions
 	* The provided settings will be merged with the existing defaults, so its possible to call this function multiple times to override previous invocations
@@ -2424,7 +2440,7 @@ function Monoxide() {
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.get(). Specify as a string or {collection: String}');
 
 		return function(req, res, next) {
-			if (!req.params.id) return res.send('No ID specified').status(404).end();
+			if (!req.params.id) return self.express.sendError(res, 404, 'No ID specified');
 			var q = self.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
@@ -2445,8 +2461,8 @@ function Monoxide() {
 					req.document = doc;
 					next(err, doc);
 				} else if (err) { // Act as endpoint and there was an error
-					if (err == 'Not found') return res.status(404).end();
-					res.status(400).end();
+					if (err == 'Not found') return self.express.sendError(res, 404);
+					self.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(doc).end();
 				}
@@ -2531,7 +2547,7 @@ function Monoxide() {
 					req.document = rows;
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					res.status(400).end();
+					self.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows).end();
 				}
@@ -2574,7 +2590,7 @@ function Monoxide() {
 					req.document = count;
 					next(err, {count: count});
 				} else if (err) { // Act as endpoint and there was an error
-					res.status(400).end();
+					self.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send({count: count}).end();
 				}
@@ -2618,7 +2634,7 @@ function Monoxide() {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					res.status(400).end();
+					self.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows).end();
 				}
@@ -2663,7 +2679,7 @@ function Monoxide() {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					res.status(400).end();
+					self.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows).end();
 				}
@@ -2708,7 +2724,7 @@ function Monoxide() {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					res.status(400).end();
+					self.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows).end();
 				}
@@ -2760,7 +2776,7 @@ function Monoxide() {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					res.status(400).end();
+					self.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows).end();
 				}
@@ -2918,7 +2934,7 @@ function Monoxide() {
 			})
 			.end(function(err) {
 				if (err) {
-					res.status(403).send(err.toString()).end();
+					self.express.sendError(res, 403, err);
 				} else {
 					callback();
 				}
