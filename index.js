@@ -999,6 +999,23 @@ function Monoxide() {
 	});
 	// }}}
 
+	// .runCommand(command, [callback]) {{{
+	/**
+	* Run an internal MongoDB command and fire an optional callback on the result
+	*
+	* @name monoxide.meta
+	*
+	* @param {Object} cmd The command to process
+	* @param {function} [callback(err,result)] Optional callback to call on completion or error
+	* @return {Object} This chainable object
+	* @example
+	*/
+	self.runCommand = argy('object [function]', function MonoxideRunCommand(cmd, callback) {
+		self.connection.db.command(cmd, callback);
+		return self;
+	});
+	// }}}
+
 	// .queryBuilder() - query builder {{{
 	/**
 	* Returns data from a Monoxide model
@@ -1564,6 +1581,24 @@ function Monoxide() {
 			plugin.call(mm, mm, callback);
 			return mm;
 		};
+
+		/**
+		* Return an array of all distinct field values
+		* @param {string} field The field to return the values of
+		* @param {function} plugin The plugin to run. This gets the arguments (values)
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*/
+		mm.distinct = function(field, callback) {
+			self.runCommand({
+				distinct: mm.$collection,
+				key: field,
+			}, function(err, res) {
+				if (err) return callback(err);
+				callback(null, res.values);
+			});
+			return mm;
+		};
+
 
 		return mm;
 	});
