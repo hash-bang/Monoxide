@@ -34,7 +34,7 @@
     "express": "^4.14.0",
     "express-log-url": "^1.0.4",
     "gulp": "^3.9.1",
-    "gulp-documentation": "^2.2.0",
+    "gulp-documentation": "^3.2.0",
     "mocha": "^3.0.2",
     "mocha-logger": "^1.0.4",
     "mongoose-scenario": "^2.0.3",
