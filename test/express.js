@@ -20,6 +20,8 @@ describe('monoxide.express.*', function() {
 
 	// Express Setup {{{
 	before(function(finish) {
+		this.timeout(10 * 1000);
+
 		app.use(expressLogger);
 		app.use(bodyParser.json());
 		app.set('log.indent', '      ');
