@@ -2422,7 +2422,6 @@ function Monoxide() {
 		if (model) settings.collection = model;
 
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.get(). Specify as a string or {collection: String}');
-		// }}}
 
 		return function(req, res, next) {
 			if (!req.params.id) return res.send('No ID specified').status(404).end();
@@ -3013,6 +3012,8 @@ function Monoxide() {
 			})
 			.value();
 	};
+	// }}}
+	// }}}
 
 	return self;
 }
