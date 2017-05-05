@@ -1,6 +1,6 @@
 {
   "name": "monoxide",
-  "version": "0.0.82",
+  "version": "0.0.83",
   "description": "A less poisonous way to work with Mongo",
   "main": "index.js",
   "repository": {
