@@ -17,6 +17,17 @@ Returns **monoxide** The Monoxide chainable object
 
 ## express
 
+### sendError
+
+Function to use when sending an error to the browser
+NOTE: This function will first look for a res.sendError(code, text) function and use that if it finds one. Otherwise it will default to res.status(code).send(text).end()
+
+**Parameters**
+
+-   `res` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** The response object
+-   `code` **[number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)** A valida HTTP return code
+-   `err` **any?** Optional error text to report
+
 ## isObjectId
 
 Alias of isObjectID
@@ -294,6 +305,7 @@ If the existing document ID is not found this function will execute the callback
     -   `q.$errNoUpdate` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Raise an error if no documents were actually updated (optional, default `false`)
     -   `q.$errBlankUpdate` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Raise an error if no fields are updated (optional, default `false`)
     -   `q.$returnUpdated` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** If true returns the updated document, if false it returns the document that was replaced (optional, default `true`)
+    -   `q.$version` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Increment the `__v` property when updating (optional, default `true`)
     -   `q.field` **...any?** Any other field (not beginning with '$') is treated as data to save
 -   `function`  (err,result)] Optional callback to call on completion or error
 
@@ -348,6 +360,7 @@ If you wish to save an existing document see the monoxide.save() function.
 -   `q` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** The object to process
     -   `q.$collection` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** The collection / model to query
     -   `q.$refetch` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Return the newly create record (optional, default `true`)
+    -   `q.$version` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Set the `__v` field to 0 when creating the document (optional, default `true`)
     -   `q.field` **...any?** Any other field (not beginning with '$') is treated as data to save
 -   `function`  (err,result)] Optional callback to call on completion or error
 

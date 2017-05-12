@@ -409,6 +409,7 @@ function Monoxide() {
 	* @param {boolean} [q.$errNoUpdate=false] Raise an error if no documents were actually updated
 	* @param {boolean} [q.$errBlankUpdate=false] Raise an error if no fields are updated
 	* @param {boolean} [q.$returnUpdated=true] If true returns the updated document, if false it returns the document that was replaced
+	* @param {boolean} [q.$version=true] Increment the `__v` property when updating
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
@@ -431,6 +432,7 @@ function Monoxide() {
 			$errNoUpdate: false,
 			$errBlankUpdate: false,
 			$returnUpdated: true,
+			$version: true,
 		});
 
 		async()
@@ -442,6 +444,7 @@ function Monoxide() {
 				'$refetch',
 				'$errNoUpdate',
 				'$errBlankUpdate',
+				'$version',
 				'$returnUpdated',
 			])
 			// Sanity checks {{{
@@ -511,9 +514,12 @@ function Monoxide() {
 					}
 				});
 
+				var updatePayload = {$set: patch};
+				if (q.$version) updatePayload['$inc'] = {'__v': 1};
+
 				o.models[q.$collection].$mongoModel.findOneAndUpdate(
 					{ _id: o.utilities.objectID(q.$id) }, // What we are writing to
-					{ $set: patch }, // What we are saving
+					updatePayload, // What we are saving
 					{ returnOriginal: !q.$returnUpdated }, // Options passed to Mongo
 					function(err, res) {
 						if (err) return next(err);
@@ -640,6 +646,7 @@ function Monoxide() {
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
 	* @param {boolean} [q.$refetch=true] Return the newly create record
+	* @param {boolean} [q.$version=true] Set the `__v` field to 0 when creating the document
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
@@ -658,6 +665,7 @@ function Monoxide() {
 	o.create = argy('object [function]', function MonoxideQuery(q, callback) {
 		_.defaults(q || {}, {
 			$refetch: true, // Fetch and return the record when created (false returns null)
+			$version: true,
 		});
 
 		async()
@@ -715,6 +723,13 @@ function Monoxide() {
 							break;
 					}
 				});
+				next();
+			})
+			// }}}
+			// Add version information if $version==true {{{
+			.then(function(next) {
+				if (!q.$version) return next();
+				q.__v = 0;
 				next();
 			})
 			// }}}

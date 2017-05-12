@@ -54,6 +54,8 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
 
+			expect(user).to.have.property('_id', users[0]._id);
+			expect(user).to.have.property('__v', 1);
 			expect(user).to.have.property('name', 'Edited User');
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('favourite', widgets[2]._id);
@@ -103,6 +105,8 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
 
+			expect(user).to.have.property('_id', users[1]._id);
+			expect(user).to.have.property('__v', 1);
 			expect(user).to.have.property('name', 'Edited User2');
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('favourite');

@@ -23,6 +23,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			res.forEach(function(widget) {
 				expect(widget).to.be.an.object;
 				expect(widget).to.have.property('_id');
+				expect(widget).to.have.property('__v', 0);
 				expect(widget).to.have.property('name');
 				expect(widget).to.have.property('content');
 
@@ -55,6 +56,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 			mlog.log('created ID', user._id);
 
+			expect(user).to.have.property('__v', 0);
 			expect(user).to.have.property('name', 'New User');
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('_password', 'oeu');
@@ -109,6 +111,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 			mlog.log('created ID', user._id);
 
+			expect(user).to.have.property('__v', 0);
 			expect(user).to.have.property('name', 'New User3');
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('_password', 'a');
@@ -135,6 +138,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 			mlog.log('created ID', user._id);
 
+			expect(user).to.have.property('__v', 0);
 			expect(user).to.have.property('name', 'New User4');
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('favourite');
@@ -159,6 +163,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
 
+			expect(user).to.have.property('__v', 0);
 			expect(user).to.have.property('name', 'New User5');
 			expect(user).to.have.property('role', 'user');
 
@@ -177,6 +182,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
 
+			expect(user).to.have.property('__v', 0);
 			expect(user).to.have.property('name', 'New User6');
 			expect(user).to.have.property('role', 'user');
 
@@ -195,6 +201,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(err).to.not.be.ok;
 			expect(user).to.be.an.object;
 
+			expect(user).to.have.property('__v', 0);
 			expect(user).to.have.property('name', 'New User7');
 			expect(user).to.have.property('role', 'user');
 
@@ -216,6 +223,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 			users.forEach(function(user) {
 				expect(user).to.be.an.object;
+				expect(user).to.have.property('__v', 0);
 				expect(user).to.have.property('name');
 				expect(user.name).to.match(/^New User[0-7]?/);
 
@@ -259,6 +267,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 				users.forEach(function(user) {
 					expect(user).to.be.an.object;
+					expect(user).to.have.property('__v', 0);
 					expect(user).to.have.property('name');
 					expect(user.name).to.match(/^New User[0-7]?/);
 
@@ -308,6 +317,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 			mlog.log('created ID', widget._id);
 
+			expect(widget).to.have.property('__v', 0);
 			expect(widget).to.have.property('created');
 			expect(widget.created).to.be.an.instanceOf(Date);
 			expect(widget).to.have.property('name', 'New Widget');

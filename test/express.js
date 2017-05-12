@@ -422,6 +422,8 @@ describe('monoxide.express.*', function() {
 				newUser = res.body;
 				expect(newUser).to.be.an.object;
 
+				expect(newUser).to.have.property('_id');
+				expect(newUser).to.have.property('__v', 0);
 				expect(newUser).to.have.property('name', 'New User via ReST');
 				expect(newUser).to.have.property('role', 'user');
 				expect(newUser).to.have.property('mostPurchased');
@@ -452,6 +454,8 @@ describe('monoxide.express.*', function() {
 				newWidget = res.body;
 				expect(newWidget).to.be.an.object;
 
+				expect(newWidget).to.have.property('_id');
+				expect(newWidget).to.have.property('__v', 0);
 				expect(newWidget).to.have.property('name', 'New Widget');
 				expect(newWidget).to.have.property('content', 'This is a new widget, there are many like it but this one is my own');
 				expect(newWidget).to.have.property('status', 'active');
@@ -474,6 +478,8 @@ describe('monoxide.express.*', function() {
 				var widget = res.body;
 				expect(widget).to.be.an.object;
 
+				expect(widget).to.have.property('_id', newWidget._id);
+				expect(widget).to.have.property('__v', 1);
 				expect(widget).to.have.property('name', 'New Widget');
 				expect(widget).to.have.property('status', 'deleted');
 
@@ -492,6 +498,8 @@ describe('monoxide.express.*', function() {
 				var widget = res.body;
 				expect(widget).to.be.an.object;
 
+				expect(widget).to.have.property('_id', newWidget._id);
+				expect(widget).to.have.property('__v', 2);
 				expect(widget).to.have.property('name', 'New Widget');
 				expect(widget).to.have.deep.property('mostPurchased.0.number', 109);
 

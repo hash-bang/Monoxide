@@ -31,6 +31,7 @@ Key differences from Mongoose / MongoDB-Core:
 * **Callback error if no matching records** - If no matching records are found in a `get()` operation and `$errNotFound` is true (the default) Monoxide will populate the error property of the callback. This is useful to automatically abandon Async chains when an expected record is not found rather than having to do manual check for record existence later.
 * **Pass private data using `$data`** - The `$data` object can be specified in any operation (query, save, delete etc.) and is ignored by Monoxide but still passed into hooks. This can be used as a method to pass data to lower-level functions such as logging operations (e.g. pass the currently logged in user to the lower level hooks)
 * **Meta polling** - Access database meta information using either the `meta()` method or the ReST adapter
+* **Version management** - Created documents correctly set the `__v` property and increment it on save
 * **DEBUG compatibility** - Setting the environment variable `DEBUG=monoxide` will output any errors raised by Monoxide to the console
 
 
