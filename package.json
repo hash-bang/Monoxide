@@ -33,9 +33,10 @@
     "chai": "^3.5.0",
     "express": "^4.15.2",
     "express-log-url": "^1.0.5",
+    "faker": "^4.1.0",
     "gulp": "^3.9.1",
     "gulp-documentation": "^3.2.0",
-    "mocha": "^3.3.0",
+    "mocha": "^3.4.1",
     "mocha-logger": "^1.0.5",
     "mongoose-scenario": "^2.1.2",
     "superagent": "^3.5.2"

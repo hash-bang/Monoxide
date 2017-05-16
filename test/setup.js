@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var async = require('async-chainable');
 var expect = require('chai').expect;
+var faker = require('faker');
 var monoxide = require('..');
 var mlog = require('mocha-logger');
 var scenario = require('mongoose-scenario');
@@ -15,12 +16,16 @@ var allowTeardown = process.env.TEARDOWN ? process.env.TEARDOWN=='true' : true;
 module.exports = {
 	// init {{{
 	init: function(finish) {
+		this.timeout(30 * 1000);
 		var self = module.exports;
 
 		async()
 			.then(self.initConnection)
 			.then(self.initSchemas)
-			.then(self.initScenarios)
+			.parallel([
+				self.initScenarios,
+				self.initPeople,
+			])
 			.end(finish);
 	},
 	// }}}
@@ -116,6 +121,24 @@ module.exports = {
 					items: [{type: 'pointer', ref: 'widgets'}]
 				}
 			},
+		});
+		// }}}
+
+		// People (big data set) {{{
+		var People = monoxide.schema('people', {
+			name: String,
+			email: String,
+			username: String,
+			job: String,
+			dob: String,
+			uuid: String,
+			address: {
+				street: String,
+				city: String,
+				state: String,
+				country: String,
+			},
+			avatar: String,
 		});
 		// }}}
 
@@ -236,6 +259,31 @@ module.exports = {
 	},
 	// }}}
 
+	// initPeople {{{
+	initPeople: function(finish) {
+		async()
+			.forEach(1000, function(next) {
+				monoxide.models.people.create({
+					$refetch: false,
+					name: faker.name.findName(),
+					email: faker.internet.email(),
+					username: faker.internet.userName(),
+					job: faker.name.jobTitle(),
+					dob: faker.date.past(),
+					uuid: faker.random.uuid(),
+					address: {
+						street: faker.address.streetAddress(),
+						city: faker.address.city(),
+						state: faker.address.state(),
+						country: faker.address.country(),
+					},
+					avatar: faker.image.avatar(),
+				}, next);
+			})
+			.end(finish);
+	},
+	// }}}
+
 	// teardownConnection {{{
 	teardownConnection: function(finish) {
 		monoxide.connection.close(finish);
@@ -245,7 +293,7 @@ module.exports = {
 	// teardownSchemas {{{
 	teardownSchemas: function(finish) {
 		async()
-			.set('models', ['users', 'widgets', 'groups'])
+			.set('models', ['users', 'widgets', 'groups', 'people'])
 			.forEach('models', function(next, id) {
 				monoxide.connection.db.dropCollection(id, next);
 			})
