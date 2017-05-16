@@ -515,7 +515,10 @@ function Monoxide() {
 				});
 
 				var updatePayload = {$set: patch};
-				if (q.$version) updatePayload['$inc'] = {'__v': 1};
+				if (q.$version) {
+					updatePayload['$inc'] = {'__v': 1};
+					delete updatePayload.$set.__v; // Remove user updates of __v
+				}
 
 				o.models[q.$collection].$mongoModel.findOneAndUpdate(
 					{ _id: o.utilities.objectID(q.$id) }, // What we are writing to
