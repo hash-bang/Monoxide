@@ -673,6 +673,7 @@ function Monoxide() {
 				'$collection', // Collection to query to find the original record
 				'$data', // Meta user-defined data
 				'$refetch',
+				'$version',
 			])
 			// Sanity checks {{{
 			.then(function(next) {
