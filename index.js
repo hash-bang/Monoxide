@@ -2324,6 +2324,7 @@ function Monoxide() {
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.save=false] Allow saving of records via the POST method
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.delete=false] Allow deleting of records via the DELETE method
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.meta=false] Allow retrival of meta information
+	* @param {function} [settings.data] Data population callback. This gets executed at the start of each query, its return value is used as `$data` for subsequent queries
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example
@@ -2343,6 +2344,10 @@ function Monoxide() {
 			req.monoxide = { // Setup object to pass params to callback functions
 				collection: settings.collection,
 			};
+
+			if (settings.data) { // if settings.data is passsed, run it and use its response
+				settings.$data = settings.data(req, res);
+			}
 
 			// Count {{{
 			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && !_.isBoolean(settings.count)) {
