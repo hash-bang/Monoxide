@@ -48,6 +48,20 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 		});
 	});
 
+	it('should retrieve all friends (big data)', function(finish) {
+		monoxide.query({
+			$collection: 'friends',
+		}, function(err, res) {
+			expect(err).to.not.be.ok;
+			expect(res).to.have.length(1000);
+			res.forEach(person => {
+				expect(person).to.have.property('_id');
+				expect(person).to.have.property('name');
+			});
+			finish();
+		});
+	});
+
 	it('should get() all users by ID (strings syntax)', function(finish) {
 		async()
 			.forEach(users, function(next, user) {

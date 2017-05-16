@@ -22,10 +22,7 @@ module.exports = {
 		async()
 			.then(self.initConnection)
 			.then(self.initSchemas)
-			.parallel([
-				self.initScenarios,
-				self.initPeople,
-			])
+			.then(self.initScenarios)
 			.end(finish);
 	},
 	// }}}
@@ -124,8 +121,8 @@ module.exports = {
 		});
 		// }}}
 
-		// People (big data set) {{{
-		var People = monoxide.schema('people', {
+		// Friends (big data set) {{{
+		var Friends = monoxide.schema('friends', {
 			name: String,
 			email: String,
 			username: String,
@@ -259,11 +256,13 @@ module.exports = {
 	},
 	// }}}
 
-	// initPeople {{{
-	initPeople: function(finish) {
+	// initFriends {{{
+	initFriends: function(finish) {
+		this.timeout(60 * 1000);
+
 		async()
-			.forEach(1000, function(next) {
-				monoxide.models.people.create({
+			.forEach(10000, function(next) {
+				monoxide.models.friends.create({
 					$refetch: false,
 					name: faker.name.findName(),
 					email: faker.internet.email(),
@@ -293,7 +292,7 @@ module.exports = {
 	// teardownSchemas {{{
 	teardownSchemas: function(finish) {
 		async()
-			.set('models', ['users', 'widgets', 'groups', 'people'])
+			.set('models', ['users', 'widgets', 'groups', 'friends'])
 			.forEach('models', function(next, id) {
 				monoxide.connection.db.dropCollection(id, next);
 			})
