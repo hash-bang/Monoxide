@@ -294,7 +294,7 @@ module.exports = {
 		async()
 			.set('models', ['users', 'widgets', 'groups', 'friends'])
 			.forEach('models', function(next, id) {
-				monoxide.connection.db.dropCollection(id, next);
+				monoxide.connection.db.dropCollection(id, ()=> next());
 			})
 			.forEach('models', function(next, id) { // Remove the model from Mongoose's schema cache otherwise it complains we are creating it twice
 				delete monoxide.connection.models[id];
