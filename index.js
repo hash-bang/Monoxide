@@ -18,6 +18,7 @@ function Monoxide() {
 	o.connection;
 	o.settings = {
 		removeAll: true, // Allow db.model.delete() calls with no arguments
+		versionIncErr: /^MongoError: Cannot apply \$inc to a value of non-numeric type. {.+} has the field '__v' of non-numeric type NULL$/, // RegExp error detector used to detect $inc problems when trying to increment `__v` in update operations
 	};
 
 	// .connect {{{
@@ -514,23 +515,38 @@ function Monoxide() {
 					}
 				});
 
+				var updateQuery = { _id: o.utilities.objectID(q.$id) };
 				var updatePayload = {$set: patch};
-				if (q.$version) {
-					updatePayload['$inc'] = {'__v': 1};
-					delete updatePayload.$set.__v; // Remove user updates of __v
-				}
-
-				o.models[q.$collection].$mongoModel.findOneAndUpdate(
-					{ _id: o.utilities.objectID(q.$id) }, // What we are writing to
-					updatePayload, // What we are saving
-					{ returnOriginal: !q.$returnUpdated }, // Options passed to Mongo
-					function(err, res) {
-						if (err) return next(err);
+				var updateOptions = { returnOriginal: !q.$returnUpdated };
+				var updateCallback = function(err, res) {
+					if (q.$version && err && o.settings.versionIncErr.test(err.toString())) { // Error while setting `__v`
+						// Remove __v as an increment operator + retry the operation
+						// It would be good if $inc could assume `0` when null, but Mongo doesn't support that
+						updatePayload.$set.__v = 1;
+						delete updatePayload.$inc;
+						o.models[q.$collection].$mongoModel.findOneAndUpdate(updateQuery, updatePayload, updateOptions, updateCallback);
+					} else if (err) {
+						next(err);
+					} else {
 						// This would only really happen if the record has gone away since we started updating
 						if (q.$errNoUpdate && !res.ok) return next('No documents updated');
+
 						if (!q.$refetch) return next(null, null);
 						next(null, new o.monoxideDocument({$collection: q.$collection}, res.value));
 					}
+				};
+
+				if (q.$version) {
+					updatePayload.$inc = {'__v': 1};
+					delete updatePayload.$set.__v; // Remove user updates of __v
+				}
+
+				// Actually perform the action
+				o.models[q.$collection].$mongoModel.findOneAndUpdate(
+					updateQuery, // What we are writing to
+					updatePayload, // What we are saving
+					updateOptions, // Options passed to Mongo
+					updateCallback
 				);
 			})
 			// }}}

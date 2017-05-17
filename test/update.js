@@ -6,7 +6,7 @@ describe('monoxide.update()', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 
-	it('should delete all widgets', function(finish) {
+	it('should mark all widgets as deleted', function(finish) {
 		monoxide.update('widgets', {
 			status: 'deleted',
 		}, function(err) {

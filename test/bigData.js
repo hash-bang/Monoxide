@@ -11,7 +11,7 @@ describe('big data sets', function() {
 	var friends;
 
 	it('should retrieve a very big data set', function(finish) {
-		this.timeout(30 * 1000);
+		this.timeout(120 * 1000);
 
 		monoxide.query({
 			$collection: 'friends',
@@ -24,11 +24,22 @@ describe('big data sets', function() {
 	});
 
 	it('should be able to scope over each item in parallel', function(finish) {
+		this.timeout(120 * 1000);
 		async()
 			.forEach(friends, function(next, friend) {
 				expect(friend).to.have.property('_id');
 				expect(friend).to.have.property('name');
 				next();
+			})
+			.end(finish);
+	});
+
+	it('should be able to perform simple operations in parallel', function(finish) {
+		this.timeout(120 * 1000);
+		async()
+			.forEach(friends, function(next, friend) {
+				friend.username += 'xxx';
+				friend.save(next);
 			})
 			.end(finish);
 	});
