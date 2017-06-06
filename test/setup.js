@@ -66,7 +66,7 @@ module.exports = {
 					}
 				],
 				settings: {
-					lang: {type: String, enum: ['en', 'es', 'fr'], default: 'en'},
+					lang: {type: String, enum: ['en', 'es', 'fr', 'elmerFudd'], default: 'en'},
 					greeting: String,
 					featured: {type: 'pointer', ref: 'widgets'},
 				},

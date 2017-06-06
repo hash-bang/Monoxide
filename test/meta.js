@@ -34,12 +34,12 @@ describe('monoxide.meta()', function() {
 
 			expect(meta).to.have.property('mostPurchased');
 			expect(meta.mostPurchased).to.have.property('type', 'array');
-			
+
 			expect(meta).to.have.property('settings.lang');
 			expect(meta['settings.lang']).to.have.property('type', 'string');
 			expect(meta['settings.lang']).to.have.property('default', 'en');
 			expect(meta['settings.lang']).to.have.property('enum');
-			expect(meta['settings.lang'].enum).to.be.deep.equal(['en', 'es', 'fr']);
+			expect(meta['settings.lang'].enum).to.be.deep.equal(['en', 'es', 'fr', 'elmerFudd']);
 
 			finish();
 		});
@@ -108,7 +108,7 @@ describe('monoxide.meta()', function() {
 			expect(meta.role).to.have.property('default', 'user');
 			expect(meta.role).to.have.property('enum');
 			expect(meta.role.enum).to.be.deep.equal([
-				{id: 'user', title: 'User'}, 
+				{id: 'user', title: 'User'},
 				{id: 'admin', title: 'Admin'},
 			]);
 
@@ -120,6 +120,7 @@ describe('monoxide.meta()', function() {
 				{id: 'en', title: 'En'},
 				{id: 'es', title: 'Es'},
 				{id: 'fr', title: 'Fr'},
+				{id: 'elmerFudd', title: 'Elmer Fudd'},
 			]);
 
 			finish();

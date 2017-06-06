@@ -958,10 +958,10 @@ function Monoxide() {
 							info.type = 'string';
 							if (path.enumValues && path.enumValues.length) {
 								if (q.$collectionEnums) {
-									info.enum = path.enumValues.map(e => { return ({
+									info.enum = path.enumValues.map(e => ({
 										id: e,
-										title: e.substr(0, 1).toUpperCase() + e.substr(1)
-									})});
+										title: _.startCase(e),
+									}));
 								} else {
 									info.enum = path.enumValues;
 								}
