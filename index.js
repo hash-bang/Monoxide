@@ -18,7 +18,7 @@ function Monoxide() {
 	o.connection;
 	o.settings = {
 		removeAll: true, // Allow db.model.delete() calls with no arguments
-		versionIncErr: /^MongoError: Cannot apply \$inc to a value of non-numeric type. {.+} has the field '__v' of non-numeric type NULL$/, // RegExp error detector used to detect $inc problems when trying to increment `__v` in update operations
+		versionIncErr: /^MongoError: Cannot apply \$inc to a value of non-numeric type. {.+} has the field '__v' of non-numeric type null$/i, // RegExp error detector used to detect $inc problems when trying to increment `__v` in update operations
 	};
 
 	// .connect {{{
