@@ -199,7 +199,7 @@ describe('monoxide.express.*', function() {
 		superagent.get(url + '/api/widgets')
 			.query({
 				select: '_id,color',
-				color: {$nin: ['red']},
+				color: {$nin: ['red', 'pink']},
 				sort: 'color',
 			})
 			.end(function(err, res) {
