@@ -106,6 +106,7 @@ module.exports = {
 			content: String,
 			status: {type: 'string', enum: ['active', 'deleted'], default: 'active'},
 			color: {type: 'string', enum: ['red', 'green', 'blue', 'yellow'], default: 'blue', index: true},
+			featured: {type: 'boolean', default: false},
 		});
 		// }}}
 
@@ -197,6 +198,7 @@ module.exports = {
 					created: '2016-06-23T10:23:42Z',
 					name: 'Widget crash',
 					content: 'This is the crash widget',
+					featured: true,
 					// color: 'blue', // Should default to this via schema
 				},
 				{

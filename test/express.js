@@ -135,6 +135,45 @@ describe('monoxide.express.*', function() {
 			});
 	});
 
+	it('should query widgets via ReST (w/ boolean true)', function(finish) {
+		superagent.get(url + '/api/widgets')
+			.query({
+				select: 'name',
+				featured: true,
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				widgets = res.body;
+				expect(widgets).to.be.an.array;
+				expect(widgets).to.have.length(1);
+
+				expect(widgets[0]).to.have.property('name', 'Widget crash');
+
+				finish();
+			});
+	});
+
+	it('should query widgets via ReST (w/ boolean false)', function(finish) {
+		superagent.get(url + '/api/widgets')
+			.query({
+				select: 'name',
+				featured: false,
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				widgets = res.body;
+				expect(widgets).to.be.an.array;
+				expect(widgets).to.have.length(2);
+
+				expect(widgets[0]).to.have.property('name', 'Widget bang');
+				expect(widgets[1]).to.have.property('name', 'Widget whollop');
+
+				finish();
+			});
+	});
+
 	it('should query widgets via ReST (array OR notation)', function(finish) {
 		superagent.get(url + '/api/widgets')
 			.query({
