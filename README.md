@@ -13,6 +13,7 @@ Monoxide attempts to provide nicer, chainable functionality on top of base Mongo
 4. [Common recipes and design patterns](RECIPES.md)
 4. [TODO list](TODO.md)
 5. [Future ideas](IDEAS.md)
+6. [Common issues](COMMON-ISSUES.md)
 
 
 Key differences from Mongoose / MongoDB-Core:
