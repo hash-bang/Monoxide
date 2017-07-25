@@ -156,6 +156,27 @@ describe('monoxide.express.*', function() {
 			});
 	});
 
+	it('should query widgets via ReST ($nin + array notation)', function(finish) {
+		superagent.get(url + '/api/widgets')
+			.query({
+				select: '_id,color',
+				color: {$nin: ['red']},
+				sort: 'color',
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var widgets = res.body;
+				expect(widgets).to.be.an.array;
+				expect(widgets).to.have.length(2);
+
+				expect(widgets[0]).to.have.property('color', 'blue');
+				expect(widgets[1]).to.have.property('color', 'blue');
+
+				finish();
+			});
+	});
+
 	it('should query groups via ReST', function(finish) {
 		superagent.get(url + '/api/groups')
 			.query({
