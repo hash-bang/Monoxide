@@ -17,11 +17,11 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			$plain: true, // Force all objects to be plain objects
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.array;
+			expect(res).to.be.an.instanceOf(Array);
 			expect(res).to.have.length(3);
 
 			res.forEach(function(widget) {
-				expect(widget).to.be.an.object;
+				expect(widget).to.be.an.instanceOf(Object);
 				expect(widget).to.have.property('_id');
 				expect(widget).to.have.property('__v', 0);
 				expect(widget).to.have.property('name');
@@ -51,7 +51,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			password: 'wonderful',
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
-			expect(user).to.be.an.object;
+			expect(user).to.be.an.instanceOf(Object);
 			newUser = user;
 
 			mlog.log('created ID', user._id);
@@ -63,7 +63,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(user).to.have.property('favourite');
 			expect(user.favourite).to.be.a.string;
 			expect(user).to.have.property('mostPurchased');
-			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.be.an.instanceOf(Array);
 			expect(user.mostPurchased).to.have.length(2);
 			expect(user.mostPurchased[0]).to.have.property('number', 50);
 			expect(user.mostPurchased[0]).to.have.property('item', widgets[0]._id);
@@ -107,7 +107,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			password: 'shark', // Should return {_password: 'a'}
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
-			expect(user).to.be.an.object;
+			expect(user).to.be.an.instanceOf(Object);
 
 			mlog.log('created ID', user._id);
 
@@ -118,7 +118,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(user).to.have.property('favourite');
 			expect(user.favourite).to.be.a.string;
 			expect(user).to.have.property('mostPurchased');
-			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.be.an.instanceOf(Array);
 			expect(user.mostPurchased).to.have.length(2);
 			expect(user.mostPurchased[0]).to.have.property('number', 80);
 			expect(user.mostPurchased[0].item).to.be.equal(widgets[1]._id);
@@ -134,7 +134,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			name: 'New User4',
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
-			expect(user).to.be.an.object;
+			expect(user).to.be.an.instanceOf(Object);
 
 			mlog.log('created ID', user._id);
 
@@ -144,10 +144,10 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(user).to.have.property('favourite');
 			expect(user.favourite).to.be.a.string;
 			expect(user).to.have.property('mostPurchased');
-			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.be.an.instanceOf(Array);
 			expect(user.mostPurchased).to.have.length(0);
 			expect(user).to.have.property('settings');
-			expect(user.settings).to.be.an.object;
+			expect(user.settings).to.be.an.instanceOf(Object);
 			expect(user.settings).to.have.property('lang', 'en');
 			expect(user.settings).to.have.property('greeting');
 
@@ -161,7 +161,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			favourite: null,
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
-			expect(user).to.be.an.object;
+			expect(user).to.be.an.instanceOf(Object);
 
 			expect(user).to.have.property('__v', 0);
 			expect(user).to.have.property('name', 'New User5');
@@ -180,7 +180,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			favourite: undefined,
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
-			expect(user).to.be.an.object;
+			expect(user).to.be.an.instanceOf(Object);
 
 			expect(user).to.have.property('__v', 0);
 			expect(user).to.have.property('name', 'New User6');
@@ -199,7 +199,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			favourite: undefined,
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
-			expect(user).to.be.an.object;
+			expect(user).to.be.an.instanceOf(Object);
 
 			expect(user).to.have.property('__v', 0);
 			expect(user).to.have.property('name', 'New User7');
@@ -218,11 +218,11 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			name: {$in: ['New User', 'New User2', 'New User3']},
 		}, function(err, users) {
 			expect(err).to.not.be.ok;
-			expect(users).to.be.an.array;
+			expect(users).to.be.an.instanceOf(Array);
 			expect(users).to.have.length(3);
 
 			users.forEach(function(user) {
-				expect(user).to.be.an.object;
+				expect(user).to.be.an.instanceOf(Object);
 				expect(user).to.have.property('__v', 0);
 				expect(user).to.have.property('name');
 				expect(user.name).to.match(/^New User[0-7]?/);
@@ -233,14 +233,14 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 
 				// Validate items OID
 				expect(user).to.have.property('items');
-				expect(user.items).to.be.an.array;
+				expect(user.items).to.be.an.instanceOf(Array);
 				expect(user.items).to.have.length.of.at.least(2);
 				user.items.forEach(function(item) {
 					expect(item).to.be.an.instanceOf(objectID);
 				});
 
 				// Validate mostpurchased[].item OID
-				expect(user.mostPurchased).to.be.an.array;
+				expect(user.mostPurchased).to.be.an.instanceOf(Array);
 				expect(user.mostPurchased).to.have.length.of.at.least(2);
 				user.mostPurchased.forEach(function(mostPurchased) {
 					expect(mostPurchased).to.have.property('item');
@@ -262,37 +262,37 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			.populate('favourite')
 			.exec(function(err, users) {
 				expect(err).to.not.be.ok;
-				expect(users).to.be.an.array;
+				expect(users).to.be.an.instanceOf(Array);
 				expect(users).to.have.length(3);
 
 				users.forEach(function(user) {
-					expect(user).to.be.an.object;
+					expect(user).to.be.an.instanceOf(Object);
 					expect(user).to.have.property('__v', 0);
 					expect(user).to.have.property('name');
 					expect(user.name).to.match(/^New User[0-7]?/);
 
 					// Validate favourite OID
 					expect(user).to.have.property('favourite');
-					expect(user.favourite).to.be.an.object;
+					expect(user.favourite).to.be.an.instanceOf(Object);
 					expect(user.favourite).to.have.property('_id');
 					expect(user.favourite).to.have.property('name');
 					expect(user.favourite).to.have.property('content');
 
 					// Validate items OID
 					expect(user).to.have.property('items');
-					expect(user.items).to.be.an.array;
+					expect(user.items).to.be.an.instanceOf(Array);
 					user.items.forEach(function(item) {
-						expect(item).to.be.an.object;
+						expect(item).to.be.an.instanceOf(Object);
 						expect(item).to.have.property('_id');
 						expect(item).to.have.property('name');
 						expect(item).to.have.property('content');
 					});
 
 					// Validate mostpurchased[].item OID
-					expect(user.mostPurchased).to.be.an.array;
+					expect(user.mostPurchased).to.be.an.instanceOf(Array);
 					user.mostPurchased.forEach(function(mostPurchased) {
 						expect(mostPurchased).to.have.property('item');
-						expect(mostPurchased.item).to.be.an.object;
+						expect(mostPurchased.item).to.be.an.instanceOf(Object);
 						expect(mostPurchased.item).to.have.property('_id');
 						expect(mostPurchased.item).to.have.property('name');
 						expect(mostPurchased.item).to.have.property('content');
@@ -313,7 +313,7 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			color: 'yellow',
 		}, function(err, widget) {
 			expect(err).to.not.be.ok;
-			expect(widget).to.be.an.object;
+			expect(widget).to.be.an.instanceOf(Object);
 
 			mlog.log('created ID', widget._id);
 

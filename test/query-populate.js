@@ -18,19 +18,19 @@ describe('monoxide.query() using $populate', function() {
 			],
 		}, function(err, users) {
 			expect(err).to.not.be.ok;
-			expect(users).to.be.an.array;
+			expect(users).to.be.an.instanceOf(Array);
 
 			expect(users[0]).to.have.property('favourite');
-			expect(users[0].favourite).to.be.an.object;
+			expect(users[0].favourite).to.be.an.instanceOf(Object);
 			expect(users[0].favourite).to.have.property('name', 'Widget bang');
 
 			expect(users[0]).to.have.property('items');
-			expect(users[0].items).to.be.an.array;
+			expect(users[0].items).to.be.an.instanceOf(Array);
 			expect(users[0].items).to.have.length(2);
 			expect(users[0].items[0]).to.have.property('name', 'Widget crash');
 
 			expect(users[0]).to.have.property('mostPurchased');
-			expect(users[0].mostPurchased).to.be.an.array;
+			expect(users[0].mostPurchased).to.be.an.instanceOf(Array);
 			expect(users[0].mostPurchased).to.have.length(2);
 			expect(users[0].mostPurchased[0]).to.have.property('_id');
 			expect(users[0].mostPurchased[0].item).to.have.property('name', 'Widget bang');
@@ -69,7 +69,7 @@ describe('monoxide.query() using $populate', function() {
 			],
 		}, function(err, users) {
 			expect(err).to.not.be.ok;
-			expect(users).to.be.an.array;
+			expect(users).to.be.an.instanceOf(Array);
 
 			users.forEach(function(user) {
 				// Favourite = OID 1:1
@@ -80,7 +80,7 @@ describe('monoxide.query() using $populate', function() {
 
 				// Items = OID 1:M (as array)
 				expect(user).to.have.property('items');
-				expect(user.items).to.be.an.array;
+				expect(user.items).to.be.an.instanceOf(Array);
 				user.items.forEach(function(i) {
 					expect(i).to.be.a.string;
 					expect(i).to.satisfy(_.isString);
@@ -89,7 +89,7 @@ describe('monoxide.query() using $populate', function() {
 
 				// mostPurchased = OID 1:M (as collection)
 				expect(user).to.have.property('mostPurchased');
-				expect(user.mostPurchased).to.be.an.array;
+				expect(user.mostPurchased).to.be.an.instanceOf(Array);
 				user.mostPurchased.forEach(function(mp) {
 					expect(mp).to.have.property('_id');
 					expect(mp._id).to.be.a.string;
@@ -122,7 +122,7 @@ describe('monoxide.query() using $populate', function() {
 			],
 		}, function(err, groups) {
 			expect(err).to.not.be.ok;
-			expect(groups).to.be.an.array;
+			expect(groups).to.be.an.instanceOf(Array);
 			expect(groups).to.have.length(3);
 
 			var group = groups[0];
@@ -131,7 +131,7 @@ describe('monoxide.query() using $populate', function() {
 			expect(group).to.have.property('preferences');
 			expect(group.preferences).to.have.property('defaults');
 			expect(group.preferences.defaults).to.have.property('items');
-			expect(group.preferences.defaults.items).to.be.an.array;
+			expect(group.preferences.defaults.items).to.be.an.instanceOf(Array);
 			expect(group.preferences.defaults.items).to.have.length(2);
 			expect(group.preferences.defaults.items[0]).to.have.property('name', 'Widget crash');
 			expect(group.preferences.defaults.items[1]).to.have.property('name', 'Widget bang');
@@ -141,7 +141,7 @@ describe('monoxide.query() using $populate', function() {
 			expect(group.users[0]).to.have.property('name', 'Jane Quark');
 			var user = group.users[0];
 			expect(user).to.have.property('mostPurchased');
-			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.be.an.instanceOf(Array);
 			expect(user.mostPurchased).to.have.length(2);
 			expect(user.mostPurchased[0]).to.have.property('number', 1);
 			expect(user.mostPurchased[0].item).to.have.property('name', 'Widget bang');

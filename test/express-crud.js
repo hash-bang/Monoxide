@@ -23,7 +23,7 @@ describe('monoxide.express - create, read, update, destroy', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.array;
+			expect(res).to.be.an.instanceOf(Array);
 			widgets = res;
 			finish();
 		});
@@ -63,12 +63,12 @@ describe('monoxide.express - create, read, update, destroy', function() {
 				expect(err).to.be.not.ok;
 
 				newUser = res.body;
-				expect(newUser).to.be.an.object;
+				expect(newUser).to.be.an.instanceOf(Object);
 
 				expect(newUser).to.have.property('name', 'Diziet Sma');
 				expect(newUser).to.have.property('role', 'user');
 				expect(newUser).to.have.property('mostPurchased');
-				expect(newUser.mostPurchased).to.be.an.array;
+				expect(newUser.mostPurchased).to.be.an.instanceOf(Array);
 				expect(newUser.mostPurchased).to.have.length(2);
 				expect(newUser.mostPurchased[0]).to.have.property('number', 72);
 				expect(newUser.mostPurchased[0]).to.have.property('item', widgets[1]._id);
@@ -88,7 +88,7 @@ describe('monoxide.express - create, read, update, destroy', function() {
 			expect(doc.favourite.toString()).to.be.equal(widgets[0]._id);
 			expect(doc.favourite).to.be.an.instanceOf(mongoose.Types.ObjectId);
 
-			expect(doc.mostPurchased).to.be.an.array;
+			expect(doc.mostPurchased).to.be.an.instanceOf(Array);
 			expect(doc.mostPurchased).to.have.length(2);
 
 			expect(doc.mostPurchased[0]).to.have.property('number', 72);
@@ -112,7 +112,7 @@ describe('monoxide.express - create, read, update, destroy', function() {
 		superagent.get(url + '/api/users/' + newUser._id)
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
-				expect(res.body).to.be.an.object;
+				expect(res.body).to.be.an.instanceOf(Object);
 				expect(res.body).to.have.property('_id', newUser._id);
 				finish();
 			});
@@ -123,7 +123,7 @@ describe('monoxide.express - create, read, update, destroy', function() {
 			.query({name: 'Diziet Sma'})
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
-				expect(res.body).to.be.an.array;
+				expect(res.body).to.be.an.instanceOf(Array);
 				expect(res.body).to.have.length(1);
 				expect(res.body[0]).to.have.property('_id', newUser._id);
 				finish();
@@ -143,12 +143,12 @@ describe('monoxide.express - create, read, update, destroy', function() {
 			})
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
-				expect(res.body).to.be.an.object;
+				expect(res.body).to.be.an.instanceOf(Object);
 				expect(res.body).to.have.property('_id', newUser._id);
 				expect(res.body).to.have.property('name', 'Cheradenine Zakalwe');
 				expect(res.body).to.have.property('favourite', widgets[2]._id);
 				expect(res.body).to.have.property('mostPurchased');
-				expect(res.body.mostPurchased).to.be.an.array;
+				expect(res.body.mostPurchased).to.be.an.instanceOf(Array);
 				expect(res.body.mostPurchased).to.have.length(1);
 				expect(res.body.mostPurchased[0]).to.have.property('number', 5);
 				expect(res.body.mostPurchased[0]).to.have.property('item', widgets[0]._id);
@@ -165,7 +165,7 @@ describe('monoxide.express - create, read, update, destroy', function() {
 			expect(doc.favourite.toString()).to.be.equal(widgets[2]._id);
 			expect(doc.favourite).to.be.an.instanceOf(mongoose.Types.ObjectId);
 
-			expect(doc.mostPurchased).to.be.an.array;
+			expect(doc.mostPurchased).to.be.an.instanceOf(Array);
 			expect(doc.mostPurchased).to.have.length(1);
 
 			expect(doc.mostPurchased[0]).to.have.property('number', 5);

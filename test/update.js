@@ -15,7 +15,7 @@ describe('monoxide.update()', function() {
 				expect(err).to.be.not.ok;
 				expect(widgets).to.have.length(3);
 
-				expect(widgets).to.be.an.array;
+				expect(widgets).to.be.an.instanceOf(Array);
 				widgets.forEach(function(u) {
 					expect(u).to.have.property('status', 'deleted');
 				});

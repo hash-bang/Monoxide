@@ -13,7 +13,7 @@ describe('monoxide.schema()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.array;
+			expect(res).to.be.an.instanceOf(Array);
 			users = res;
 			finish();
 		});
@@ -22,7 +22,6 @@ describe('monoxide.schema()', function() {
 	it('should call a static method', function() {
 		monoxide.models.users.countByType('user', function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.a.number;
 			expect(res).to.be.equal(2);
 		});
 	});

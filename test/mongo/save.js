@@ -13,7 +13,7 @@ describe('Mongo - save tests', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.array;
+			expect(res).to.be.an.instanceOf(Array);
 			users = res;
 			finish();
 		});
@@ -26,7 +26,7 @@ describe('Mongo - save tests', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.array;
+			expect(res).to.be.an.instanceOf(Array);
 			widgets = res;
 			finish();
 		});

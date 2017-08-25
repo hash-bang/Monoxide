@@ -13,7 +13,7 @@ describe('monoxide.query()', function() {
 			$sort: 'name',
 		}, function(err, users) {
 			expect(err).to.not.be.ok;
-			expect(users).to.be.an.array;
+			expect(users).to.be.an.instanceOf(Array);
 
 			expect(users[0]).to.have.property('_id');
 			expect(users[0]._id).to.be.a.string;
@@ -22,7 +22,7 @@ describe('monoxide.query()', function() {
 			expect(users[0]).to.have.property('favourite');
 			expect(users[0].favourite).to.be.a.string;
 			expect(users[0]).to.have.property('mostPurchased');
-			expect(users[0].mostPurchased).to.be.an.array;
+			expect(users[0].mostPurchased).to.be.an.instanceOf(Array);
 			expect(users[0].mostPurchased).to.have.length(2);
 			expect(users[0].mostPurchased[0]).to.have.property('number', 1);
 			expect(users[0].mostPurchased[0].item).to.be.a.string;
@@ -34,7 +34,7 @@ describe('monoxide.query()', function() {
 			expect(users[1]).to.have.property('name', 'Joe Random');
 			expect(users[1]).to.have.property('role', 'user');
 			expect(users[1]).to.have.property('favourite');
-			expect(users[1].mostPurchased).to.be.an.array;
+			expect(users[1].mostPurchased).to.be.an.instanceOf(Array);
 			expect(users[1].mostPurchased).to.have.length(3);
 			expect(users[1].mostPurchased[0]).to.have.property('number', 5);
 			expect(users[1].mostPurchased[0].item).to.be.a.string;
@@ -53,7 +53,6 @@ describe('monoxide.query()', function() {
 			$count: true,
 		}, function(err, res) {
 			expect(err).to.not.be.ok;
-			expect(res).to.be.a.number;
 			expect(res).to.be.equal(2);
 
 			finish();
@@ -66,7 +65,7 @@ describe('monoxide.query()', function() {
 			$sort: 'created',
 		}, function(err, widgets) {
 			expect(err).to.not.be.ok;
-			expect(widgets).to.be.an.array;
+			expect(widgets).to.be.an.instanceOf(Array);
 
 			var widgetsSorted = _.sortBy(widgets, 'created');
 
@@ -85,7 +84,7 @@ describe('monoxide.query()', function() {
 			created: {$lte: new Date(2016, 02, 01, 10, 0, 0)},
 		}, function(err, widgets) {
 			expect(err).to.not.be.ok;
-			expect(widgets).to.be.an.array;
+			expect(widgets).to.be.an.instanceOf(Array);
 			expect(widgets).to.have.length(1);
 
 			expect(widgets[0]).to.have.property('name', 'Widget bang');
@@ -100,14 +99,14 @@ describe('monoxide.query()', function() {
 			$sort: 'created',
 		}, function(err, widgets) {
 			expect(err).to.be.not.ok;
-			expect(widgets).to.be.an.array;
+			expect(widgets).to.be.an.instanceOf(Array);
 
 			monoxide.query({
 				$collection: 'users',
 				items: {$in: [widgets[0]._id]},
 			}, function(err, users) {
 				expect(err).to.not.be.ok;
-				expect(users).to.be.an.array;
+				expect(users).to.be.an.instanceOf(Array);
 				expect(users).to.have.length(1);
 
 				expect(users[0]).to.have.property('items');
@@ -124,14 +123,14 @@ describe('monoxide.query()', function() {
 			$sort: 'created',
 		}, function(err, widgets) {
 			expect(err).to.be.not.ok;
-			expect(widgets).to.be.an.array;
+			expect(widgets).to.be.an.instanceOf(Array);
 
 			monoxide.query({
 				$collection: 'users',
 				items: {$nin: [ widgets[0]._id, widgets[2]._id] },
 			}, function(err, users) {
 				expect(err).to.not.be.ok;
-				expect(users).to.be.an.array;
+				expect(users).to.be.an.instanceOf(Array);
 				expect(users).to.have.length(0);
 
 				finish();
@@ -146,7 +145,7 @@ describe('monoxide.query()', function() {
 			$sort: 'created',
 		}, function(err, widgets) {
 			expect(err).to.be.not.ok;
-			expect(widgets).to.be.an.array;
+			expect(widgets).to.be.an.instanceOf(Array);
 
 			widgets.forEach(function(widget) {
 				[
@@ -173,7 +172,7 @@ describe('monoxide.query()', function() {
 	it('should be able to query via a collection array', function(finish) {
 		monoxide.models.widgets.findOne({name: 'Widget bang'}, function(err, widget) {
 			expect(err).to.be.not.ok;
-			expect(widget).to.be.an.object;
+			expect(widget).to.be.an.instanceOf(Object);
 			expect(widget).to.have.property('name', 'Widget bang');
 
 			monoxide.models.users.find({
@@ -182,7 +181,7 @@ describe('monoxide.query()', function() {
 				'mostPurchased.item': widget._id,
 			}, function(err, users) {
 				expect(err).to.not.be.ok;
-				expect(users).to.be.an.array;
+				expect(users).to.be.an.instanceOf(Array);
 				expect(users).to.have.length(2);
 				finish();
 			});
@@ -192,7 +191,7 @@ describe('monoxide.query()', function() {
 	it('should be able to query via an array of IDs', function(finish) {
 		monoxide.models.widgets.findOne({name: 'Widget bang'}, function(err, widget) {
 			expect(err).to.be.not.ok;
-			expect(widget).to.be.an.object;
+			expect(widget).to.be.an.instanceOf(Object);
 			expect(widget).to.have.property('name', 'Widget bang');
 
 			monoxide.models.users.find({
@@ -201,7 +200,7 @@ describe('monoxide.query()', function() {
 				items: {$in: [widget._id]},
 			}, function(err, users) {
 				expect(err).to.not.be.ok;
-				expect(users).to.be.an.array;
+				expect(users).to.be.an.instanceOf(Array);
 				expect(users).to.have.length(1);
 				finish();
 			});
@@ -214,7 +213,7 @@ describe('monoxide.query()', function() {
 			name: 'Joe Random',
 		}, function(err, user) {
 			expect(err).to.be.not.ok;
-			expect(user).to.be.an.object;
+			expect(user).to.be.an.instanceOf(Object);
 			expect(user).to.have.property('name', 'Joe Random');
 
 			// Validate that 1:1 OIDs are plain strings
@@ -224,7 +223,7 @@ describe('monoxide.query()', function() {
 
 			// Validate 1:M OIDs are plain strings
 			expect(user).to.have.property('items');
-			expect(user.items).to.be.an.array;
+			expect(user.items).to.be.an.instanceOf(Array);
 			user.items.forEach(function(item) {
 				expect(item).to.be.a.string;
 				expect(item).to.satisfy(_.isString);
@@ -232,7 +231,7 @@ describe('monoxide.query()', function() {
 
 			// Validate 1:M (collection) OIDs are plain strings
 			expect(user).to.have.property('mostPurchased');
-			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.be.an.instanceOf(Array);
 			user.mostPurchased.forEach(function(mostPurchased) {
 				expect(mostPurchased).to.have.property('item');
 				expect(mostPurchased.item).to.be.a.string;

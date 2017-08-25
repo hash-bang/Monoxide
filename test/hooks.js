@@ -13,7 +13,7 @@ describe('monoxide.* (hooks)', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.array;
+			expect(res).to.be.an.instanceOf(Array);
 			users = res;
 			finish();
 		});
@@ -56,7 +56,7 @@ describe('monoxide.* (hooks)', function() {
 				expect(q.$data).to.be.deep.equal({foo: 'bar', baz: 123});
 
 				expect(doc).to.have.property('isModified'); // Check for a random Monoxide function
-				expect(doc.isModified).to.be.a.function;
+				expect(doc.isModified).to.be.an.instanceOf(Function);
 
 				expect(q._id).to.equal(users[0]._id);
 				expect(doc._id).to.equal(users[0]._id);

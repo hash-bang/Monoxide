@@ -71,7 +71,7 @@ describe('monoxide.express (permission tests)', function() {
 					expect(err).to.be.not.ok;
 
 					widgets = res.body;
-					expect(widgets).to.be.an.array;
+					expect(widgets).to.be.an.instanceOf(Array);
 					expect(widgets).to.have.length(3);
 					server.close(finish);
 				});
@@ -132,7 +132,7 @@ describe('monoxide.express (permission tests)', function() {
 					superagent.get(url + '/api/widgets/' + widgets[1]._id)
 						.end(function(err, res) {
 							expect(err).to.be.not.ok;
-							expect(res.body).to.be.an.object;
+							expect(res.body).to.be.an.instanceOf(Object);
 							expect(res.body).to.have.property('_id');
 
 							server.close(finish);
@@ -212,7 +212,7 @@ describe('monoxide.express (permission tests)', function() {
 							expect(calledMiddleware).to.deep.equal(['m1','m2','m3']);
 							expect(err).to.be.not.ok;
 							expect(res.statusCode).to.be.equal(200);
-							expect(res.body).to.be.an.object;
+							expect(res.body).to.be.an.instanceOf(Object);
 							expect(res.body).to.have.property('_id');
 
 							server.close(finish);
@@ -259,7 +259,7 @@ describe('monoxide.express (permission tests)', function() {
 				superagent.get(url + '/api/widgets/' + widgets[1]._id + '?foo=foo!').end(function(err, res) {
 					expect(err).to.be.not.ok;
 					expect(res.statusCode).to.be.equal(200);
-					expect(res.body).to.be.an.object;
+					expect(res.body).to.be.an.instanceOf(Object);
 					expect(res.body).to.have.property('_id');
 
 					server.close(finish);
@@ -325,7 +325,7 @@ describe('monoxide.express (permission tests)', function() {
 					superagent.get(url + '/api/widgets?foobar=baz&color=blue')
 						.end(function(err, res) {
 							expect(err).to.be.not.ok;
-							expect(res.body).to.be.an.array;
+							expect(res.body).to.be.an.instanceOf(Array);
 							expect(res.body).to.have.length(2);
 
 							server.close(finish);
@@ -394,7 +394,7 @@ describe('monoxide.express (permission tests)', function() {
 					superagent.get(url + '/api/widgets/count?color=blue')
 						.end(function(err, res) {
 							expect(err).to.be.not.ok;
-							expect(res.body).to.be.an.object;
+							expect(res.body).to.be.an.instanceOf(Object);
 							expect(res.body).to.have.property('count', 2);
 
 							server.close(finish);
@@ -460,7 +460,7 @@ describe('monoxide.express (permission tests)', function() {
 						.send({color: 'yellow', force: true})
 						.end(function(err, res) {
 							expect(err).to.be.not.ok;
-							expect(res.body).to.be.an.object;
+							expect(res.body).to.be.an.instanceOf(Object);
 							expect(res.body).to.have.property('_id', widgets[0]._id);
 							expect(res.body).to.have.property('color', 'yellow');
 
@@ -572,7 +572,7 @@ describe('monoxide.express (permission tests)', function() {
 					superagent.get(url + '/api/widgets/' + widgets[0]._id)
 						.end(function(err, res) {
 							expect(err).to.be.not.ok;
-							expect(res.body).to.be.an.object;
+							expect(res.body).to.be.an.instanceOf(Object);
 							expect(res.body).to.have.property('_id', widgets[0]._id);
 							expect(res.body).to.have.property('status', 'deleted');
 

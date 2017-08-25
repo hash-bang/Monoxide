@@ -14,7 +14,7 @@ describe('monoxide.query() using $select', function() {
 			$select: ['_id', 'name', 'color'],
 		}, function(err, widgets) {
 			expect(err).to.be.not.ok;
-			expect(widgets).to.be.an.array;
+			expect(widgets).to.be.an.instanceOf(Array);
 			expect(widgets).to.have.length(3);
 			widgets.forEach(function(w) {
 				expect(w).to.have.property('_id');
@@ -35,7 +35,7 @@ describe('monoxide.query() using $select', function() {
 			$select: ['-name', '-content'],
 		}, function(err, widgets) {
 			expect(err).to.be.not.ok;
-			expect(widgets).to.be.an.array;
+			expect(widgets).to.be.an.instanceOf(Array);
 			expect(widgets).to.have.length(3);
 			widgets.forEach(function(w) {
 				expect(w).to.have.property('_id');
@@ -58,7 +58,7 @@ describe('monoxide.query() using $select', function() {
 			$populate: 'mostPurchased.item',
 		}, function(err, users) {
 			expect(err).to.be.not.ok;
-			expect(users).to.be.an.array;
+			expect(users).to.be.an.instanceOf(Array);
 			expect(users).to.have.length(2);
 			users.forEach(function(u) {
 				//expect(u).to.not.have.property('_id');
@@ -89,7 +89,7 @@ describe('monoxide.query() using $select', function() {
 			$select: ['-mostPurchased.item'],
 		}, function(err, users) {
 			expect(err).to.be.not.ok;
-			expect(users).to.be.an.array;
+			expect(users).to.be.an.instanceOf(Array);
 			expect(users).to.have.length(2);
 			users.forEach(function(u) {
 				expect(u).to.have.property('_id');

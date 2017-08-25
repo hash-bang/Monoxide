@@ -14,7 +14,7 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.array;
+			expect(res).to.be.an.instanceOf(Array);
 			users = res;
 			finish();
 		});
@@ -27,7 +27,7 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.array;
+			expect(res).to.be.an.instanceOf(Array);
 			widgets = res;
 
 			// Quick check that we got _id's which are just strings
@@ -52,7 +52,7 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 			],
 		}, function(err, user) {
 			expect(err).to.not.be.ok;
-			expect(user).to.be.an.object;
+			expect(user).to.be.an.instanceOf(Object);
 
 			expect(user).to.have.property('_id', users[0]._id);
 			expect(user).to.have.property('__v', 1);
@@ -60,7 +60,7 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('favourite', widgets[2]._id);
 			expect(user).to.have.property('mostPurchased');
-			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.be.an.instanceOf(Array);
 			expect(user.mostPurchased).to.have.length(2);
 			expect(user.mostPurchased[0]).to.have.property('number', 12);
 			expect(user.mostPurchased[0]).to.have.property('item', widgets[0]._id);
@@ -78,7 +78,7 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 				expect(doc.favourite.toString()).to.be.equal(widgets[2]._id);
 				expect(doc.favourite).to.be.an.instanceOf(mongoose.Types.ObjectId);
 
-				expect(doc.mostPurchased).to.be.an.array;
+				expect(doc.mostPurchased).to.be.an.instanceOf(Array);
 				expect(doc.mostPurchased).to.have.length(2);
 
 				expect(doc.mostPurchased[0]).to.have.property('item');
@@ -103,7 +103,7 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 		];
 		users[1].save(function(err, user) {
 			expect(err).to.not.be.ok;
-			expect(user).to.be.an.object;
+			expect(user).to.be.an.instanceOf(Object);
 
 			expect(user).to.have.property('_id', users[1]._id);
 			expect(user).to.have.property('__v', 1);
@@ -112,7 +112,7 @@ describe('monoxide.save() / monoxideDocument.save()', function() {
 			expect(user).to.have.property('favourite');
 			expect(user.favourite).to.be.a.string;
 			expect(user).to.have.property('mostPurchased');
-			expect(user.mostPurchased).to.be.an.array;
+			expect(user.mostPurchased).to.be.an.instanceOf(Array);
 			expect(user.mostPurchased).to.have.length(2);
 			expect(user.mostPurchased[0]).to.have.property('number', 18);
 			expect(user.mostPurchased[0]).to.have.property('item', widgets[1]._id);

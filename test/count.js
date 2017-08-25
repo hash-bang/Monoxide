@@ -10,7 +10,6 @@ describe('monoxide.count()', function() {
 		monoxide.count('users', function(err, count) {
 			expect(err).to.not.be.ok;
 
-			expect(count).to.be.a.number;
 			expect(count).to.be.equal(2);
 
 			finish();
@@ -21,7 +20,6 @@ describe('monoxide.count()', function() {
 		monoxide.count('widgets', function(err, count) {
 			expect(err).to.not.be.ok;
 
-			expect(count).to.be.a.number;
 			expect(count).to.be.equal(3);
 
 			finish();
@@ -35,7 +33,6 @@ describe('monoxide.count()', function() {
 		}, function(err, count) {
 			expect(err).to.not.be.ok;
 
-			expect(count).to.be.a.number;
 			expect(count).to.be.equal(2);
 
 			finish();
@@ -49,7 +46,6 @@ describe('monoxide.count()', function() {
 		}, function(err, count) {
 			expect(err).to.not.be.ok;
 
-			expect(count).to.be.a.number;
 			expect(count).to.be.equal(0);
 
 			finish();
