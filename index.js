@@ -25,15 +25,21 @@ function Monoxide() {
 	/**
 	* Connect to a Mongo database
 	* @param {string} uri The URL of the database to connect to
-	* @param {function} callback Optional callback when connected, if omitted this function is syncronous
+	* @param {function} [callback] Optional callback when connected, if omitted this function is syncronous
 	* @return {monoxide} The Monoxide chainable object
 	*/
 	o.connect = function(uri, callback) {
 		// Use native promises
 		mongoose.Promise = global.Promise;
 
-		mongoose.connect(uri, callback);
-		o.connection = mongoose.connection;
+		mongoose.connect(uri, {
+			useMongoClient: true,
+		})
+		.then(() => {
+			o.connection = mongoose.connection;
+			if (callback) callback();
+		});
+
 		return o;
 	};
 	// }}}
