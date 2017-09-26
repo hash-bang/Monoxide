@@ -1317,6 +1317,8 @@ function Monoxide() {
 		mm.$methods = {};
 		mm.$virtuals = {};
 		mm.$hooks = {};
+		mm.$data = {};
+
 
 		/**
 		* Shortcut function to create a monoxide.queryBuilder object and immediately start filtering
@@ -1633,6 +1635,35 @@ function Monoxide() {
 				callback(null, res.values);
 			});
 			return mm;
+		};
+
+
+		/**
+		* Set a simple data key
+		* This is usually used to store suplemental information about models
+		* @param {Object|string} key The key to set or a full object of keys
+		* @param {*} value If `key` is a string the value is the value stored
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*/
+		mm.set = function(key, value) {
+			if (argy.isType(key, 'object')) {
+				_.assign(mm.$data, key);
+			} else if (argy.isType(key, 'string')) {
+				mm.$data[key] = value;
+			} else {
+				throw new Error('Unsupported type storage during set');
+			}
+			return mm;
+		};
+
+
+		/*
+		* Gets a simple data key or returns a fallback
+		* @param {string} key The data key to retrieve
+		* @param {*} [fallback] The fallback to return if the key is not present
+		*/
+		mm.get = function(key, fallback) {
+			return (argy.isType(mm.$data[key], 'undefined') ? fallback : mm.$data[key]);
 		};
 
 

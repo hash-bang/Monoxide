@@ -289,6 +289,25 @@ describe('monoxide.express.*', function() {
 			});
 	});
 
+	it('should retrieve a single user by ID (filtering by selected fields)', function(finish) {
+		superagent.get(url + '/api/users/' + users[0]._id)
+			.query({
+				select: ['_id', 'name'],
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var user = res.body;
+				expect(user).to.be.an.instanceOf(Object);
+				expect(user).to.be.deep.equal({
+					_id: users[0]._id,
+					name: users[0].name,
+					nameParts: users[0].nameParts, // Custom fields will always be glued on
+				});
+				finish();
+			});
+	});
+
 	it('should query widgets via ReST', function(finish) {
 		superagent.get(url + '/api/widgets')
 			.query({
