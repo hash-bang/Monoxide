@@ -34,6 +34,7 @@ function Monoxide() {
 
 		mongoose.connect(uri, {
 			useMongoClient: true,
+			promiseLibrary: global.Promise,
 		})
 		.then(() => {
 			o.connection = mongoose.connection;
