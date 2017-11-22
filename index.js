@@ -1129,9 +1129,10 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.sort = argy('string|array [function]', function(q, callback) {
+		qb.sort = argy('string|array|undefined [function]', function(q, callback) {
 			argy(arguments)
 				.ifForm('', function() {})
+				.ifForm('undefined', function() {})
 				.ifForm(['string', 'string function'], function(field, callback) {
 					if (qb.query.$sort) {
 						qb.query.$sort.push(field);
