@@ -1456,9 +1456,9 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback
 		* @return {monoxide}
 		*/
-		mm.remove = function(q, callback) {
+		mm.remove = argy('[object] [function]', function(q, callback) {
 			return o.delete(_.merge({}, q, {$collection: mm.$collection, $multiple: true}), callback);
-		};
+		});
 
 
 		/**
