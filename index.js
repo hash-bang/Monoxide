@@ -1163,13 +1163,15 @@ function Monoxide() {
 		* If this function is passed a falsy value the limit is removed
 		* @name monoxide.queryBuilder.limit
 		* @memberof monoxide.queryBuilder
-		* @param {number} q Limit records to this number
+		* @param {number|string} q Limit records to this number (it will be parsed to an Int)
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.limit = argy('[falsy|number] [function]', function(q, callback) {
+		qb.limit = argy('[falsy|string|number] [function]', function(q, callback) {
 			if (!q) {
 				delete qb.query.$limit;
+			} else if (argy.isType(q, 'string')) {
+				qb.query.$limit = parseInt(q);
 			} else {
 				qb.query.$limit = q;
 			}
@@ -1186,13 +1188,15 @@ function Monoxide() {
 		* If this function is passed a falsy value the skip offset is removed
 		* @name monoxide.queryBuilder.skip
 		* @memberof monoxide.queryBuilder
-		* @param {number} q Skip this number of records
+		* @param {number} q Skip this number of records (it will be parsed to an Int)
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.skip = argy('[falsy|number] [function]', function(q, callback) {
+		qb.skip = argy('[falsy|string|number] [function]', function(q, callback) {
 			if (!q) {
 				delete qb.query.$skip;
+			} else if (argy.isType(q, 'string')) {
+				qb.query.$skip = parseInt(q);
 			} else {
 				qb.query.$skip = q;
 			}
