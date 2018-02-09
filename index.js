@@ -2473,7 +2473,7 @@ function Monoxide() {
 			// }}}
 			// Unknown {{{
 			} else {
-				res.status(404).end();
+				res.sendStatus(404);
 			}
 			// }}}
 		};
@@ -2542,7 +2542,7 @@ function Monoxide() {
 					if (err == 'Not found') return o.express.sendError(res, 404);
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
-					res.send(doc).end();
+					res.send(doc);
 				}
 			});
 		};
@@ -2627,7 +2627,7 @@ function Monoxide() {
 				} else if (err) { // Act as endpoint and there was an error
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
-					res.send(rows).end();
+					res.send(rows);
 				}
 			});
 		};
@@ -2670,7 +2670,7 @@ function Monoxide() {
 				} else if (err) { // Act as endpoint and there was an error
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
-					res.send({count: count}).end();
+					res.send({count: count});
 				}
 			});
 		};
@@ -2714,7 +2714,7 @@ function Monoxide() {
 				} else if (err) { // Act as endpoint and there was an error
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
-					res.send(rows).end();
+					res.send(rows);
 				}
 			});
 		};
@@ -2759,7 +2759,7 @@ function Monoxide() {
 				} else if (err) { // Act as endpoint and there was an error
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
-					res.send(rows).end();
+					res.send(rows);
 				}
 			});
 		};
@@ -2804,7 +2804,7 @@ function Monoxide() {
 				} else if (err) { // Act as endpoint and there was an error
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
-					res.send(rows).end();
+					res.send(rows);
 				}
 			});
 		};
@@ -2856,7 +2856,7 @@ function Monoxide() {
 				} else if (err) { // Act as endpoint and there was an error
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
-					res.send(rows).end();
+					res.send(rows);
 				}
 			});
 		};
