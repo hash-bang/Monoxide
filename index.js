@@ -350,7 +350,7 @@ function Monoxide() {
 			// End {{{
 			.end(function(err) {
 				if (err) {
-					debug('get() error - ' + err.toString());
+					debug('get() error', err);
 					return callback(err);
 				} else if (q.$count) {
 					callback(null, this.result);
@@ -565,7 +565,7 @@ function Monoxide() {
 			// End {{{
 			.end(function(err) {
 				if (err) {
-					debug('save() error - ' + err.toString());
+					debug('save() error', err);
 					if (_.isFunction(callback)) callback(err);
 				} else {
 					if (_.isFunction(callback)) callback(null, this.newRec);
@@ -650,7 +650,7 @@ function Monoxide() {
 			// End {{{
 			.end(function(err) {
 				if (err) {
-					debug('update() error - ' + err.toString());
+					debug('update() error', err);
 					if (callback) callback(err);
 				} else {
 					if (callback) callback(null, this.newRec);
@@ -792,7 +792,7 @@ function Monoxide() {
 			// End {{{
 			.end(function(err) {
 				if (err) {
-					debug('create() error - ' + err.toString());
+					debug('create() error', err);
 					if (_.isFunction(callback)) callback(err);
 				} else {
 					if (_.isFunction(callback)) callback(null, this.newRec);
@@ -887,7 +887,7 @@ function Monoxide() {
 			// End {{{
 			.end(function(err) {
 				if (err) {
-					debug('delete() error - ' + err.toString());
+					debug('delete() error', err);
 					if (callback) callback(err);
 				} else {
 					if (callback) callback(null, this.newRec);
@@ -1024,7 +1024,7 @@ function Monoxide() {
 			// End {{{
 			.end(function(err) {
 				if (err) {
-					debug('meta() error - ' + err.toString());
+					debug('meta() error', err);
 					if (callback) callback(err);
 				} else {
 					if (callback) callback(null, this.meta);
