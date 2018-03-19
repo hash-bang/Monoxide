@@ -910,6 +910,7 @@ function Monoxide() {
 	* @param {boolean} [q.$collectionEnums=false] Provide all enums as a collection object instead of an array
 	* @param {boolean} [q.$filterPrivate=true] Ignore all private fields
 	* @param {boolean} [q.$prototype=false] Provide the $prototype meta object
+	* @param {boolean} [q.$indexes=false] Include whether a field is indexed
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -925,6 +926,7 @@ function Monoxide() {
 		_.defaults(q || {}, {
 			$filterPrivate: true,
 			$prototype: false,
+			$indexes: false,
 		});
 
 		async()
@@ -934,6 +936,7 @@ function Monoxide() {
 				'$filterPrivate', // Filter out /^_/ fields
 				'$collectionEnums', // Convert enums into a collection (with `id` + `title` fields per object)
 				'$prototype',
+				'$indexes',
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -951,7 +954,7 @@ function Monoxide() {
 					.value();
 
 				var meta = {
-					_id: {type: 'objectid'}, // FIXME: Is it always the case that a doc has an ID?
+					_id: {type: 'objectid', index: true}, // FIXME: Is it always the case that a doc has an ID?
 				};
 
 				_.forEach(sortedPaths, function(path) {
@@ -999,6 +1002,8 @@ function Monoxide() {
 
 					// Extract default value if its not a function (otherwise return [DYNAMIC])
 					if (path.defaultValue) info.default = argy.isType(path.defaultValue, 'scalar') ? path.defaultValue : '[DYNAMIC]';
+
+					if (q.$indexes && path._index) info.index = true;
 
 					meta[id] = info;
 				});
@@ -1671,6 +1676,96 @@ function Monoxide() {
 		mm.get = function(key, fallback) {
 			return (argy.isType(mm.$data[key], 'undefined') ? fallback : mm.$data[key]);
 		};
+
+
+
+		/**
+		* Retrieve the list of actual on-the-database indexes
+		* @param {function} callback Callback to fire as (err, indexes)
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*/
+		mm.getIndexes = function(callback) {
+			mm.$mongoModel.indexes(function(err, res) {
+				if (err && err.message == 'no collection') {
+					callback(null, []); // Collection doesn't exist yet - ignore and return that it has no indexes
+				} else {
+					callback(err, res);
+				}
+			});
+
+			return mm;
+		};
+
+
+		/**
+		* Return the list of indexes requested by the schema
+		* @param {function} callback Callback to fire as (err, indexes)
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*/
+		mm.getSchemaIndexes = function(callback) {
+			mm.meta({$indexes: true}, function(err, res) {
+				if (err) return callback(err);
+				callback(null, _(res)
+					.map(function(v, k) {
+						return _.assign(v, {id: k});
+					})
+					.filter(function(v) {
+						return !!v.index;
+					})
+					.map(function(v) {
+						var o = {name: v.id == '_id' ? '_id_' : v.id, key: {}};
+						o.key[v.id] = 1;
+						return o;
+					})
+					.value()
+				);
+			});
+
+			return mm;
+		};
+
+
+		/**
+		* Check this model by a defined list of indexes
+		* The return is a duplicate of the input indexes with an additional `status` property which can equal to 'ok' or 'missing'
+		* @param {array} [wantIndexes] The indexes to examine against. If omitted the results of model.getSchemaIndexes() is used
+		* @param {array} [actualIndexes] The current state of the model to compare against. If omitted the results of model.getIndexes() is used
+		* @param {function} callback The callback to call as (err, indexes)
+		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*/
+		mm.checkIndexes = argy('[array] [array] function', function(wantIndexes, actualIndexes, callback) {
+			async()
+				// Either use provided indexes or determine them {{{
+				.parallel({
+					wantIndexes: function(next) {
+						if (wantIndexes) return next(null, wantIndexes);
+						mm.getSchemaIndexes(next);
+					},
+					actualIndexes: function(next) {
+						if (actualIndexes) return next(null, actualIndexes);
+						mm.getIndexes(next);
+					},
+				})
+				// }}}
+				// Compare indexes against whats declared {{{
+				.map('indexReport', 'wantIndexes', function(next, index) {
+					var foundIndex = this.actualIndexes.find(i => _.isEqual(i.key, index.key));
+					if (foundIndex) {
+						index.status = 'ok';
+					} else {
+						index.status = 'missing';
+					}
+
+					next(null, index);
+				})
+				// }}}
+				// End {{{
+				.end(function(err) {
+					if (err) return callback(err);
+					callback(null, this.indexReport);
+				});
+				// }}}
+		});
 
 
 		return mm;
