@@ -241,4 +241,13 @@ describe('monoxide.query()', function() {
 			finish();
 		});
 	});
+
+	it('should query a collection using dotted notation', function(finish) {
+		monoxide.models.users.find({'mostPurchased.number': 15}, function(err, data) {
+			expect(err).to.be.not.ok;
+			expect(data).to.have.length(1);
+			expect(data[0]).to.have.property('name', 'Joe Random');
+			finish();
+		});
+	});
 });

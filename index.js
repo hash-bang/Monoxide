@@ -1534,9 +1534,12 @@ function Monoxide() {
 		* A hook is exactly the same as a eventEmitter.on() event but must return a callback
 		* Multiple hooks can be attached and all will be called in parallel on certain events such as 'save'
 		* All hooks must return non-errors to proceed with the operation
+		* @param {string} eventName The event ID to hook against
+		* @param {function} callback The callback to run when hooked, NOTE: Any falsy callbacks are ignored
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
 		mm.hook = function(eventName, callback) {
+			if (!callback) return mm; // Ignore flasy callbacks
 			if (!mm.$hooks[eventName]) mm.$hooks[eventName] = [];
 			mm.$hooks[eventName].push(callback);
 			return mm;
