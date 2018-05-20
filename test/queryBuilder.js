@@ -29,9 +29,7 @@ describe('monoxide.queryBuilder', function() {
 				expect(users[0].mostPurchased).to.be.an('array');
 				expect(users[0].mostPurchased).to.have.length(2);
 				expect(users[0].mostPurchased[0]).to.have.property('number', 1);
-				expect(users[0].mostPurchased[0].item).to.be.a('string');
 				expect(users[0].mostPurchased[1]).to.have.property('number', 2);
-				expect(users[0].mostPurchased[1].item).to.be.a('string');
 
 				expect(users[1]).to.have.property('name', 'Joe Random');
 				expect(users[1]).to.have.property('role', 'user');
@@ -39,11 +37,8 @@ describe('monoxide.queryBuilder', function() {
 				expect(users[1].mostPurchased).to.be.an('array');
 				expect(users[1].mostPurchased).to.have.length(3);
 				expect(users[1].mostPurchased[0]).to.have.property('number', 5);
-				expect(users[1].mostPurchased[0].item).to.be.a('string');
 				expect(users[1].mostPurchased[1]).to.have.property('number', 10);
-				expect(users[1].mostPurchased[1].item).to.be.a('string');
 				expect(users[1].mostPurchased[2]).to.have.property('number', 15);
-				expect(users[1].mostPurchased[2].item).to.be.a('string');
 
 				finish();
 			});

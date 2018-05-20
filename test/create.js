@@ -142,7 +142,6 @@ describe('monoxide.create() / monoxide.model[].create()', function() {
 			expect(user).to.have.property('name', 'New User4');
 			expect(user).to.have.property('role', 'user');
 			expect(user).to.have.property('favourite');
-			expect(user.favourite).to.be.a('string');
 			expect(user).to.have.property('mostPurchased');
 			expect(user.mostPurchased).to.be.an('array');
 			expect(user.mostPurchased).to.have.length(0);
