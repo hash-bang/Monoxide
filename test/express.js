@@ -507,9 +507,7 @@ describe('monoxide.express.*', function() {
 				expect(newUser.mostPurchased).to.be.an.instanceOf(Array);
 				expect(newUser.mostPurchased).to.have.length(2);
 				expect(newUser.mostPurchased[0]).to.have.property('number', 80);
-				expect(newUser.mostPurchased[0].item).to.be.a.string;
 				expect(newUser.mostPurchased[1]).to.have.property('number', 90);
-				expect(newUser.mostPurchased[1].item).to.be.a.string;
 
 				finish();
 			});
