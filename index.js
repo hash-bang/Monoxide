@@ -2687,6 +2687,7 @@ function Monoxide() {
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 			omitFields: [/^_(?!id|_v)/], // Omit all fields prefixed with '_' that are not '_id' or '__v'
+			correctRegExps: true, // Rewrite $regExp queries as per the bug @ https://github.com/Automattic/mongoose/issues/598
 		});
 		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.query(). Specify as a string or {collection: String}');
@@ -2698,8 +2699,22 @@ function Monoxide() {
 
 			if (settings.shorthandArrays) {
 				q = _.mapValues(q, function(val, key) {
-					if (!settings.queryAllowed[key] && _.isArray(val)) return val = {$in: val}
+					if (!settings.queryAllowed[key] && _.isArray(val) && val.every(v => _.isString(v))) return val = {$in: val}
 					return val;
+				});
+			}
+
+			// Correct RegExp strings into actual regExps. This should go away when Mongoose is (finally) upgraded to 5
+			if (settings.correctRegExps) {
+				q = traverse.map(q, function(node) {
+					if (_.isObject(node) && node.$regexp) { // Rewite into RegExp
+						if (node.options) { // Also given options about how to treat the RegExp
+							if (!/^[gimuy]+$/.test(node.options)) return next('Invalid regExp options'); // Accept only certain combinations
+							this.update(new RegExp(node.$regexp, node.options), true);
+						} else { // Plain regexp
+							this.update(new RegExp(node.$regexp), true);
+						}
+					}
 				});
 			}
 
