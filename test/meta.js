@@ -10,6 +10,7 @@ describe('monoxide.meta()', function() {
 	it('should get the meta information of the users model', function(finish) {
 		monoxide.meta({
 			$collection: 'users',
+			$indexes: true,
 		}, function(err, meta) {
 			expect(err).to.not.be.ok;
 			expect(meta).to.be.an('object');
@@ -22,6 +23,7 @@ describe('monoxide.meta()', function() {
 			expect(meta.role).to.have.property('default', 'user');
 			expect(meta.role).to.have.property('enum');
 			expect(meta.role.enum).to.be.deep.equal(['user', 'admin']);
+			expect(meta.role).to.have.property('index', true);
 
 			expect(meta).to.not.have.property('_password');
 

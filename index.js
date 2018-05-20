@@ -2960,6 +2960,7 @@ function Monoxide() {
 			var q = o.utilities.rewriteQuery(req.query, settings);
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
+			q.$indexes = true;
 
 			if (req.params.id) q.$id = req.params.id;
 

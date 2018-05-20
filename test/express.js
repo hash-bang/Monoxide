@@ -454,10 +454,12 @@ describe('monoxide.express.*', function() {
 				expect(res.body).to.have.property('status');
 				expect(res.body.status).to.have.property('enum');
 				expect(res.body.status.enum).to.be.deep.equal([{id: 'active', title: 'Active'}, {id: 'deleted', title: 'Deleted'}]);
+				expect(res.body.status).to.have.property('index', true);
 
 				expect(res.body).to.have.property('color');
 				expect(res.body.color).to.have.property('enum');
 				expect(res.body.color.enum).to.be.deep.equal([{id: 'red', title: 'Red'}, {id: 'green', title: 'Green'}, {id: 'blue', title: 'Blue'}, {id: 'yellow', title: 'Yellow'}]);
+				expect(res.body.color).to.have.property('index', true);
 
 				finish();
 			});

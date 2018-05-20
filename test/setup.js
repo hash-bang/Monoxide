@@ -55,7 +55,7 @@ module.exports = {
 		var Users = monoxide
 			.schema('users', {
 				name: String,
-				role: {type: String, enum: ['user', 'admin'], default: 'user'},
+				role: {type: String, enum: ['user', 'admin'], default: 'user', index: true},
 				_password: String,
 				favourite: {type: 'pointer', ref: 'widgets'},
 				items: [{type: 'pointer', ref: 'widgets'}],
@@ -104,7 +104,7 @@ module.exports = {
 			created: {type: Date, default: Date.now},
 			name: String,
 			content: String,
-			status: {type: 'string', enum: ['active', 'deleted'], default: 'active'},
+			status: {type: 'string', enum: ['active', 'deleted'], default: 'active', index: true},
 			color: {type: 'string', enum: ['red', 'green', 'blue', 'yellow'], default: 'blue', index: true},
 			featured: {type: 'boolean', default: false},
 		});
