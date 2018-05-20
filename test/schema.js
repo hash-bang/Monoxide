@@ -13,7 +13,7 @@ describe('monoxide.schema()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			users = res;
 			finish();
 		});

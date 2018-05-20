@@ -13,14 +13,14 @@ describe('monoxideDocument.isModified()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 
 			var user = res[0];
 			user.name += '!';
 
 			var modified = user.isModified();
 			expect(modified).to.be.ok;
-			expect(modified).to.be.an.instanceOf(Array);
+			expect(modified).to.be.an('array');
 			expect(modified).to.have.length(1);
 			expect(modified[0]).to.be.equal('name');
 
@@ -36,14 +36,14 @@ describe('monoxideDocument.isModified()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 
 			var user = res[0];
 			user.settings.lang = 'fr';
 
 			var modified = user.isModified();
 			expect(modified).to.be.ok;
-			expect(modified).to.be.an.instanceOf(Array);
+			expect(modified).to.be.an('array');
 			expect(modified).to.have.length(1);
 			expect(modified[0]).to.be.equal('settings.lang');
 
@@ -59,14 +59,14 @@ describe('monoxideDocument.isModified()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 
 			var user = res[0];
 			user.mostPurchased[0].number = 99;
 
 			var modified = user.isModified();
 			expect(modified).to.be.ok;
-			expect(modified).to.be.an.instanceOf(Array);
+			expect(modified).to.be.an('array');
 			expect(modified).to.have.length(1);
 			expect(modified[0]).to.be.equal('mostPurchased.0.number');
 
@@ -82,7 +82,7 @@ describe('monoxideDocument.isModified()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 
 			var user = res[0];
 			user.mostPurchased = [
@@ -93,7 +93,7 @@ describe('monoxideDocument.isModified()', function() {
 
 			var modified = user.isModified();
 			expect(modified).to.be.ok;
-			expect(modified).to.be.an.instanceOf(Array);
+			expect(modified).to.be.an('array');
 			expect(modified).to.have.length(1);
 			expect(modified[0]).to.be.equal('mostPurchased');
 
@@ -109,7 +109,7 @@ describe('monoxideDocument.isModified()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 
 			var user = res[0];
 			user.settings = {
@@ -119,7 +119,7 @@ describe('monoxideDocument.isModified()', function() {
 
 			var modified = user.isModified();
 			expect(modified).to.be.ok;
-			expect(modified).to.be.an.instanceOf(Array);
+			expect(modified).to.be.an('array');
 			expect(modified).to.have.length(1);
 			expect(modified[0]).to.be.equal('settings');
 
@@ -135,14 +135,14 @@ describe('monoxideDocument.isModified()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 
 			var user = res[0];
 			user.settings.prefix = 'Mr.';
 
 			var modified = user.isModified();
 			expect(modified).to.be.ok;
-			expect(modified).to.be.an.instanceOf(Array);
+			expect(modified).to.be.an('array');
 			expect(modified).to.have.length(1);
 			expect(modified[0]).to.be.equal('settings.prefix');
 
@@ -158,21 +158,21 @@ describe('monoxideDocument.isModified()', function() {
 			$sort: 'name',
 		}, function(err, widgets) {
 			expect(err).to.be.not.ok;
-			expect(widgets).to.be.an.instanceOf(Array);
+			expect(widgets).to.be.an('array');
 
 			monoxide.query({
 				$collection: 'users',
 				$sort: 'name',
 			}, function(err, res) {
 				expect(err).to.be.not.ok;
-				expect(res).to.be.an.instanceOf(Array);
+				expect(res).to.be.an('array');
 
 				var user = res[0];
 				user.settings.featured = monoxide.utilities.objectID(widgets[0]._id); // Force string into an OID
 
 				var modified = user.isModified();
 				expect(modified).to.be.ok;
-				expect(modified).to.be.an.instanceOf(Array);
+				expect(modified).to.be.an('array');
 				expect(modified).to.have.length(1);
 				expect(modified[0]).to.be.equal('settings.featured');
 

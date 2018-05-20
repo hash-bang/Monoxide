@@ -36,7 +36,7 @@ describe('monoxide.utility.diff()', function() {
 		expect(patch).to.have.property('name', 'Bar');
 		expect(patch).to.not.have.property('age');
 		expect(patch).to.have.property('widgets');
-		expect(patch.widgets).to.be.an.instanceOf(Array);
+		expect(patch.widgets).to.be.an('array');
 		expect(patch.widgets).to.have.length(1);
 		expect(patch.widgets[0]).to.be.equal(4);
 		expect(patch).to.have.property('fooBars');
@@ -52,7 +52,7 @@ describe('monoxide.utility.diff()', function() {
 			$sort: 'name',
 		}, function(err, users) {
 			expect(err).to.be.not.ok;
-			expect(users).to.be.an.instanceOf(Array);
+			expect(users).to.be.an('array');
 			expect(users).to.have.length(2);
 
 			var originalUser = users[0].toObject();

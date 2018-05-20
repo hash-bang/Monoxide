@@ -36,8 +36,8 @@
     "faker": "^4.1.0",
     "gulp": "^3.9.1",
     "gulp-documentation": "^3.2.1",
-    "mocha": "^4.1.0",
-    "mocha-logger": "^1.0.5",
+    "mocha": "^5.2.0",
+    "mocha-logger": "^1.0.6",
     "mongoose-scenario": "^2.1.2",
     "superagent": "^3.8.2"
   }

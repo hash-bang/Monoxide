@@ -77,36 +77,36 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				users = res.body;
-				expect(users).to.be.an.instanceOf(Array);
+				expect(users).to.be.an('array');
 
 				expect(users[0]).to.have.property('__v'); // All fields prefixed with '_' should be omitted by default, excepting _id, __v
 				expect(users[0]).to.have.property('name', 'Jane Quark');
 				expect(users[0]).to.have.property('role', 'user');
 				expect(users[0]).to.not.have.property('_password');
 				expect(users[0]).to.have.property('favourite');
-				expect(users[0].favourite).to.be.an.instanceOf(Object);
+				expect(users[0].favourite).to.be.an('object');
 				expect(users[0].favourite).to.have.property('name', 'Widget bang');
 				expect(users[0]).to.have.property('mostPurchased');
-				expect(users[0].mostPurchased).to.be.an.instanceOf(Array);
+				expect(users[0].mostPurchased).to.be.an('array');
 				expect(users[0].mostPurchased).to.have.length(2);
 				expect(users[0].mostPurchased[0]).to.have.property('number', 1);
-				expect(users[0].mostPurchased[0].item).to.be.a.string;
+				expect(users[0].mostPurchased[0].item).to.be.a('string');
 				expect(users[0].mostPurchased[1]).to.have.property('number', 2);
-				expect(users[0].mostPurchased[1].item).to.be.a.string;
+				expect(users[0].mostPurchased[1].item).to.be.a('string');
 				expect(users[0]).to.have.property('nameParts'); // Check that the map function fired
 				expect(users[0].nameParts).to.deep.equal(['Jane', 'Quark']);
 
 				expect(users[1]).to.have.property('name', 'Joe Random');
 				expect(users[1]).to.have.property('role', 'user');
 				expect(users[1]).to.have.property('favourite');
-				expect(users[1].mostPurchased).to.be.an.instanceOf(Array);
+				expect(users[1].mostPurchased).to.be.an('array');
 				expect(users[1].mostPurchased).to.have.length(3);
 				expect(users[1].mostPurchased[0]).to.have.property('number', 5);
-				expect(users[1].mostPurchased[0].item).to.be.a.string;
+				expect(users[1].mostPurchased[0].item).to.be.a('string');
 				expect(users[1].mostPurchased[1]).to.have.property('number', 10);
-				expect(users[1].mostPurchased[1].item).to.be.a.string;
+				expect(users[1].mostPurchased[1].item).to.be.a('string');
 				expect(users[1].mostPurchased[2]).to.have.property('number', 15);
-				expect(users[1].mostPurchased[2].item).to.be.a.string;
+				expect(users[1].mostPurchased[2].item).to.be.a('string');
 				expect(users[1]).to.have.property('nameParts');
 				expect(users[1].nameParts).to.deep.equal(['Joe', 'Random']);
 
@@ -124,7 +124,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				widgets = res.body;
-				expect(widgets).to.be.an.instanceOf(Array);
+				expect(widgets).to.be.an('array');
 				expect(widgets).to.have.length(3);
 
 				expect(widgets[0]).to.have.property('name', 'Widget bang');
@@ -145,7 +145,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				widgets = res.body;
-				expect(widgets).to.be.an.instanceOf(Array);
+				expect(widgets).to.be.an('array');
 				expect(widgets).to.have.length(1);
 
 				expect(widgets[0]).to.have.property('name', 'Widget crash');
@@ -164,7 +164,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				widgets = res.body;
-				expect(widgets).to.be.an.instanceOf(Array);
+				expect(widgets).to.be.an('array');
 				expect(widgets).to.have.length(2);
 
 				expect(widgets[0]).to.have.property('name', 'Widget bang');
@@ -184,7 +184,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				var widgets = res.body;
-				expect(widgets).to.be.an.instanceOf(Array);
+				expect(widgets).to.be.an('array');
 				expect(widgets).to.have.length(3);
 
 				expect(widgets[0]).to.have.property('name', 'Widget whollop');
@@ -206,7 +206,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				var widgets = res.body;
-				expect(widgets).to.be.an.instanceOf(Array);
+				expect(widgets).to.be.an('array');
 				expect(widgets).to.have.length(2);
 
 				expect(widgets[0]).to.have.property('color', 'blue');
@@ -225,7 +225,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				var widgets = res.body;
-				expect(widgets).to.be.an.instanceOf(Array);
+				expect(widgets).to.be.an('array');
 				expect(widgets).to.have.length(3);
 
 				expect(widgets[0]).to.have.property('name', 'Group Bar');
@@ -245,7 +245,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				var users = res.body;
-				expect(users).to.be.an.instanceOf(Array);
+				expect(users).to.be.an('array');
 				expect(users).to.have.length(1);
 
 				expect(users[0].items).to.be.deep.equal([widgets[0]._id]);
@@ -265,22 +265,22 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				var user = res.body;
-				expect(user).to.be.an.instanceOf(Object);
+				expect(user).to.be.an('object');
 
 				expect(user).to.have.property('__v'); // All fields prefixed with '_' should be omitted by default, excepting _id, __v
 				expect(user).to.have.property('name', 'Jane Quark');
 				expect(user).to.have.property('role', 'user');
 				expect(user).to.not.have.property('_password');
 				expect(user).to.have.property('favourite');
-				expect(user.favourite).to.be.an.instanceOf(Object);
+				expect(user.favourite).to.be.an('object');
 				expect(user.favourite).to.have.property('name', 'Widget bang');
 				expect(user).to.have.property('mostPurchased');
-				expect(user.mostPurchased).to.be.an.instanceOf(Array);
+				expect(user.mostPurchased).to.be.an('array');
 				expect(user.mostPurchased).to.have.length(2);
 				expect(user.mostPurchased[0]).to.have.property('number', 1);
-				expect(user.mostPurchased[0].item).to.be.a.string;
+				expect(user.mostPurchased[0].item).to.be.a('string');
 				expect(user.mostPurchased[1]).to.have.property('number', 2);
-				expect(user.mostPurchased[1].item).to.be.a.string;
+				expect(user.mostPurchased[1].item).to.be.a('string');
 
 				expect(user).to.have.property('nameParts'); // Check that the map function fired
 				expect(user.nameParts).to.deep.equal(['Jane', 'Quark']);
@@ -298,7 +298,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				var user = res.body;
-				expect(user).to.be.an.instanceOf(Object);
+				expect(user).to.be.an('object');
 				expect(user).to.be.deep.equal({
 					_id: users[0]._id,
 					name: users[0].name,
@@ -317,7 +317,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				var widgets = res.body;
-				expect(widgets).to.be.an.instanceOf(Array);
+				expect(widgets).to.be.an('array');
 				expect(widgets).to.have.length(3);
 
 				expect(widgets[0]).to.have.property('name', 'Widget bang');
@@ -337,7 +337,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				var widgets = res.body;
-				expect(widgets).to.be.an.instanceOf(Array);
+				expect(widgets).to.be.an('array');
 				expect(widgets).to.have.length(3);
 
 				expect(widgets[0]).to.have.property('name', 'Group Bar');
@@ -355,7 +355,7 @@ describe('monoxide.express.*', function() {
 			.end(function(err, res) {
 				expect(err).to.be.ok;
 
-				expect(res.body).to.be.an.instanceOf(Object);
+				expect(res.body).to.be.an('object');
 
 				finish();
 			});
@@ -366,7 +366,7 @@ describe('monoxide.express.*', function() {
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
-				expect(res.body).to.be.an.instanceOf(Object);
+				expect(res.body).to.be.an('object');
 				expect(res.body).to.have.property('count');
 				expect(res.body.count).to.be.equal(3);
 
@@ -379,7 +379,7 @@ describe('monoxide.express.*', function() {
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
-				expect(res.body).to.be.an.instanceOf(Object);
+				expect(res.body).to.be.an('object');
 				expect(res.body).to.have.property('count');
 				expect(res.body.count).to.be.equal(3);
 
@@ -394,7 +394,7 @@ describe('monoxide.express.*', function() {
 			.end(function(err, res) {
 				expect(err).to.be.ok;
 
-				expect(res.body).to.be.an.instanceOf(Object);
+				expect(res.body).to.be.an('object');
 
 				finish();
 			});
@@ -405,7 +405,7 @@ describe('monoxide.express.*', function() {
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
-				expect(res.body).to.be.an.instanceOf(Object);
+				expect(res.body).to.be.an('object');
 				expect(res.body).to.have.property('_id');
 				expect(res.body._id).to.have.property('type', 'objectid');
 
@@ -436,7 +436,7 @@ describe('monoxide.express.*', function() {
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
-				expect(res.body).to.be.an.instanceOf(Object);
+				expect(res.body).to.be.an('object');
 				expect(res.body).to.have.property('_id');
 				expect(res.body._id).to.have.property('type', 'objectid');
 
@@ -449,7 +449,7 @@ describe('monoxide.express.*', function() {
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
-				expect(res.body).to.be.an.instanceOf(Object);
+				expect(res.body).to.be.an('object');
 
 				expect(res.body).to.have.property('status');
 				expect(res.body.status).to.have.property('enum');
@@ -469,7 +469,7 @@ describe('monoxide.express.*', function() {
 			.end(function(err, res) {
 				expect(err).to.be.not.ok;
 
-				expect(res.body).to.be.an.instanceOf(Object);
+				expect(res.body).to.be.an('object');
 
 				expect(res.body).to.have.property('$prototype');
 				expect(res.body.$prototype).to.be.deep.equal({
@@ -497,14 +497,14 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				newUser = res.body;
-				expect(newUser).to.be.an.instanceOf(Object);
+				expect(newUser).to.be.an('object');
 
 				expect(newUser).to.have.property('_id');
 				expect(newUser).to.have.property('__v', 0);
 				expect(newUser).to.have.property('name', 'New User via ReST');
 				expect(newUser).to.have.property('role', 'user');
 				expect(newUser).to.have.property('mostPurchased');
-				expect(newUser.mostPurchased).to.be.an.instanceOf(Array);
+				expect(newUser.mostPurchased).to.be.an('array');
 				expect(newUser.mostPurchased).to.have.length(2);
 				expect(newUser.mostPurchased[0]).to.have.property('number', 80);
 				expect(newUser.mostPurchased[1]).to.have.property('number', 90);
@@ -527,7 +527,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				newWidget = res.body;
-				expect(newWidget).to.be.an.instanceOf(Object);
+				expect(newWidget).to.be.an('object');
 
 				expect(newWidget).to.have.property('_id');
 				expect(newWidget).to.have.property('__v', 0);
@@ -552,7 +552,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				var widget = res.body;
-				expect(widget).to.be.an.instanceOf(Object);
+				expect(widget).to.be.an('object');
 
 				expect(widget).to.have.property('_id', newWidget._id);
 				expect(widget).to.have.property('__v', 1);
@@ -572,7 +572,7 @@ describe('monoxide.express.*', function() {
 				expect(err).to.be.not.ok;
 
 				var widget = res.body;
-				expect(widget).to.be.an.instanceOf(Object);
+				expect(widget).to.be.an('object');
 
 				expect(widget).to.have.property('_id', newWidget._id);
 				expect(widget).to.have.property('__v', 2);
@@ -597,7 +597,7 @@ describe('monoxide.express.*', function() {
 					.end(function(err, res) {
 						if (err) return next(err);
 						expect(err).to.be.not.ok;
-						expect(res.body).to.be.an.instanceOf(Array);
+						expect(res.body).to.be.an('array');
 						expect(res.body).to.have.length(0);
 
 						finish();

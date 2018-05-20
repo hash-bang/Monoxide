@@ -13,7 +13,7 @@ describe('monoxide.runCommand()', function() {
 			key: 'role',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res.values).to.be.an.instanceOf(Array);
+			expect(res.values).to.be.an('array');
 			expect(res.values).to.be.deep.equal(['user']);
 			finish();
 		});
@@ -22,7 +22,7 @@ describe('monoxide.runCommand()', function() {
 	it('should be able to run runCommand alias .distinct()', function(finish) {
 		monoxide.models.users.distinct('role', function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			expect(res).to.be.deep.equal(['user']);
 			finish();
 		});

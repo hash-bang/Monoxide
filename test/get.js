@@ -15,7 +15,7 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.not.be.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			users = res;
 
 			finish();
@@ -28,7 +28,7 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.not.be.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			widgets = res;
 
 			finish();
@@ -41,7 +41,7 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.not.be.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			groups = res;
 
 			finish();
@@ -53,7 +53,7 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 			.forEach(users, function(next, user) {
 				monoxide.get('users', user._id, function(err, res) {
 					expect(err).to.be.not.ok;
-					expect(res).to.be.an.instanceOf(Object);
+					expect(res).to.be.an('object');
 
 					expect(user._id).to.deep.equal(res._id);
 					next();
@@ -70,7 +70,7 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 					$id: user._id
 				}, function(err, res) {
 					expect(err).to.be.not.ok;
-					expect(res).to.be.an.instanceOf(Object);
+					expect(res).to.be.an('object');
 
 					expect(user._id).to.deep.equal(res._id);
 					next();
@@ -84,7 +84,7 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 			.forEach(users, function(next, user) {
 				monoxide.models.users.findOne({_id: user._id}, function(err, res) {
 					expect(err).to.be.not.ok;
-					expect(res).to.be.an.instanceOf(Object);
+					expect(res).to.be.an('object');
 
 					expect(user._id).to.deep.equal(res._id);
 					next();
@@ -114,7 +114,7 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 			.forEach(users, function(next, user) {
 				monoxide.models.users.findOneByID(user._id, function(err, res) {
 					expect(err).to.be.not.ok;
-					expect(res).to.be.an.instanceOf(Object);
+					expect(res).to.be.an('object');
 
 					expect(user._id).to.deep.equal(res._id);
 					next();
@@ -147,7 +147,7 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 			.forEach(widgets, function(next, widget) {
 				monoxide.get('widgets', widget._id, function(err, res) {
 					expect(err).to.be.not.ok;
-					expect(res).to.be.an.instanceOf(Object);
+					expect(res).to.be.an('object');
 
 					expect(widget._id).to.deep.equal(res._id);
 					next();
@@ -161,7 +161,7 @@ describe('monoxide.query() / monoxide.get() / monoxide.model[].findOne*()', func
 			.forEach(groups, function(next, group) {
 				monoxide.get('groups', group._id, function(err, res) {
 					expect(err).to.be.not.ok;
-					expect(res).to.be.an.instanceOf(Object);
+					expect(res).to.be.an('object');
 
 					expect(res._id).to.deep.equal(res._id);
 					next();

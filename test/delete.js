@@ -14,7 +14,7 @@ describe('monoxide.delete() / monoxide.models[].remove() / monoxideDocument.remo
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			expect(res).to.have.length(3);
 			widgets = res;
 			finish();

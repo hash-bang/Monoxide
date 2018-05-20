@@ -14,7 +14,7 @@ describe('monoxideDocument.getOIDs()', function() {
 			$sort: 'name',
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			users = res;
 			finish();
 		});
@@ -25,7 +25,7 @@ describe('monoxideDocument.getOIDs()', function() {
 		var docPaths = [];
 
 		var nodes = users[0].getOIDs();
-		expect(nodes).to.be.an.instanceOf(Array);
+		expect(nodes).to.be.an('array');
 
 		nodes.forEach(function(node) {
 			schemaPaths.push(node.schemaPath);

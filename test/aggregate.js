@@ -14,7 +14,7 @@ describe('monoxide.aggregate()', function() {
 			],
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			expect(res).to.have.length(3);
 			finish();
 		});
@@ -30,7 +30,7 @@ describe('monoxide.aggregate()', function() {
 			],
 		}, function(err, res) {
 			expect(err).to.be.not.ok;
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			expect(res).to.have.length(2);
 
 			expect(res[0]).to.have.property('name', 'Widget crash');

@@ -12,7 +12,7 @@ describe('monoxide.meta()', function() {
 			$collection: 'users',
 		}, function(err, meta) {
 			expect(err).to.not.be.ok;
-			expect(meta).to.be.an.instanceOf(Object);
+			expect(meta).to.be.an('object');
 
 			expect(meta).to.have.property('name');
 			expect(meta.name).to.have.property('type', 'string');
@@ -50,7 +50,7 @@ describe('monoxide.meta()', function() {
 			$collection: 'widgets',
 		}, function(err, meta) {
 			expect(err).to.not.be.ok;
-			expect(meta).to.be.an.instanceOf(Object);
+			expect(meta).to.be.an('object');
 
 			expect(meta).to.have.property('created');
 			expect(meta.created).to.have.property('type', 'date');
@@ -80,7 +80,7 @@ describe('monoxide.meta()', function() {
 			$collection: 'groups',
 		}, function(err, meta) {
 			expect(err).to.not.be.ok;
-			expect(meta).to.be.an.instanceOf(Object);
+			expect(meta).to.be.an('object');
 
 			expect(meta).to.have.property('name');
 			expect(meta.name).to.have.property('type', 'string');
@@ -101,7 +101,7 @@ describe('monoxide.meta()', function() {
 			$collectionEnums: true,
 		}, function(err, meta) {
 			expect(err).to.not.be.ok;
-			expect(meta).to.be.an.instanceOf(Object);
+			expect(meta).to.be.an('object');
 
 			expect(meta).to.have.property('role');
 			expect(meta.role).to.have.property('type', 'string');
@@ -133,10 +133,10 @@ describe('monoxide.meta()', function() {
 			$prototype: true,
 		}, function(err, meta) {
 			expect(err).to.not.be.ok;
-			expect(meta).to.be.an.instanceOf(Object);
+			expect(meta).to.be.an('object');
 
 			expect(meta).to.have.property('$prototype');
-			expect(meta.$prototype).to.be.an.instanceOf(Object);
+			expect(meta.$prototype).to.be.an('object');
 			expect(meta.$prototype).to.be.deep.equal({
 				role: 'user',
 				settings: {

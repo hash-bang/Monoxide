@@ -19,7 +19,7 @@ describe('monoxide indexes', function() {
 	it('should retrieve the indexes of a Mongo model', function(finish) {
 		monoxide.models.users.getIndexes(function(err, res) {
 			if (err) return finish(err);
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			expect(res).to.have.length(1);
 			expect(res[0]).to.have.property('name', '_id_');
 			expect(res[0]).to.have.property('ns');
@@ -31,7 +31,7 @@ describe('monoxide indexes', function() {
 	it('should retrieve the ideal indexes of a declared schema', function(finish) {
 		monoxide.models.users.getSchemaIndexes(function(err, res) {
 			if (err) return finish(err);
-			expect(res).to.be.an.instanceOf(Array);
+			expect(res).to.be.an('array');
 			expect(res).to.have.length(1);
 			expect(res[0]).to.have.property('name', '_id_');
 			finish();
