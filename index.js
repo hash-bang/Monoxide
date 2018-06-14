@@ -39,7 +39,8 @@ function Monoxide() {
 		.then(() => {
 			o.connection = mongoose.connection;
 			if (callback) callback();
-		});
+		})
+		.catch(e => callback(e))
 
 		return o;
 	};
