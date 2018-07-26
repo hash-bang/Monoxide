@@ -805,6 +805,28 @@ var Users = monoxide.schema('users', {
 
 Returns **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** The monoxide model of the generated schema
 
+
+## monoxide.use
+
+Calls a single or array of plugin functions which should mutate the main Monoxide modules behaviour.
+
+```javascript
+var myPlugin = (finish, monoxide) => {
+	// Attach to each model and print to the conole when we are saving something
+	monoxide.models
+		.forEach(model =>
+			model.hook('save', (done, q) => console.log('Saving', q))
+		)
+
+	finish();
+};
+
+monoxide.use(myPlugin)
+
+// Every subsequent save operation will now print to the console
+```
+
+
 ## monoxide.express.defaults
 
 Set the default settings used when calling other monoxide.express.middleware functions

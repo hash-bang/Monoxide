@@ -2989,6 +2989,27 @@ function Monoxide() {
 	// }}}
 	// }}}
 
+	// .use([plugins...], [callback]) {{{
+	/**
+	* Run a third party plugin against the entire Monoxide structure
+	* Really this function just registers all given modules against monoxide then fires the callback when done
+	* Each plugin is called as `(callback, monoxide)`
+	* @param {function|array} [plugin...] Plugin module (raw function) or array of plugins to register
+	* @param {function} [callback] Optional callback to fire when all plugin have registered
+	* @return {monoxide.monoxideModel} The chainable monoxideModel
+	*/
+	o.use = function(plugin, callback) {
+		async()
+			.forEach(_.castArray(plugin), function(next, plugin) {
+				plugin.call(o, next, o);
+			})
+			.end(callback);
+
+
+		return o;
+	};
+	// }}}
+
 	// .utilities structure {{{
 	o.utilities = {};
 
