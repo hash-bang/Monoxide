@@ -813,7 +813,7 @@ Calls a single or array of plugin functions which should mutate the main Monoxid
 ```javascript
 var myPlugin = (finish, monoxide) => {
 	// Attach to each model and print to the conole when we are saving something
-	monoxide.models
+	_(monoxide.models)
 		.forEach(model =>
 			model.hook('save', (done, q) => console.log('Saving', q))
 		)
