@@ -1574,7 +1574,7 @@ function Monoxide() {
 
 
 		/**
-		* Execute all hooks for an event
+		* Execute all hooks attached to a model
 		* This function fires all hooks in parallel and expects all to resolve correctly via callback
 		* NOTE: Hooks are always fired with the callback as the first argument
 		* @param {string} name The name of the hook to invoke
@@ -1583,13 +1583,16 @@ function Monoxide() {
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
 		mm.fire = function(name, callback) {
-			if (mm.listenerCount(name)) { // There is at least one event handler attached
+			if ( // There is at least one event handler attached
+				(mm.$hooks[name] && mm.$hooks[name].length)
+				|| (o.$hooks[name] && o.$hooks[name].length)
+			) {
 				var eventArgs = _.values(arguments);
 				eventArgs.splice(1, 1); // Remove the 'callback' arg as events cant respond to it anyway
 				mm.emit.apply(mm, eventArgs);
+			} else {
+				return callback();
 			}
-
-			if (!mm.$hooks[name] || !mm.$hooks[name].length) return callback();
 
 			// Calculate the args array we will pass to each hook
 			var hookArgs = _.values(arguments);
@@ -1599,11 +1602,15 @@ function Monoxide() {
 			eventArgs.splice(1, 1); // Remove the 'callback' arg as events cant respond to it anyway
 
 			async()
-				.forEach(mm.$hooks[name], function(next, hook) {
-					// Fire hooks by this name
+				// Fire hooks attached to this model + global hooks {{{
+				.forEach([]
+					.concat(o.$hooks[name], mm.$hooks[name])
+					.filter(f => !!f) // Actually is a function?
+				, function(next, hookFunc) {
 					hookArgs[0] = next;
-					hook.apply(mm, hookArgs);
+					hookFunc.apply(mm, hookArgs);
 				})
+				// }}}
 				.end(callback);
 
 			return mm;
@@ -3000,12 +3007,49 @@ function Monoxide() {
 	*/
 	o.use = function(plugin, callback) {
 		async()
-			.forEach(_.castArray(plugin), function(next, plugin) {
-				plugin.call(o, next, o);
+			.forEach(_.castArray(plugin), function(nextPlugin, plugin) {
+				if (o.used.some(i => i === plugin)) {
+					debug('Plugin already loaded, ignoring');
+					nextPlugin();
+				} else {
+					o.used.push(plugin);
+					plugin.call(o, nextPlugin, o);
+				}
 			})
 			.end(callback);
 
+		return o;
+	};
 
+	/**
+	* Storage for modules we have already loaded
+	* @var {Array <function>} All plugins (as funtions) we have previously loaded
+	*/
+	o.used = [];
+	// }}}
+
+	// .hook(hookName, callback) {{{
+
+	/**
+	* Holder for global hooks
+	* @var {array <function>}
+	*/
+	o.$hooks = {};
+
+
+	/**
+	* Attach a hook to a global event
+	* A hook is exactly the same as a eventEmitter.on() event but must return a callback
+	* Multiple hooks can be attached and all will be called in parallel on certain events such as 'save'
+	* All hooks must return non-errors to proceed with the operation
+	* @param {string} eventName The event ID to hook against
+	* @param {function} callback The callback to run when hooked, NOTE: Any falsy callbacks are ignored
+	* @return {monoxide.monoxideModel} The chainable monoxideModel
+	*/
+	o.hook = function(eventName, callback) {
+		if (!callback) return mm; // Ignore flasy callbacks
+		if (!o.$hooks[eventName]) o.$hooks[eventName] = [];
+		o.$hooks[eventName].push(callback);
 		return o;
 	};
 	// }}}

@@ -827,6 +827,18 @@ monoxide.use(myPlugin)
 ```
 
 
+## monoxide.register
+
+Register a callback against an event being fired for any model.
+
+```javascript
+monoxide.register('create', function(done, q) {
+	console.log('CREATE RECORD ON MODEL', this.$collection, q);
+	done();
+});
+```
+
+
 ## monoxide.express.defaults
 
 Set the default settings used when calling other monoxide.express.middleware functions

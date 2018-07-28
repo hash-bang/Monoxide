@@ -29,6 +29,8 @@ TODO
 - [x] monoxide.document.hook('save', cb)
 - [ ] Auto reconnection
 - [x] Omit fields (e.g. '_' prefix)
+- [x] monoxide.use() should load a module ONCE - repeated calls should be ignored
+- [x] monoxide.hook() should regisster a hook against all models (context should be the model)
 
 
 Tests
