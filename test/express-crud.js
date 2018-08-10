@@ -11,6 +11,7 @@ var port = 8181;
 var url = 'http://localhost:' + port;
 
 describe('monoxide.express - create, read, update, destroy', function() {
+	before('load the rest plugin', done => monoxide.use('rest', done));
 	before(testSetup.init);
 	after(testSetup.teardown);
 	after(() => { if (server) server.close() });
