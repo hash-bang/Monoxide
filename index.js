@@ -121,6 +121,7 @@ function Monoxide() {
 	* @param {boolean=false} [q.$count=false] Only count the results - do not return them. If enabled a number of returned with the result
 	* @param {object|function} [q.$data] Set the user-defined data object, if this is a function the callback result is used
 	* @param {boolean} [q.$decorate=true] Add all Monoxide methods, functions and meta properties
+	* @param {string} [q.$want='array'] How to return data contents. ENUM: 'array', 'cursor'
 	* @param {boolean} [q.$plain=false] Return a plain object or object array. This is the equivelent of calling .toObject() on any resultant object. Implies $decorate=true
 	* @param {boolean} [q.$cacheFKs=true] Cache the foreign keys (objectIDs) within an object so future retrievals dont have to recalculate the model structure
 	* @param {boolean} [q.$applySchema=true] Apply the schema for each document retrieval - this slows retrieval but means any alterations to the schema are applied to each retrieved record
@@ -148,6 +149,7 @@ function Monoxide() {
 
 		_.defaults(q || {}, {
 			$cacheFKs: true, // Cache model Foreign Keys (used for populates) or compute them every time
+			$want: 'array',
 			$applySchema: true, // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
 			$errNotFound: true, // During $id / $one operations raise an error if the record is not found
 		});
@@ -166,6 +168,7 @@ function Monoxide() {
 				'$limit', // Limit the return to this many rows
 				'$skip', // Offset return by this number of rows
 				'$count', // Only count the results - do not return them
+				'$want', // What result we are looking for from the query
 				'$cacheFKs', // Cache model Foreign Keys (used for populates) or compute them every time
 				'$applySchema', // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
 				'$decorate',
@@ -286,29 +289,41 @@ function Monoxide() {
 			// }}}
 			// Execute and capture return {{{
 			.then('result', function(next) {
-				this.query.exec(function(err, res) {
-					if (err) return next(err);
+				switch (q.$want) {
+					case 'array':
+						this.query.exec(function(err, res) {
+							if (err) return next(err);
 
-					if (q.$one) {
-						if (_.isEmpty(res)) {
-							if (q.$errNotFound) {
-								next('Not found');
+							if (q.$one) {
+								if (_.isEmpty(res)) {
+									if (q.$errNotFound) {
+										next('Not found');
+									} else {
+										next(null, undefined);
+									}
+								} else {
+									next(null, res);
+								}
+							} else if (q.$count) {
+								next(null, res);
 							} else {
-								next(null, undefined);
+								next(null, res);
 							}
-						} else {
-							next(null, res);
-						}
-					} else if (q.$count) {
-						next(null, res);
-					} else {
-						next(null, res);
-					}
-				});
+						});
+						break;
+					case 'cursor':
+						next(null, this.query.cursor());
+						break;
+					default:
+						next('Unknown $want type');
+				}
 			})
 			// }}}
 			// Convert Mongoose Documents into Monoxide Documents {{{
 			.then('result', function(next) {
+				// Not wanting an array of data? - pass though the result
+				if (q.$want != 'array') return next(null, this.result);
+
 				if (this.result === undefined) {
 					next(null, undefined);
 				} else if (q.$one) {
@@ -336,6 +351,9 @@ function Monoxide() {
 			// }}}
 			// Apply populates {{{
 			.then(function(next) {
+				// Not wanting an array of data? - pass though the result
+				if (q.$want != 'array') return next(null, this.result);
+
 				if (!q.$populate || !q.$populate.length || q.$count || q.$decorate === false || q.$plain === false || this.result === undefined) return next(); // Skip
 				if (q.$one) {
 					this.result.populate(q.$populate, next);
@@ -1065,6 +1083,7 @@ function Monoxide() {
 	* @class
 	* @name monoxide.queryBuilder
 	* @return {monoxide.queryBuilder}
+	* @fires queryBuilder Fired as (callback, qb) when a new queryBuilder object is created
 	*/
 	o.queryBuilder = function monoxideQueryBuilder() {
 		var qb = this;
@@ -1283,6 +1302,21 @@ function Monoxide() {
 			return qb;
 		});
 		// }}}
+
+
+		/**
+		* Convenience function to return the generated cursor back from a queryBuilder object
+		* @name monoxide.queryBuilder.cursor
+		* @memberof monoxide.queryBuilder
+		* @param {function} callback(err, cursor)
+		* @return {Mongoose.queryBuilder} This chainable object
+		*/
+		qb.cursor = function(callback) {
+			qb.query.$want = 'cursor';
+			return o.query(qb.query, callback);
+		};
+
+		o.fireImmediate('queryBuilder', qb);
 
 		return qb;
 	};
@@ -3044,12 +3078,73 @@ function Monoxide() {
 	* All hooks must return non-errors to proceed with the operation
 	* @param {string} eventName The event ID to hook against
 	* @param {function} callback The callback to run when hooked, NOTE: Any falsy callbacks are ignored
-	* @return {monoxide.monoxideModel} The chainable monoxideModel
+	* @return {monoxide} The chainable monoxide
 	*/
 	o.hook = function(eventName, callback) {
 		if (!callback) return mm; // Ignore flasy callbacks
 		if (!o.$hooks[eventName]) o.$hooks[eventName] = [];
 		o.$hooks[eventName].push(callback);
+		return o;
+	};
+
+
+	/**
+	* Execute global level hooks
+	* NOTE: This will only fire hooks attached via monoxide.hook() and not individual model hooks
+	* NOTE: Hooks are always fired with the callback as the first argument
+	* @param {string} name The name of the hook to invoke
+	* @param {function} callback The callback to invoke on success
+	* @param {...*} parameters Any other parameters to be passed to each hook
+	* @return {monoxide} The chainable monoxide
+	*/
+	o.fire = function(name, callback) {
+		if (o.$hooks[name] && o.$hooks[name].length) { // There is at least one event handler attached
+			var eventArgs = _.values(arguments);
+			eventArgs.splice(1, 1); // Remove the 'callback' arg as events cant respond to it anyway
+			o.emit.apply(o, eventArgs);
+		} else {
+			return callback();
+		}
+
+		// Calculate the args array we will pass to each hook
+		var hookArgs = _.values(arguments);
+		hookArgs.shift(); // We will set args[0] to the callback in each case anyway so we only need to shift 1
+
+		async()
+			// Fire hooks attached to this model + global hooks {{{
+			.forEach(
+				o.$hooks[name]
+				.filter(f => !!f) // Actually is a function?
+			, function(next, hookFunc) {
+				hookArgs[0] = next;
+				hookFunc.apply(o, hookArgs);
+			})
+			// }}}
+			.end(callback);
+
+		return o;
+	};
+
+
+
+	/**
+	* Similar to fire() expect that execution is immediate
+	* This should only be used by sync functions that require immediate action such as object mutators
+	* NOTE: Because of the nature of this function a callback CANNOT be accepted when finished - the function is assumed done when it returns
+	* @param {string} name The name of the hook to invoke
+	* @param {...*} parameters Any other parameters to be passed to each hook
+	* @return {monoxide} The chainable monoxide
+	* @see fire()
+	*/
+	o.fireImmediate = function(name, callback) {
+		if (!o.$hooks[name] || !o.$hooks[name].length) return o; // No hooks to run anyway
+
+		for (var i of o.$hooks[name]) {
+			let hookArgs = _.values(arguments);
+			hookArgs.shift();
+			i.apply(o, hookArgs);
+		}
+
 		return o;
 	};
 	// }}}
