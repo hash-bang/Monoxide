@@ -33,6 +33,44 @@ describe('monoxide.query.iterator()', function() {
 			})
 	});
 
+
+	it('should be able to recurse the iterator in a forEach and mutate the data (via cursor)', function(done) {
+		monoxide.models.users
+			.find()
+			.iterator()
+			.forEach(function(next, doc) {
+				doc.name = 'FAKE';
+				next();
+			})
+			.exec((err, items) => {
+				expect(err).to.not.be.ok;
+				expect(items).to.be.an('array');
+				expect(items).to.have.length(2);
+				expect(items).to.satisfy(a => a.every(i => expect(i).to.have.property('name', 'FAKE')));
+				done();
+			})
+	});
+
+
+	it('should be able to recurse the iterator in a forEach and mutate the data (via result data)', function(done) {
+		monoxide.models.users
+			.find()
+			.iterator()
+			.filter(next => next(null, true)) // Accept all data - collapses the cursor into a data object
+			.forEach(function(next, item) {
+				item.name = 'FAKE';
+				next();
+			})
+			.exec((err, items) => {
+				expect(err).to.not.be.ok;
+				expect(items).to.be.an('array');
+				expect(items).to.have.length(2);
+				expect(items).to.satisfy(a => a.every(i => expect(i).to.have.property('name')));
+				done();
+			})
+	});
+
+
 	it('should be able to recurse the iterator via map()', function(done) {
 		monoxide.models.users
 			.find()
@@ -46,6 +84,7 @@ describe('monoxide.query.iterator()', function() {
 				done();
 			})
 	});
+
 
 	it('should be able to filter results via filter()', function(done) {
 		monoxide.models.users
@@ -61,6 +100,7 @@ describe('monoxide.query.iterator()', function() {
 			})
 	});
 
+
 	it('should be able to filter() then map()', function(done) {
 		monoxide.models.users
 			.find()
@@ -75,6 +115,7 @@ describe('monoxide.query.iterator()', function() {
 				done();
 			})
 	});
+
 
 	it('should be able to map(), forEach(), filter() in combination', function(done) {
 		var names = [];
