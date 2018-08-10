@@ -219,6 +219,18 @@ module.exports = function(finish, monoxide) {
 		qb.iterator = ()=> {
 			return new iteratorObject({query: qb});
 		};
+
+		qb.filter = (...args)=> qb
+			.iterator()
+			.filter(...args);
+
+		qb.map = (...args)=> qb
+			.iterator()
+			.map(...args);
+
+		qb.forEach = (...args)=> qb
+			.iterator()
+			.forEach(...args);
 	});
 
 	finish();

@@ -8,11 +8,8 @@ describe('monoxide.query.iterator()', function() {
 	after(testSetup.teardown);
 
 	it('should create a simple user iterator', function() {
-		var iter = monoxide.models.users
-			.find()
-			.iterator();
-
-		expect(iter).to.be.an.instanceOf(require('../plugins/iterators').iteratorObject);
+		var io = require('../plugins/iterators').iteratorObject;
+		expect(monoxide.models.users.find().iterator()).to.be.an.instanceOf(io);
 	});
 
 	it('should be able to recurse the iterator in a forEach', function(done) {
@@ -135,6 +132,29 @@ describe('monoxide.query.iterator()', function() {
 				expect(items).to.have.length(1);
 				expect(items[0]).to.have.property('name', 'Joe Random');
 				expect(names).to.be.deep.equal([{name: 'Joe Random'}]);
+				done();
+			})
+	});
+
+
+	it('should support lazy initialization - omitting the .iterator() call', ()=> {
+		var io = require('../plugins/iterators').iteratorObject;
+		expect(monoxide.models.users.find().filter()).to.be.an.instanceOf(io);
+		expect(monoxide.models.users.find().forEach()).to.be.an.instanceOf(io);
+		expect(monoxide.models.users.find().map()).to.be.an.instanceOf(io);
+	});
+
+
+	it('should be able to map() without the .iterator() call', function(done) {
+		var names = [];
+
+		monoxide.models.users
+			.find()
+			.map((next, item) => next(null, ({name: item.name})))
+			.exec(function(err, items) {
+				expect(err).to.not.be.ok;
+				expect(items).to.be.an('array');
+				expect(items).to.have.length(2);
 				done();
 			})
 	});
