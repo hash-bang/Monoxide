@@ -3054,7 +3054,6 @@ function Monoxide() {
 	* @return {monoxide.monoxide} The chainable object
 	*/
 	o.use = function(plugins, callback) {
-		console.log('O.USE', plugins);
 		async()
 			.forEach(_.castArray(plugins), function(next, plugin) {
 				if (o.used.some(i => i === plugin)) {
@@ -3072,10 +3071,6 @@ function Monoxide() {
 				} else {
 					next('Unsupported plugin format');
 				}
-			})
-			.then(function(next) {
-				console.log('USE COMPLETE');
-				next();
 			})
 			.end(callback);
 
