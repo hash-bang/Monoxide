@@ -3,7 +3,7 @@ var monoxide = require('..');
 var testSetup = require('./setup');
 
 describe('monoxide.query.iterator()', function() {
-	before('load iterator plugin', ()=> monoxide.use(require('../plugins/iterators')));
+	before('load iterator plugin', done => monoxide.use('iterators', done));
 	before(testSetup.init);
 	after(testSetup.teardown);
 

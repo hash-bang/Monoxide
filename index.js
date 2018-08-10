@@ -1668,11 +1668,25 @@ function Monoxide() {
 		/**
 		* Run a third party plugin against a model
 		* This function is really just a shorthand way to pass a Monoxide model into a function
-		* @param {function} plugin The plugin to run. This gets the arguments (model, callback)
+		* @param {function|string|array} plugins The plugin(s) to run. Each function is run as (model, callback), strings are assumed to be file paths to JS files if they contain at least one '/' or `.` otherwise they are loaded from the `plugins` directory
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
-		mm.use = function(plugin, callback) {
-			plugin.call(mm, mm, callback);
+		mm.use = function(plugins, callback) {
+			async()
+				.forEach(_.castArray(plugins), function(next, plugin) {
+					if (_.isString(plugin)) {
+						var pluginModule = /[\/\.]/.test(plugin) // Contains at least one slash or dot?
+							? require(plugin)
+							: require(__dirname + '/plugins/' + plugin)
+						pluginModule.call(mm, mm, next);
+					} else if (_.isFunction(plugin)) {
+						plugin.call(mm, mm, next);
+					} else {
+						next('Unsupported plugin format');
+					}
+				})
+				.end(callback);
+
 			return mm;
 		};
 
@@ -3035,20 +3049,33 @@ function Monoxide() {
 	* Run a third party plugin against the entire Monoxide structure
 	* Really this function just registers all given modules against monoxide then fires the callback when done
 	* Each plugin is called as `(callback, monoxide)`
-	* @param {function|array} [plugin...] Plugin module (raw function) or array of plugins to register
+	* @param {function|string|array} plugins The plugin(s) to run. Each function is run as (model, callback), strings are assumed to be file paths to JS files if they contain at least one '/' or `.` otherwise they are loaded from the `plugins` directory
 	* @param {function} [callback] Optional callback to fire when all plugin have registered
-	* @return {monoxide.monoxideModel} The chainable monoxideModel
+	* @return {monoxide.monoxide} The chainable object
 	*/
-	o.use = function(plugin, callback) {
+	o.use = function(plugins, callback) {
+		console.log('O.USE', plugins);
 		async()
-			.forEach(_.castArray(plugin), function(nextPlugin, plugin) {
+			.forEach(_.castArray(plugins), function(next, plugin) {
 				if (o.used.some(i => i === plugin)) {
 					debug('Plugin already loaded, ignoring');
-					nextPlugin();
-				} else {
+					next();
+				} else if (_.isString(plugin)) {
+					var pluginModule = /[\/\.]/.test(plugin) // Contains at least one slash or dot?
+						? require(plugin)
+						: require(__dirname + '/plugins/' + plugin)
+					pluginModule.call(o, next, o);
+					o.used.push(pluginModule);
+				} else if (_.isFunction(plugin)) {
+					plugin.call(o, o, next);
 					o.used.push(plugin);
-					plugin.call(o, nextPlugin, o);
+				} else {
+					next('Unsupported plugin format');
 				}
+			})
+			.then(function(next) {
+				console.log('USE COMPLETE');
+				next();
 			})
 			.end(callback);
 
