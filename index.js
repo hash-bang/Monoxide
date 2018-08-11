@@ -2483,7 +2483,7 @@ function Monoxide() {
 					pluginModule.call(o, next, o);
 					o.used.push(pluginModule);
 				} else if (_.isFunction(plugin)) {
-					plugin.call(o, o, next);
+					plugin.call(o, next, o);
 					o.used.push(plugin);
 				} else {
 					next('Unsupported plugin format');
