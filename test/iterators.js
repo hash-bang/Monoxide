@@ -12,6 +12,19 @@ describe('monoxide.query.iterator()', function() {
 		expect(monoxide.models.users.find().iterator()).to.be.an.instanceOf(io);
 	});
 
+	it('should be able to slurp a cursor into cached data', function(done) {
+		monoxide.models.users
+			.find()
+			.iterator()
+			.slurp()
+			.exec((err, items) => {
+				expect(err).to.not.be.ok;
+				expect(items).to.be.an('array');
+				expect(items).to.have.length(2);
+				done();
+			})
+	});
+
 	it('should be able to recurse the iterator in a forEach', function(done) {
 		var names = [];
 
@@ -98,6 +111,20 @@ describe('monoxide.query.iterator()', function() {
 	});
 
 
+	it('should be able to reduce results via reduce()', function(done) {
+		monoxide.models.users
+			.find()
+			.iterator()
+			.reduce((next, item, value) => next(null, value + item.name.substr(0, 1)), '=')
+			.exec(function(err, res) {
+				expect(err).to.not.be.ok;
+				expect(res).to.be.a('string');
+				expect(res).to.be.equal('=JJ');
+				done();
+			})
+	});
+
+
 	it('should be able to filter() then map()', function(done) {
 		monoxide.models.users
 			.find()
@@ -114,24 +141,42 @@ describe('monoxide.query.iterator()', function() {
 	});
 
 
-	it('should be able to map(), forEach(), filter() in combination', function(done) {
-		var names = [];
+	it('should be able to use all techniques in combination', function(done) {
+		var forEached = [];
+		var reduced = [];
+		var tapped = [];
+		var thrued = [];
 
 		monoxide.models.users
 			.find()
 			.iterator()
 			.filter((next, item) => next(null, item.name.startsWith('Joe')))
-			.map((next, item) => next(null, ({name: item.name})))
-			.forEach((next, item) => {
-				names.push(item);
+			.map((next, item) => next(null, ({name: item.name}))) // Extract only the name
+			.forEach((next, item) => { // Append each to the array to check later
+				forEached.push(item);
 				next();
 			})
-			.exec(function(err, items) {
+			.reduce((next, item, items) => { // Simple pass through copy
+				reduced.push(item);
+				items.push(item);
+				next(null, items);
+			}, [])
+			.tap((next, items) => {
+				tapped = items;
+				next();
+			})
+			.thru((next, items) => {
+				thrued = items;
+				next(null, items);
+			})
+			.exec((err, items) => {
 				expect(err).to.not.be.ok;
 				expect(items).to.be.an('array');
 				expect(items).to.have.length(1);
 				expect(items[0]).to.have.property('name', 'Joe Random');
-				expect(names).to.be.deep.equal([{name: 'Joe Random'}]);
+				expect(forEached).to.be.deep.equal([{name: 'Joe Random'}]);
+				expect(reduced).to.be.deep.equal([{name: 'Joe Random'}]);
+				expect(tapped).to.be.deep.equal([{name: 'Joe Random'}]);
 				done();
 			})
 	});

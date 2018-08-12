@@ -188,6 +188,132 @@ var iteratorObject = function(options) {
 	};
 	// }}}
 
+	// reduce() - iterate over every item returning a single final result {{{
+	this.reduce = (cb, initial) => {
+		this.settings.operations.push({func: this.$operations.reduce, args: [cb, initial]});
+		return this;
+	};
+
+	this.$operations.reduce = (done, cb, initial) => {
+		switch (this.settings.method) {
+			case 'cursor': // Page the cursor running the callback until the cursor is exhausted
+				this.settings.data = [];
+				var value = initial;
+				var runner = ()=> {
+					this.settings.cursor.next((err, doc) => {
+						if (err) {
+							cb(err);
+						} else if (doc) { // Found an item - run the callback over it
+							cb.call(doc, (err, res) => {
+								if (err) return done(err);
+								value = res;
+								runner(); // Go fetch the next record
+							}, doc, value);
+						} else { // Exhausted all documents
+							this.settings.data = value;
+							this.settings.method = 'data';
+							done();
+						}
+					});
+				};
+
+				runner();
+				break;
+			case 'data': // Run async.map over every item in the data array and overwrite the previous array
+				async()
+					.set('iter', this)
+					.set('data', this.settings.data)
+					.set('value', initial)
+					.limit(1)
+					.forEach('data', function(next, doc) {
+						cb.call(doc, (err, res) => {
+							if (err) return next(err);
+							this.value = res;
+							next();
+						}, doc, this.value);
+					})
+					.end(function(err) {
+						if (err) return done(err);
+						this.iter.settings.data = this.value;
+						done();
+					});
+				break;
+			default:
+				throw new Error('Unsupported map iteration method');
+		};
+	};
+	// }}}
+
+	// slurp() - utility function to read all data from a cursor into memory {{{
+	this.slurp = ()=> {
+		this.settings.operations.push({func: this.$operations.slurp});
+		return this;
+	};
+
+	this.$operations.slurp = done => {
+		this.settings.data = [];
+		var runner = ()=> {
+			this.settings.cursor.next((err, doc) => {
+				if (err) {
+					done(err);
+				} else if (doc) { // Found an item - run the callback over it
+					this.settings.data.push(doc);
+					runner();
+				} else { // Exhausted all documents
+					this.settings.method = 'data';
+					done();
+				}
+			});
+		};
+
+		runner();
+	};
+	// }}}
+
+	// tap() - analyse a result but don't effect it {{{
+	this.tap = (cb) => {
+		this.settings.operations.push({func: this.$operations.tap, args: [cb]});
+		return this;
+	};
+
+	this.$operations.tap = (done, cb) => {
+		switch (this.settings.method) {
+			case 'cursor': // Slurp all data then re-call ourselves to process the data
+				this.$operations.slurp(()=> this.$operations.tap(done, cb));
+				break;
+			case 'data': // Run async.map over every item in the data array and overwrite the previous array
+				cb.call(this.settings.data, done, this.settings.data);
+				break;
+			default:
+				throw new Error('Unsupported map iteration method');
+		};
+	};
+	// }}}
+
+	// thru() - run a function on a data set and use the result {{{
+	this.thru = (cb) => {
+		this.settings.operations.push({func: this.$operations.thru, args: [cb]});
+		return this;
+	};
+
+	this.$operations.thru = (done, cb) => {
+		switch (this.settings.method) {
+			case 'cursor': // Slurp all data then re-call ourselves to process the data
+				this.$operations.slurp(()=> this.$operations.thru(done, cb));
+				break;
+			case 'data': // Run async.map over every item in the data array and overwrite the previous array
+				cb.call(this.settings.data, (err, res) => {
+					if (err) return done(err);
+					this.settings.data = res;
+					done();
+				}, this.settings.data);
+				break;
+			default:
+				throw new Error('Unsupported map iteration method');
+		};
+	};
+	// }}}
+
 	// Exec - actual operation runner {{{
 	this.exec = (cb) => {
 		var nextOperation = ()=> {
@@ -216,21 +342,31 @@ var iteratorObject = function(options) {
 module.exports = function(finish, monoxide) {
 
 	monoxide.hook('queryBuilder', qb => {
-		qb.iterator = ()=> {
-			return new iteratorObject({query: qb});
-		};
+		qb.iterator = ()=> new iteratorObject({query: qb});
 
-		qb.filter = (...args)=> qb
+		qb.filter = (...args) => qb
 			.iterator()
 			.filter(...args);
 
-		qb.map = (...args)=> qb
+		qb.map = (...args) => qb
 			.iterator()
 			.map(...args);
 
-		qb.forEach = (...args)=> qb
+		qb.forEach = (...args) => qb
 			.iterator()
 			.forEach(...args);
+
+		qb.slurp = (...args) => qb
+			.iterator()
+			.slurp(...args)
+
+		qb.tap = (...args) => qb
+			.iterator()
+			.tap(...args)
+
+		qb.thru = (...args) => qb
+			.iterator()
+			.thru(...args)
 	});
 
 	finish();
