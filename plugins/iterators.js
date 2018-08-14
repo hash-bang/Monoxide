@@ -59,7 +59,7 @@ var iteratorObject = function(options) {
 							cb.call(doc, (err, res) => {
 								if (err) return done(err);
 								this.settings.data.push(res); // Push the mapped record into the data array
-								runner(); // Go fetch the next record
+								setTimeout(runner); // Go fetch the next record in the next tick
 							}, doc);
 						} else { // Exhausted all documents
 							this.settings.method = 'data';
@@ -105,7 +105,7 @@ var iteratorObject = function(options) {
 							cb.call(doc, err => {
 								if (err) return done(err);
 								this.settings.data.push(doc); // Push the mapped record into the data array
-								runner(); // Go fetch the next record
+								setTimeout(runner); // Go fetch the next record
 							}, doc);
 						} else { // Exhausted all documents
 							this.settings.method = 'data';
@@ -152,7 +152,7 @@ var iteratorObject = function(options) {
 								} else if (res) { // Keep the record?
 									this.settings.data.push(doc); // Push the mapped record into the data array
 								}
-								runner(); // Go fetch the next record
+								setTimeout(runner); // Go fetch the next record
 							}, doc);
 						} else { // Exhausted all documents
 							this.settings.method = 'data';
@@ -207,7 +207,7 @@ var iteratorObject = function(options) {
 							cb.call(doc, (err, res) => {
 								if (err) return done(err);
 								value = res;
-								runner(); // Go fetch the next record
+								setTimeout(runner); // Go fetch the next record
 							}, doc, value);
 						} else { // Exhausted all documents
 							this.settings.data = value;
@@ -258,7 +258,7 @@ var iteratorObject = function(options) {
 					done(err);
 				} else if (doc) { // Found an item - run the callback over it
 					this.settings.data.push(doc);
-					runner();
+					setTimeout(runner);
 				} else { // Exhausted all documents
 					this.settings.method = 'data';
 					done();
