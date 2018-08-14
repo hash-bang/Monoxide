@@ -941,7 +941,7 @@ function Monoxide() {
 	* 	console.log('About the widget collection:', res);
 	* });
 	*/
-	o.meta = argy('object [function]', function MonoxideMeta(q, callback) {
+	o.meta = argy('[object] function', function MonoxideMeta(q, callback) {
 		_.defaults(q || {}, {
 			$filterPrivate: true,
 			$prototype: false,
