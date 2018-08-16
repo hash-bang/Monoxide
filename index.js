@@ -1513,6 +1513,22 @@ function Monoxide() {
 
 
 		/**
+		* Run an aggregation pipeline on a model
+		* @param {array} q The aggregation pipeline to process
+		* @param {function} callback Callback to fire as (err, data)
+		* @return {Object} This chainable object
+		*/
+		mm.aggregate = argy('array function', function(q, callback) {
+			o.aggregate({
+				$collection: mm.$collection,
+				$stages: q,
+			}, callback)
+
+			return mm;
+		});
+
+
+		/**
 		* Add a method to a all documents returned from this model
 		* A method is a user defined function which extends the `monoxide.monoxideDocument` prototype
 		* @param {string} name The function name to add as a static method
