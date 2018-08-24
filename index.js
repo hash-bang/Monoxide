@@ -1688,6 +1688,8 @@ function Monoxide() {
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
 		mm.use = function(plugins, callback) {
+			if (!plugins) return callback(); // Do nothing if given falsy
+
 			async()
 				.forEach(_.castArray(plugins), function(next, plugin) {
 					if (_.isString(plugin)) {
@@ -2487,6 +2489,8 @@ function Monoxide() {
 	* @return {monoxide.monoxide} The chainable object
 	*/
 	o.use = function(plugins, callback) {
+		if (!plugins) return callback(); // Do nothing if given falsy
+
 		async()
 			.forEach(_.castArray(plugins), function(next, plugin) {
 				if (o.used.some(i => i === plugin)) {
