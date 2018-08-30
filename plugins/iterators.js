@@ -173,6 +173,9 @@ var iteratorObject = function(options) {
 								next(err);
 							} else if (!res) {
 								doc = undefined;
+								next();
+							} else {
+								next();
 							}
 						}, doc);
 					})
