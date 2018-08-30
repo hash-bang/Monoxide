@@ -21,6 +21,12 @@ describe('monoxide.query.iterator()', function() {
 				expect(err).to.not.be.ok;
 				expect(items).to.be.an('array');
 				expect(items).to.have.length(2);
+
+				items.forEach(item => {
+					expect(item).to.have.property('_id');
+					expect(item._id).to.be.a('string');
+				});
+
 				done();
 			})
 	});

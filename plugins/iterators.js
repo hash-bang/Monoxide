@@ -13,6 +13,11 @@ var async = require('async-chainable');
 * @param {Mongoose.QueryCursor} [options.cursor] Cursor object when pulling data
 * @param {array} [options.data] Data object to iterate with
 * @param {string} [options.method=='cursor'] Method to iterate with
+* @param {Object} [options.monoxide] The monoxide master object to operate on
+* @param {string} [options.collection] The collection name we are operating on. Inherited from the query.$collection property unless overriden
+* @param {boolean} [options.applySchema] Whether to inherit schema defaults. Inherited from the query.$applySchema property unless overridden
+* @param {boolean} [options.decorate] Whether to wrap all output objects in a MonoxideDocument. Inherited from the query.$decorate property unless overridden
+* @param {boolean} [options.dirty] Whether to mark the document as dirty. Inherited from the query.$dirty property unless overridden
 */
 var iteratorObject = function(options) {
 	this.settings = _.defaults(options, {
@@ -56,6 +61,12 @@ var iteratorObject = function(options) {
 						if (err) {
 							cb(err);
 						} else if (doc) { // Found an item - run the callback over it
+							if (this.settings.decorate) doc = new this.settings.monoxide.monoxideDocument({
+								$collection: this.settings.collection,
+								$applySchema: this.settings.applySchema,
+								$decorate: this.settings.decorate,
+								$dirty: this.settings.dirty,
+							}, doc);
 							cb.call(doc, (err, res) => {
 								if (err) return done(err);
 								this.settings.data.push(res); // Push the mapped record into the data array
@@ -102,6 +113,12 @@ var iteratorObject = function(options) {
 						if (err) {
 							cb(err);
 						} else if (doc) { // Found an item - run the callback over it
+							if (this.settings.decorate) doc = new this.settings.monoxide.monoxideDocument({
+								$collection: this.settings.collection,
+								$applySchema: this.settings.applySchema,
+								$decorate: this.settings.decorate,
+								$dirty: this.settings.dirty,
+							}, doc);
 							cb.call(doc, err => {
 								if (err) return done(err);
 								this.settings.data.push(doc); // Push the mapped record into the data array
@@ -146,6 +163,13 @@ var iteratorObject = function(options) {
 						if (err) {
 							cb(err);
 						} else if (doc) { // Found an item - run the callback over it
+							if (this.settings.decorate) doc = new this.settings.monoxide.monoxideDocument({
+								$collection: this.settings.collection,
+								$applySchema: this.settings.applySchema,
+								$decorate: this.settings.decorate,
+								$dirty: this.settings.dirty,
+							}, doc);
+
 							cb.call(doc, (err, res) => {
 								if (err) {
 									return done(err);
@@ -207,6 +231,12 @@ var iteratorObject = function(options) {
 						if (err) {
 							cb(err);
 						} else if (doc) { // Found an item - run the callback over it
+							if (this.settings.decorate) doc = new this.settings.monoxide.monoxideDocument({
+								$collection: this.settings.collection,
+								$applySchema: this.settings.applySchema,
+								$decorate: this.settings.decorate,
+								$dirty: this.settings.dirty,
+							}, doc);
 							cb.call(doc, (err, res) => {
 								if (err) return done(err);
 								value = res;
@@ -260,6 +290,12 @@ var iteratorObject = function(options) {
 				if (err) {
 					done(err);
 				} else if (doc) { // Found an item - run the callback over it
+					if (this.settings.decorate) doc = new this.settings.monoxide.monoxideDocument({
+						$collection: this.settings.collection,
+						$applySchema: this.settings.applySchema,
+						$decorate: this.settings.decorate,
+						$dirty: this.settings.dirty,
+					}, doc);
 					this.settings.data.push(doc);
 					setTimeout(runner);
 				} else { // Exhausted all documents
@@ -343,9 +379,17 @@ var iteratorObject = function(options) {
 
 
 module.exports = function(finish, monoxide) {
-
 	monoxide.hook('queryBuilder', qb => {
-		qb.iterator = ()=> new iteratorObject({query: qb});
+		qb.iterator = ()=> new iteratorObject({
+			monoxide: monoxide,
+			query: qb,
+
+			// Properties inherited from the query
+			collection: qb.query.$collection,
+			applySchema: _.isUndefined(qb.query.$applySchema) ? true : qb.$applySchema,
+			decorate: _.isUndefined(qb.query.$decorate) ? true : qb.$decorate,
+			dirty: _.isUndefined(qb.query.$dirty) ? true : qb.$dirty,
+		});
 
 		qb.filter = (...args) => qb
 			.iterator()
