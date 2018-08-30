@@ -2853,7 +2853,9 @@ function Monoxide() {
 				cb(null, res);
 			} else {
 				res.push(result);
-				cursor.next(cursorReady);
+				setTimeout(function() { // Queue fetcher in timeout so we don't stack overflow
+					cursor.next(cursorReady);
+				});
 			}
 		};
 
