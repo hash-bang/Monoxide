@@ -662,7 +662,7 @@ function Monoxide() {
 			// }}}
 			// Peform the update {{{
 			.then('rawResponse', function(next) {
-				o.models[q.$collection].$mongooseModel.update(_.omit(q, this.metaFields), _.omit(qUpdate, this.metaFields), {multi: true}, next);
+				o.models[q.$collection].$mongooseModel.updateMany(_.omit(q, this.metaFields), _.omit(qUpdate, this.metaFields), {multi: true}, next);
 			})
 			// }}}
 			// End {{{
