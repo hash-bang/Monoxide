@@ -85,7 +85,7 @@ describe('monoxide.queryBuilder', function() {
 				expect(widgets).to.be.an('array');
 				expect(widgets).to.have.length(2);
 
-				expect(_.keys(widgets[0])).to.deep.equal(['_id', 'color']);
+				expect(_.keys(widgets[0]).sort()).to.deep.equal(['_id', 'color']);
 
 				finish();
 			});

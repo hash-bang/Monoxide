@@ -29,14 +29,13 @@ function Monoxide() {
 	* @return {monoxide} The Monoxide chainable object
 	*/
 	o.connect = function(uri, callback) {
-		// Use native promises
-		mongoose.Promise = global.Promise;
-
+		mongoose.set('useFindAndModify', false);
+		mongoose.set('useCreateIndex', true);
 		mongoose.connect(uri, {
 			promiseLibrary: global.Promise,
-			useMongoClient: true,
+			useNewUrlParser: true,
 		})
-		.then(() => {
+		.then(function() {
 			o.connection = mongoose.connection;
 			if (callback) callback();
 		})
@@ -213,7 +212,7 @@ function Monoxide() {
 				//console.log('POSTPOPFIELDS', o.filterPostPopulate);
 
 				if (q.$count) {
-					next(null, o.models[q.$collection].$mongooseModel.count(fields));
+					next(null, o.models[q.$collection].$mongooseModel.countDocuments(fields));
 				} else if (q.$one) {
 					next(null, o.models[q.$collection].$mongooseModel.findOne(fields));
 				} else {
@@ -2428,6 +2427,7 @@ function Monoxide() {
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to query
+	* @param {boolean} [q.$slurp=true] Attempt to read all results into an array rather than return a cursor
 	* @param {array} q.$stages The aggregation stages array
 	* @param {Object} [q.$stages.$project] Fields to be supplied in the aggregation (in the form `{field: true}`)
 	* @param {boolean} [q.$stages.$project._id=false] If true surpress the output of the `_id` field
@@ -2464,6 +2464,15 @@ function Monoxide() {
 			// Execute and capture return {{{
 			.then('result', function(next) {
 				o.models[q.$collection].$mongoModel.aggregate(q.$stages, next);
+			})
+			// }}}
+			// Slurp the cursor? {{{
+			.then('result', function(next) {
+				if (q.$slurp || _.isUndefined(q.$slurp)) {
+					o.utilities.slurpCursor(this.result, next);
+				} else {
+					next(null, this.result);
+				}
 			})
 			// }}}
 			// End {{{
@@ -2824,6 +2833,31 @@ function Monoxide() {
 				return val;
 			})
 			.value();
+	};
+	// }}}
+
+	// .utilities.slurpCursor(cursor, cb) {{{
+	/**
+	* Asyncronously calls a cursor until it is exhausted
+	*
+	* @name monoxide.utilities.slurpCursor
+	*
+	* @param {Cursor} cursor A mongo compatible cursor object
+	* @param {function} cb The callback to call as (err, result) when complete
+	*/
+	o.utilities.slurpCursor = function(cursor, cb) {
+		var res = [];
+
+		var cursorReady = function(err, result) {
+			if (result === null) { // Cursor is exhausted
+				cb(null, res);
+			} else {
+				res.push(result);
+				cursor.next(cursorReady);
+			}
+		};
+
+		cursor.next(cursorReady);
 	};
 	// }}}
 	// }}}
