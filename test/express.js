@@ -254,6 +254,33 @@ describe('monoxide.express.*', function() {
 				finish();
 			});
 	});
+
+	it('should query groups via ReST w/population of users', function(finish) {
+		superagent.get(url + '/api/groups')
+			.query({
+				sort: 'name',
+				populate: 'users',
+			})
+			.end(function(err, res) {
+				expect(err).to.be.not.ok;
+
+				var groups = res.body;
+				expect(groups).to.be.an('array');
+				expect(groups).to.have.length(3);
+
+				groups.forEach(group => {
+					expect(group).to.have.property('name');
+					expect(group).to.have.property('users');
+					expect(group.users).to.be.an('array');
+
+					group.users.forEach(user => {
+						expect(user).to.have.property('name');
+					});
+				});
+
+				finish();
+			});
+	});
 	// }}}
 
 	// GET (single ID) {{{
