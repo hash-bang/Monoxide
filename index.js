@@ -1302,7 +1302,28 @@ function Monoxide() {
 		});
 		// }}}
 
+		// qb.promise() {{{
+		/**
+		* Convenience function to execute the query and return a promise with the result
+		* @name monoxide.queryBuilder.promise
+		* @memberof monoxide.queryBuilder
+		* @return {Mongoose.queryBuilder} This chainable object
+		*/
+		qb.promise = function(callback) {
+			return new Promise(function(resolve, reject) {
+				o.query(qb.query, function(err, result) {
+					if (err) {
+						reject(err);
+					} else {
+						resolve(result);
+					}
+				});
+			});
+		};
+		// }}}
 
+
+		// qb.cursor() {{{
 		/**
 		* Convenience function to return the generated cursor back from a queryBuilder object
 		* @name monoxide.queryBuilder.cursor
@@ -1314,6 +1335,7 @@ function Monoxide() {
 			qb.query.$want = 'cursor';
 			return o.query(qb.query, callback);
 		};
+		// }}}
 
 		o.fireImmediate('queryBuilder', qb);
 

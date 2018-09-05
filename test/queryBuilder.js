@@ -131,4 +131,17 @@ describe('monoxide.queryBuilder', function() {
 				finish();
 			});
 	});
+
+
+	it('should query the users model as a promise promise', function(finish) {
+		monoxide.models.users
+			.find()
+			.promise()
+			.then(user => {
+				expect(user).to.be.an('array');
+				expect(user).to.have.length(2);
+				finish();
+			})
+			.catch(()=> expect.fail())
+	});
 });
