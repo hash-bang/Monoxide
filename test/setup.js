@@ -55,7 +55,7 @@ module.exports = {
 		var Users = monoxide
 			.schema('users', {
 				name: String,
-				role: {type: String, enum: ['user', 'admin'], default: 'user', index: true},
+				role: {type: String, enum: ['user', 'admin'], default: 'user', index: true, customBool: true},
 				_password: String,
 				favourite: {type: 'pointer', ref: 'widgets'},
 				items: [{type: 'pointer', ref: 'widgets'}],
@@ -66,7 +66,7 @@ module.exports = {
 					}
 				],
 				settings: {
-					lang: {type: String, enum: ['en', 'es', 'fr', 'elmerFudd'], default: 'en'},
+					lang: {type: String, enum: ['en', 'es', 'fr', 'elmerFudd'], default: 'en', customNumber: 123},
 					greeting: String,
 					featured: {type: 'pointer', ref: 'widgets'},
 				},
@@ -105,8 +105,8 @@ module.exports = {
 			name: String,
 			content: String,
 			status: {type: 'string', enum: ['active', 'deleted'], default: 'active', index: true},
-			color: {type: 'string', enum: ['red', 'green', 'blue', 'yellow'], default: 'blue', index: true},
-			featured: {type: 'boolean', default: false},
+			color: {type: 'string', enum: ['red', 'green', 'blue', 'yellow'], default: 'blue', index: true, customArray: [1, 2, 3]},
+			featured: {type: 'boolean', default: false, customObject: {foo: 'Foo!', bar: 'Bar!'}},
 		});
 		// }}}
 

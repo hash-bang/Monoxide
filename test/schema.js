@@ -47,4 +47,15 @@ describe('monoxide.schema()', function() {
 		expect(users[0].password).to.equal('RESTRICTED');
 		expect(users[0].passwordStrength).to.equal(3);
 	});
+
+	it('should be able to access a custom schema properties', function() {
+		expect(monoxide).to.have.nested.property('models.users.$schema.role.customBool', true);
+		expect(monoxide).to.have.nested.property('models.users.$schema.settings.lang.customNumber', 123);
+
+		expect(monoxide).to.have.nested.property('models.widgets.$schema.color.customArray');
+		expect(monoxide.models.widgets.$schema.color.customArray).to.deep.equal([1, 2, 3]);
+
+		expect(monoxide).to.have.nested.property('models.widgets.$schema.featured.customObject');
+		expect(monoxide.models.widgets.$schema.featured.customObject).to.deep.equal({foo: 'Foo!', bar: 'Bar!'});
+	});
 });

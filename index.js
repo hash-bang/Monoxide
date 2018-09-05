@@ -1380,6 +1380,13 @@ function Monoxide() {
 		*/
 		mm.$oids = _.has(mm, '$mongooseModel.schema') ? o.utilities.extractFKs(mm.$mongooseModel.schema) : {};
 
+		/**
+		* Optional model schema
+		* NOTE: This is the user defined schema as-is NOT the computed $monogooseModel.schema
+		* @var {Object}
+		*/
+		mm.$schema = settings.$schema;
+
 		mm.$collection = settings.$collection;
 		mm.$methods = {};
 		mm.$virtuals = {};
@@ -2434,6 +2441,7 @@ function Monoxide() {
 		o.models[model] = new o.monoxideModel({
 			$collection: model,
 			$mongoose: mongoose.model(model.toLowerCase(), schema), // FIXME: When we implement our own schema def system we can remove the toLowerCase() component that Mongoose insists on using. We can also remove all of the other toLowerCase() calls when we're trying to find the Mongoose schema
+			$schema: schema.obj,
 		});
 
 		return o.models[model];
