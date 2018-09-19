@@ -1320,6 +1320,14 @@ function Monoxide() {
 				});
 			});
 		};
+
+		// Wrap all promise functions in a convnience wrapper
+		['then', 'catch', 'finally'].forEach(f => {
+			qb[f] = function() {
+				var p = qb.promise();
+				return p[f].apply(p, arguments);
+			};
+		});
 		// }}}
 
 
