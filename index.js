@@ -14,6 +14,7 @@ var util = require('util');
 */
 function Monoxide() {
 	var o = this;
+	o.mongoose = mongoose;
 	o.models = {};
 	o.connection;
 	o.settings = {
