@@ -354,15 +354,18 @@ function Monoxide() {
 				if (q.$want != 'array') return next(null, this.result);
 
 				if (!q.$populate || !q.$populate.length || q.$count || q.$decorate === false || q.$plain === false || this.result === undefined) return next(); // Skip
-				if (q.$one) {
-					this.result.populate(q.$populate, next);
-				} else {
-					async()
-						.forEach(this.result, function(next, doc) {
-							doc.populate(q.$populate, next);
-						})
-						.end(next);
-				}
+				async()
+					.forEach(_.castArray(this.result), (next, doc) => {
+						async()
+							.forEach(q.$populate, (next, pop) => {
+								var path = _.isString(pop) ? pop : pop.path;
+								if (!o.utilities.isObjectId(_.get(doc, path))) return next(); // Already populated
+
+								doc.populate(path, next);
+							})
+							.end(next);
+					})
+					.end(next);
 			})
 			// }}}
 			// End {{{
