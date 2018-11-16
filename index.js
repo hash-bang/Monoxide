@@ -46,6 +46,18 @@ function Monoxide() {
 	};
 	// }}}
 
+	// .disconnect {{{
+	/**
+	* Disconnect from an active connection
+	* @return {monoxide} The Monoxide chainable object
+	*/
+	o.disconnect = function(callback) {
+		mongoose.disconnect(callback);
+
+		return o;
+	};
+	// }}}
+
 	// .get(q, [id], callback) {{{
 	/**
 	* Retrieve a single record from a model via its ID
