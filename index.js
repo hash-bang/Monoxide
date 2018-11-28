@@ -110,7 +110,7 @@ function Monoxide() {
 			});
 
 		if (!q.$id) return callback('No $id specified');
-		return o.query(q, callback);
+		return o.internal.query(q, callback);
 	});
 	// }}}
 
@@ -191,7 +191,7 @@ function Monoxide() {
 			.then(function(next) {
 				if (!q || _.isEmpty(q)) return next('No query given for get operation');
 				if (!q.$collection) return next('$collection must be specified for get operation');
-				if (!o.models[q.$collection]) return next('Model not initalized');
+				if (!o.models[q.$collection]) return next('Model not initalized: "' + q.$collection + '"');
 				next();
 			})
 			// }}}
@@ -430,7 +430,7 @@ function Monoxide() {
 		// Glue count functionality to query
 		q.$count = true;
 
-		return o.query(q, callback);
+		return o.internal.query(q, callback);
 	});
 	// }}}
 
@@ -522,7 +522,7 @@ function Monoxide() {
 				if (_.isEmpty(patch)) {
 					if (q.$errBlankUpdate) return next('Nothing to update');
 					if (q.$refetch) {
-						return o.get({$collection: q.$collection, $id: q.$id}, next);
+						return o.internal.get({$collection: q.$collection, $id: q.$id}, next);
 					} else {
 						return next(null, {});
 					}
@@ -814,7 +814,7 @@ function Monoxide() {
 			// Refetch record {{{
 			.then('newRec', function(next) {
 				if (!q.$refetch) return next(null, null);
-				o.query({
+				o.internal.query({
 					$collection: q.$collection,
 					$id: this.rawResponse.insertedId.toString(),
 				}, function(err, res) {
@@ -897,10 +897,10 @@ function Monoxide() {
 			// Delete record {{{
 			.then(function(next) {
 				if (q.$multiple) { // Multiple delete operation
-					o.query(_.merge(_.omit(q, this.metaFields), {$collection: q.$collection, $select: 'id'}), function(err, rows) {
+					o.internal.query(_.merge(_.omit(q, this.metaFields), {$collection: q.$collection, $select: 'id'}), function(err, rows) {
 						async()
 							.forEach(rows, function(next, row) {
-								o.delete({$collection: q.$collection, $id: row._id}, next);
+								o.internal.delete({$collection: q.$collection, $id: row._id}, next);
 							})
 							.end(next);
 					});
@@ -1292,7 +1292,7 @@ function Monoxide() {
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
 		qb.exec = argy('function', function(callback) {
-			return o.query(qb.query, callback);
+			return o.internal.query(qb.query, callback);
 		});
 		// }}}
 
@@ -1327,7 +1327,7 @@ function Monoxide() {
 		*/
 		qb.promise = function(callback) {
 			return new Promise(function(resolve, reject) {
-				o.query(qb.query, function(err, result) {
+				o.internal.query(qb.query, function(err, result) {
 					if (err) {
 						reject(err);
 					} else {
@@ -1357,7 +1357,7 @@ function Monoxide() {
 		*/
 		qb.cursor = function(callback) {
 			qb.query.$want = 'cursor';
-			return o.query(qb.query, callback);
+			return o.internal.query(qb.query, callback);
 		};
 		// }}}
 
@@ -1522,7 +1522,7 @@ function Monoxide() {
 		*/
 		mm.create = argy('object [function]', function(q, callback) {
 			q.$collection = mm.$collection;
-			o.create(q, callback);
+			o.internal.create(q, callback);
 			return mm;
 		});
 
@@ -1538,7 +1538,7 @@ function Monoxide() {
 		*/
 		mm.update = argy('object object [function]', function(q, qUpdate, callback) {
 			q.$collection = mm.$collection;
-			o.update(q, qUpdate, callback);
+			o.internal.update(q, qUpdate, callback);
 			return mm;
 		});
 
@@ -1553,7 +1553,7 @@ function Monoxide() {
 		* @return {monoxide}
 		*/
 		mm.remove = argy('[object] [function]', function(q, callback) {
-			return o.delete(_.merge({}, q, {$collection: mm.$collection, $multiple: true}), callback);
+			return o.internal.delete(_.merge({}, q, {$collection: mm.$collection, $multiple: true}), callback);
 		});
 
 
@@ -1571,7 +1571,7 @@ function Monoxide() {
 		* @return {Object} This chainable object
 		*/
 		mm.aggregate = argy('array function', function(q, callback) {
-			o.aggregate({
+			o.internal.aggregate({
 				$collection: mm.$collection,
 				$stages: q,
 			}, callback)
@@ -1729,7 +1729,7 @@ function Monoxide() {
 		mm.meta = argy('[object] function', function(options, callback) {
 			var settings = options || {};
 			settings.$collection = mm.$collection;
-			o.meta(settings, callback);
+			o.internal.meta(settings, callback);
 			return mm;
 		});
 
@@ -1767,7 +1767,7 @@ function Monoxide() {
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
 		*/
 		mm.distinct = function(field, callback) {
-			o.runCommand({
+			o.internal.runCommand({
 				distinct: mm.$collection,
 				key: field,
 			}, function(err, res) {
@@ -1959,7 +1959,7 @@ function Monoxide() {
 					});
 				}
 
-				o.save(patch, function(err, newRec) {
+				o.internal.save(patch, function(err, newRec) {
 					doc = newRec;
 					if (_.isFunction(callback)) callback(err, newRec);
 				});
@@ -1975,7 +1975,7 @@ function Monoxide() {
 			*/
 			remove: function(callback) {
 				var doc = this;
-				o.delete({
+				o.internal.delete({
 					$collection: doc.$collection,
 					$id: doc._id,
 				}, callback);
@@ -2138,7 +2138,7 @@ function Monoxide() {
 										// Node is falsy - nothing to populate here
 									} else {
 										populator.defer(function(next) {
-											o.query({
+											o.internal.query({
 												$errNotFound: false,
 												$collection: population.ref,
 												$id: o.utilities.isObjectID(node.node) ? node.node.toString() : node.node,
@@ -2389,6 +2389,7 @@ function Monoxide() {
 	* @param {string} model The model name (generally lowercase plurals e.g. 'users', 'widgets', 'favouriteItems' etc.)
 	* @param {Object} spec The schema specification composed of a hierarhical object of keys with each value being the specification of that field
 	* @returns {Object} The monoxide model of the generated schema
+	* @emits modelCreate Called as (model, instance) when a model gets created
 	*
 	* @example
 	* // Example schema for a widget
@@ -2467,6 +2468,8 @@ function Monoxide() {
 			$mongoose: mongoose.model(model.toLowerCase(), schema), // FIXME: When we implement our own schema def system we can remove the toLowerCase() component that Mongoose insists on using. We can also remove all of the other toLowerCase() calls when we're trying to find the Mongoose schema
 			$schema: schema.obj,
 		});
+
+		o.emit('modelCreate', model, o.models[model]);
 
 		return o.models[model];
 	};
@@ -2916,6 +2919,10 @@ function Monoxide() {
 		cursor.next(cursorReady);
 	};
 	// }}}
+	// }}}
+
+	// Create internals mapping {{{
+	o.internal = o; // Mapping for the original function handlers (e.g. get() before any mutations)
 	// }}}
 
 	return o;
