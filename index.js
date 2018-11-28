@@ -35,12 +35,14 @@ function Monoxide() {
 		mongoose.connect(uri, {
 			promiseLibrary: global.Promise,
 			useNewUrlParser: true,
+		}, function(err) {
+			if (err) {
+				if (_.isFunction(callback)) callback(err);
+			} else {
+				o.connection = mongoose.connection;
+				if (_.isFunction(callback)) callback();
+			}
 		})
-		.then(function() {
-			o.connection = mongoose.connection;
-			if (callback) callback();
-		})
-		.catch(e => callback(e))
 
 		return o;
 	};
