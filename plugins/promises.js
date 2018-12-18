@@ -12,6 +12,7 @@ module.exports = function(finish, o) {
 		'delete',
 		'meta',
 		'runCommand',
+		'save',
 	].forEach(method => o[method] = promisify(o[method]));
 
 	o.on('modelCreate', (model, m) => {
