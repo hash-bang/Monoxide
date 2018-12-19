@@ -37,5 +37,5 @@ module.exports = function(finish, o) {
 		});
 	});
 
-	return finish;
+	finish();
 };
