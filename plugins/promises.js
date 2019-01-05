@@ -4,6 +4,7 @@
 var promisify = require('util').promisify;
 
 module.exports = function(finish, o) {
+	// Promisify all module methods
 	[
 		'connect',
 		'disconnect',
@@ -15,6 +16,8 @@ module.exports = function(finish, o) {
 		'save',
 	].forEach(method => o[method] = promisify(o[method]));
 
+
+	// Promisify all model methods
 	o.on('modelCreate', (model, m) => {
 		[
 			'aggregate',
@@ -35,6 +38,17 @@ module.exports = function(finish, o) {
 				resolve(result);
 			});
 		});
+	});
+
+
+	// Promisify all document methods
+	o.on('documentCreate', doc => {
+		[
+			'delete',
+			'populate',
+			'remove',
+			'save',
+		].forEach(method => doc.__proto__[method] = promisify(doc.__proto__[method]));
 	});
 
 	finish();

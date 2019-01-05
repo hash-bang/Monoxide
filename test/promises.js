@@ -5,6 +5,7 @@ var testSetup = require('./setup');
 
 describe('monoxide.queryBuilder (promises)', function() {
 	before(testSetup.init);
+	before(done => monoxide.use('promises', done));
 	after(testSetup.teardown);
 
 	it('should query the users model as a promise (via promise())', function(finish) {
@@ -50,5 +51,19 @@ describe('monoxide.queryBuilder (promises)', function() {
 				expect(user).to.have.length(2);
 				finish();
 			})
+	});
+
+	it('should return results and process them as promises', function(finish) {
+		monoxide.models.users
+			.findOne()
+			.then(user => {
+				expect(user).to.be.an('object');
+				expect(user).to.have.property('_id');
+				var saver = user.save();
+				expect(saver).to.be.a('promise');
+				return saver;
+			})
+			.then(()=> finish())
+			.catch(()=> expect.fail())
 	});
 });

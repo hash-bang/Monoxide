@@ -1348,7 +1348,6 @@ function Monoxide() {
 		});
 		// }}}
 
-
 		// qb.cursor() {{{
 		/**
 		* Convenience function to return the generated cursor back from a queryBuilder object
@@ -1917,6 +1916,7 @@ function Monoxide() {
 	* @param {string} setup.$collection The collection this document belongs to
 	* @param {Object} data The initial data
 	* @return {monoxide.monoxideDocument}
+	* @emits documentCreate Emitted as (doc) when a new document instance is created
 	*/
 	o.monoxideDocument = function monoxideDocument(setup, data) {
 		if (setup.$decorate === false) return data;
@@ -2358,6 +2358,9 @@ function Monoxide() {
 			doc.$populated[node.docPath] = o.utilities.isObjectID(node.docPath);
 			if (!setup.$dirty) doc.$originalValues[node.docPath] = _.get(doc, node.docPath);
 		});
+
+
+		o.emit('documentCreate', doc);
 
 		return doc;
 	};
