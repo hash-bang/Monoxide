@@ -1259,7 +1259,7 @@ function Monoxide() {
 		* @param {function} [callback] Optional callback. If present this is the equivelent of calling exec()
 		* @return {monoxide.queryBuilder} This chainable object
 		*/
-		qb.populate = argy('string|array [function]', function(q, callback) {
+		qb.populate = argy('[string|array] [function]', function(q, callback) {
 			argy(arguments)
 				.ifForm('', function() {})
 				.ifForm(['string', 'string function'], function(field, callback) {
