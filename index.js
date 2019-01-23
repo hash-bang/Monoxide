@@ -2505,6 +2505,7 @@ function Monoxide() {
 	* @param {Object} [q.$stages.$lookup]
 	* @param {Object} [q.$stages.$out]
 	* @param {Object} [q.$stages.$indexStats]
+	* @param {string} [q.$want='array'] How to return data contents. ENUM: 'array', 'cursor'. The iterator plugin must be loaded for 'cursor' support
 	*
 	* @param {function} callback(err, result) the callback to call on completion or error
 	*
@@ -2525,12 +2526,16 @@ function Monoxide() {
 			// }}}
 			// Execute and capture return {{{
 			.then('result', function(next) {
-				o.models[q.$collection].$mongoModel.aggregate(q.$stages, next);
+				if (!q.$want || q.$want == 'array') {
+					o.models[q.$collection].$mongoModel.aggregate(q.$stages, next);
+				} else {
+					o.fireImmediate('aggregateCursor', q, next);
+				}
 			})
 			// }}}
 			// Slurp the cursor? {{{
 			.then('result', function(next) {
-				if (q.$slurp || _.isUndefined(q.$slurp)) {
+				if ((!q.$want || q.$want == 'array') && (q.$slurp || _.isUndefined(q.$slurp))) {
 					o.utilities.slurpCursor(this.result, next);
 				} else {
 					next(null, this.result);

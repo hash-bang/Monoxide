@@ -30,7 +30,7 @@ var iteratorObject = function(options) {
 
 	this.$operations = {};
 
-	// cursor() - fetch the curor and wait for it to load {{{
+	// cursor() - fetch the cursor and wait for it to load {{{
 	this.cursor = ()=> {
 		this.settings.method = 'cursor';
 		this.settings.operations.push({func: this.$operations.cursor});
@@ -38,6 +38,7 @@ var iteratorObject = function(options) {
 	};
 
 	this.$operations.cursor = done => {
+		if (this.settings.cursor) return done(); // Already have a cursor
 		this.settings.query.cursor((err, cursor) => {
 			if (err) return done(err);
 			this.settings.cursor = cursor;
@@ -379,9 +380,10 @@ var iteratorObject = function(options) {
 
 
 module.exports = function(finish, monoxide) {
+	// Hook into queryBuilder creation stages
 	monoxide.hook('queryBuilder', qb => {
 		qb.iterator = ()=> new iteratorObject({
-			monoxide: monoxide,
+			monoxide,
 			query: qb,
 
 			// Properties inherited from the query
@@ -414,6 +416,24 @@ module.exports = function(finish, monoxide) {
 		qb.thru = (...args) => qb
 			.iterator()
 			.thru(...args)
+	});
+
+	// Hook into aggregation cursors
+	monoxide.hook('aggregateCursor', (q, next) => {
+		monoxide.models[q.$collection].$mongoModel.aggregate(q.$stages, {
+			cursor: {batchSize: 0},
+		}, (err, cursor) => {
+			next(null, new iteratorObject({
+				monoxide, cursor,
+				query: q,
+				collection: q.$collection,
+
+				// Disable all Monoxide document wrapping
+				applySchema: false,
+				decorate: false,
+				dirty: false,
+			}));
+		});
 	});
 
 	finish();
