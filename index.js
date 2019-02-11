@@ -26,16 +26,17 @@ function Monoxide() {
 	/**
 	* Connect to a Mongo database
 	* @param {string} uri The URL of the database to connect to
+	* @param {Object} [options] Additional options to pass to Mongoose
 	* @param {function} [callback] Optional callback when connected, if omitted this function is syncronous
 	* @return {monoxide} The Monoxide chainable object
 	*/
-	o.connect = function(uri, callback) {
+	o.connect = argy('string [object] [function]', function(uri, options, callback) {
 		mongoose.set('useFindAndModify', false);
 		mongoose.set('useCreateIndex', true);
-		mongoose.connect(uri, {
+		mongoose.connect(uri, _.assign({
 			promiseLibrary: global.Promise,
 			useNewUrlParser: true,
-		}, function(err) {
+		}, options || {}), function(err) {
 			if (err) {
 				if (_.isFunction(callback)) callback(err);
 			} else {
@@ -45,7 +46,7 @@ function Monoxide() {
 		})
 
 		return o;
-	};
+	});
 	// }}}
 
 	// .disconnect {{{
