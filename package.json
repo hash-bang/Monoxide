@@ -1,6 +1,6 @@
 {
   "name": "monoxide",
-  "version": "0.0.121",
+  "version": "0.0.122",
   "description": "A less poisonous way to work with Mongo",
   "main": "index.js",
   "repository": {
@@ -20,25 +20,25 @@
   "homepage": "https://github.com/hash-bang/Monoxide",
   "dependencies": {
     "argy": "^1.3.1",
-    "async-chainable": "^2.4.0",
-    "debug": "^3.1.0",
+    "async-chainable": "^2.6.1",
+    "debug": "^4.1.1",
     "deep-diff": "^1.0.2",
     "lodash": "^4.17.10",
     "lodash-deep": "^2.0.0",
-    "mongoose": "~5.2.10",
+    "mongoose": "^5.4.11",
     "traverse": "^0.6.6"
   },
   "devDependencies": {
     "body-parser": "^1.18.3",
     "chai": "^4.1.2",
     "express": "^4.16.3",
-    "express-log-url": "^1.2.3",
+    "express-log-url": "^1.3.4",
     "faker": "^4.1.0",
     "gulp": "^3.9.1",
     "gulp-documentation": "^3.2.1",
     "mocha": "^5.2.0",
     "mocha-logger": "^1.0.6",
-    "mongoose-scenario": "^2.1.2",
+    "mongoose-scenario": "^2.1.3",
     "superagent": "^3.8.3"
   }
 }
