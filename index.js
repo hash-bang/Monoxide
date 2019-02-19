@@ -133,7 +133,9 @@ function Monoxide() {
 	* @param {boolean} [q.$one=false] Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
 	* @param {number} [q.$limit] Limit the return to this many rows
 	* @param {number} [q.$skip] Offset return by this number of rows
-	* @param {boolean=false} [q.$count=false] Only count the results - do not return them. If enabled a number of returned with the result
+	* @param {boolean} [q.$count=false] Only count the results - do not return them. If enabled a number of returned with the result
+	* @param {boolean} [q.$countExact=false] Return EXACT match count rather than a quick guess
+	* @param {boolean} [q.$countSkipAggregate=false] When an empty query is present, dont try and accelerate the counting via aggregation (much much faster) - see https://jira.mongodb.org/browse/SERVER-3645
 	* @param {object|function} [q.$data] Set the user-defined data object, if this is a function the callback result is used
 	* @param {boolean} [q.$decorate=true] Add all Monoxide methods, functions and meta properties
 	* @param {string} [q.$want='array'] How to return data contents. ENUM: 'array', 'cursor'
@@ -172,23 +174,10 @@ function Monoxide() {
 
 		async()
 			.set('metaFields', [
-				'$collection', // Collection to query
-				'$data', // Meta user-defined data object
-				'$dirty', // Whether the document is unclean
-				'$id', // If specified return only one record by its master ID (implies $one=true). If present all other conditionals will be ignored and only the object is returned (see $one)
-				'$select', // Field selection criteria to apply
-				'$sort', // Sorting criteria to apply
-				'$populate', // Population criteria to apply
-				'$one', // Whether a single object should be returned (implies $limit=1). If enabled an object is returned not an array
-				'$limit', // Limit the return to this many rows
-				'$skip', // Offset return by this number of rows
-				'$count', // Only count the results - do not return them
-				'$want', // What result we are looking for from the query
-				'$cacheFKs', // Cache model Foreign Keys (used for populates) or compute them every time
-				'$applySchema', // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
-				'$decorate',
-				'$plain',
-				'$errNotFound', // During $id / $one operations raise an error if the record is not found
+				'$collection', '$data', '$dirty', '$id', '$select', '$sort', '$populate', '$one', '$limit', '$skip',
+				'$count', '$countExact', '$countSkipAggregate',
+				'$want', '$cacheFKs', '$applySchema', '$decorate', '$plain',
+				'$errNotFound',
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -228,7 +217,18 @@ function Monoxide() {
 				//console.log('POSTPOPFIELDS', o.filterPostPopulate);
 
 				if (q.$count) {
-					next(null, o.models[q.$collection].$mongooseModel.countDocuments(fields));
+					if (q.$countExact) {
+						next(null, o.models[q.$collection].$mongooseModel.estimatedDocumentCount(fields));
+					} else if (!q.$countSkipAggregate && _.isEmpty(fields)) {
+						q.$want = 'raw'; // Signal that we've already run the query here
+						o.models[q.$collection].aggregate([ {$collStats: {count: {}}} ], function(err, res) {
+							if (err) return next(err);
+							if (!_.has(res, '0.count')) return next('Illegal aggregation return');
+							next(null, res[0].count);
+						});
+					} else if (q.$count) {
+						next(null, o.models[q.$collection].$mongooseModel.countDocuments(fields));
+					}
 				} else if (q.$one) {
 					next(null, o.models[q.$collection].$mongooseModel.findOne(fields));
 				} else {
@@ -328,6 +328,9 @@ function Monoxide() {
 						break;
 					case 'cursor':
 						next(null, this.query.cursor());
+						break;
+					case 'raw': // Used by some upstream options like counting to signal that the query has already run and the result should be passed through
+						next(null, this.query);
 						break;
 					default:
 						next('Unknown $want type');
