@@ -1572,14 +1572,17 @@ function Monoxide() {
 		/**
 		* Run an aggregation pipeline on a model
 		* @param {array} q The aggregation pipeline to process
+		* @param {Object} [options] Additional options to pass to the aggreation function
 		* @param {function} callback Callback to fire as (err, data)
 		* @return {Object} This chainable object
 		*/
-		mm.aggregate = argy('array function', function(q, callback) {
-			o.internal.aggregate({
-				$collection: mm.$collection,
-				$stages: q,
-			}, callback)
+		mm.aggregate = argy('array [object] function', function(q, options, callback) {
+			o.internal.aggregate(
+				_.assign({
+					$collection: mm.$collection,
+					$stages: q,
+				}, options)
+			, callback)
 
 			return mm;
 		});
