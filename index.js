@@ -562,7 +562,12 @@ function Monoxide() {
 					}
 				});
 
-				var updateQuery = { _id: o.utilities.objectID(q.$id) };
+				try {
+					var updateQuery = { _id: o.utilities.objectID(q.$id) };
+				} catch (e) {
+					return next('Unable to allocate ID "' + q.$id + '" for save operation');
+				}
+
 				var updatePayload = {$set: patch};
 				var updateOptions = { returnOriginal: !q.$returnUpdated };
 				var updateCallback = function(err, res) {
