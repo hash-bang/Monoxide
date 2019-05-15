@@ -221,7 +221,7 @@ function Monoxide() {
 						next(null, o.models[q.$collection].$mongooseModel.estimatedDocumentCount(fields));
 					} else if (!q.$countSkipAggregate && _.isEmpty(fields)) {
 						q.$want = 'raw'; // Signal that we've already run the query here
-						o.models[q.$collection].aggregate([ {$collStats: {count: {}}} ], function(err, res) {
+						o.models[q.$collection].aggregate([ {$collStats: {count: {}} } ], function(err, res) {
 							if (err) return next(err);
 							if (!_.has(res, '0.count')) return next('Illegal aggregation return');
 							next(null, res[0].count);
@@ -952,6 +952,7 @@ function Monoxide() {
 	*
 	* @param {Object} q The object to process
 	* @param {string} q.$collection The collection / model to examine
+	* @param {boolean} [q.$arrayDefault=false] Set array items to a default of '[]' in the prototype if no other default is specified
 	* @param {boolean} [q.$collectionEnums=false] Provide all enums as a collection object instead of an array
 	* @param {boolean} [q.$filterPrivate=true] Ignore all private fields
 	* @param {boolean} [q.$prototype=false] Provide the $prototype meta object
@@ -969,6 +970,7 @@ function Monoxide() {
 	*/
 	o.meta = argy('[object] function', function MonoxideMeta(q, callback) {
 		_.defaults(q || {}, {
+			$arrayDefault: false,
 			$filterPrivate: true,
 			$prototype: false,
 			$indexes: false,
@@ -978,6 +980,7 @@ function Monoxide() {
 			.set('metaFields', [
 				'$collection', // Collection to query to find the original record
 				'$data', // Meta user-defined data
+				'$arrayDefault', // Set a default empty array for array types
 				'$filterPrivate', // Filter out /^_/ fields
 				'$collectionEnums', // Convert enums into a collection (with `id` + `title` fields per object)
 				'$prototype',
@@ -1063,8 +1066,14 @@ function Monoxide() {
 				var prototype = this.meta.$prototype = {};
 
 				_.forEach(this.meta, function(v, k) {
-					if (!_.has(v, 'default')) return;
-					if (v.default == '[DYNAMIC]') return; // Ignore dynamic values
+					if (q.$arrayDefault && v.type == 'array') {
+						v.default = [];
+					} else if (!_.has(v, 'default')) { // Ignore items with no defaults
+						return;
+					} else if (v.default == '[DYNAMIC]') { // Ignore dynamic values
+						return;
+					}
+
 					_.set(prototype, k, v.default);
 				});
 
