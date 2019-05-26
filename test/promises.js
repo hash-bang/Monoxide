@@ -66,4 +66,23 @@ describe('monoxide.queryBuilder (promises)', function() {
 			.then(()=> finish())
 			.catch(()=> expect.fail())
 	});
+
+	it('should manage additional arguments after find()', function(finish) {
+		var users;
+		monoxide.models.users.find()
+			.then(res => users = res)
+			.then(()=> monoxide.models.users
+				.findOneByID(users[0]._id)
+				.populate('favourite')
+				.limit(1)
+			)
+			.then(user => {
+				expect(user).to.be.an('object');
+				expect(user).to.have.property('_id');
+				expect(user).to.have.property('favourite');
+				expect(user.favourite).to.be.an('object');
+			})
+			.then(()=> finish())
+			.catch(()=> expect.fail())
+	});
 });
