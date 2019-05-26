@@ -28,7 +28,16 @@ module.exports = function(finish, o) {
 			'getSchemaIndexes',
 			'remove',
 			'update',
+			'findOneByID',
 		].forEach(method => m[method] = promisify(m[method]));
+
+		m.findOneByID = id => new Promise((resolve, reject) => {
+			if (!id) return reject('No ID specified');
+			o.internal.query({$collection: model, $id: id}, (err, result) => {
+				if (err) return reject(err);
+				resolve(result);
+			});
+		});
 	});
 
 
