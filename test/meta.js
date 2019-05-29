@@ -37,6 +37,12 @@ describe('monoxide.meta()', function() {
 			expect(meta).to.have.property('mostPurchased');
 			expect(meta.mostPurchased).to.have.property('type', 'array');
 
+			expect(meta).to.have.property('mostPurchased.number');
+			expect(meta['mostPurchased.number']).to.be.deep.equal({type: 'number', default: 0});
+
+			expect(meta).to.have.property('mostPurchased.item');
+			expect(meta['mostPurchased.item']).to.be.deep.equal({type: 'objectid', ref: 'widgets'});
+
 			expect(meta).to.have.property('settings.lang');
 			expect(meta['settings.lang']).to.have.property('type', 'string');
 			expect(meta['settings.lang']).to.have.property('default', 'en');

@@ -996,65 +996,72 @@ function Monoxide() {
 			// }}}
 			// Retrieve the meta information {{{
 			.then('meta', function(next) {
-				var sortedPaths = _(o.models[q.$collection].$mongooseModel.schema.paths)
-					.map((v,k) => v)
-					.sortBy('path')
-					.value();
-
 				var meta = {
 					_id: {type: 'objectid', index: true}, // FIXME: Is it always the case that a doc has an ID?
 				};
 
-				_.forEach(sortedPaths, function(path) {
-					var id = path.path;
+				var scanNode = function(node, prefix) {
+					if (!prefix) prefix = '';
 
-					if (q.$filterPrivate && _.last(path.path.split('.')).startsWith('_')) return; // Skip private fields
+					var sortedPaths = _(node)
+						.map((v,k) => v)
+						.sortBy('path')
+						.value();
 
-					var info = {};
-					switch (path.instance.toLowerCase()) {
-						case 'string':
-							info.type = 'string';
-							if (path.enumValues && path.enumValues.length) {
-								if (q.$collectionEnums) {
-									info.enum = path.enumValues.map(e => ({
-										id: e,
-										title: _.startCase(e),
-									}));
-								} else {
-									info.enum = path.enumValues;
+					_.forEach(sortedPaths, function(path) {
+						var id = prefix + path.path;
+
+						if (q.$filterPrivate && _.last(path.path.split('.')).startsWith('_')) return; // Skip private fields
+
+						var info = {};
+						switch (path.instance.toLowerCase()) {
+							case 'string':
+								info.type = 'string';
+								if (path.enumValues && path.enumValues.length) {
+									if (q.$collectionEnums) {
+										info.enum = path.enumValues.map(e => ({
+											id: e,
+											title: _.startCase(e),
+										}));
+									} else {
+										info.enum = path.enumValues;
+									}
 								}
-							}
-							break;
-						case 'number':
-							info.type = 'number';
-							break;
-						case 'date':
-							info.type = 'date';
-							break;
-						case 'boolean':
-							info.type = 'boolean';
-							break;
-						case 'array':
-							info.type = 'array';
-							break;
-						case 'object':
-							info.type = 'object';
-							break;
-						case 'objectid':
-							info.type = 'objectid';
-							if (_.has(path, 'options.ref')) info.ref = path.options.ref;
-							break;
-						default:
-							debug('Unknown Mongo data type during meta extract on ' + q.$collection + ':', path.instance.toLowerCase());
-					}
+								break;
+							case 'number':
+								info.type = 'number';
+								break;
+							case 'date':
+								info.type = 'date';
+								break;
+							case 'boolean':
+								info.type = 'boolean';
+								break;
+							case 'array':
+								info.type = 'array';
+								if (_.has(path, 'schema.paths')) scanNode(path.schema.paths, id + '.');
+								break;
+							case 'object':
+								info.type = 'object';
+								break;
+							case 'objectid':
+								info.type = 'objectid';
+								if (_.has(path, 'options.ref')) info.ref = path.options.ref;
+								break;
+							default:
+								debug('Unknown Mongo data type during meta extract on ' + q.$collection + ':', path.instance.toLowerCase());
+						}
 
-					// Extract default value if its not a function (otherwise return [DYNAMIC])
-					if (path.defaultValue) info.default = argy.isType(path.defaultValue, 'scalar') ? path.defaultValue : '[DYNAMIC]';
+						// Extract default value if its not a function (otherwise return [DYNAMIC])
+						if (!_.isUndefined(path.defaultValue)) info.default = argy.isType(path.defaultValue, 'scalar') ? path.defaultValue : '[DYNAMIC]';
 
-					if (q.$indexes && path._index) info.index = true;
+						if (q.$indexes && path._index) info.index = true;
 
-					meta[id] = info;
-				});
+						meta[id] = info;
+					});
+				};
+
+				scanNode(o.models[q.$collection].$mongooseModel.schema.paths);
 
 				next(null, meta);
 			})
@@ -1063,9 +1070,13 @@ function Monoxide() {
 			.then(function(next) {
 				if (!q.$prototype) return next();
 
+				var meta = this.meta;
 				var prototype = this.meta.$prototype = {};
 
 				_.forEach(this.meta, function(v, k) {
+					var parentPath = k.split('.').slice(0, -1).join('.');
+					if (parentPath && meta[parentPath] && meta[parentPath].type == 'array') return; // Dont set the prototype if the parent is an array (parent defaults to empty array anyway)
+
 					if (q.$arrayDefault && v.type == 'array') {
 						v.default = [];
 					} else if (!_.has(v, 'default')) { // Ignore items with no defaults
