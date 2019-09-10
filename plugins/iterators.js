@@ -60,7 +60,7 @@ var iteratorObject = function(options) {
 				var runner = ()=> {
 					this.settings.cursor.next((err, doc) => {
 						if (err) {
-							cb(err);
+							throw new Error(err.errmsg || err);
 						} else if (doc) { // Found an item - run the callback over it
 							if (this.settings.decorate) doc = new this.settings.monoxide.monoxideDocument({
 								$collection: this.settings.collection,
@@ -112,7 +112,7 @@ var iteratorObject = function(options) {
 				var runner = ()=> {
 					this.settings.cursor.next((err, doc) => {
 						if (err) {
-							cb(err);
+							throw new Error(err.errmsg || err);
 						} else if (doc) { // Found an item - run the callback over it
 							if (this.settings.decorate) doc = new this.settings.monoxide.monoxideDocument({
 								$collection: this.settings.collection,
@@ -162,7 +162,7 @@ var iteratorObject = function(options) {
 				var runner = ()=> {
 					this.settings.cursor.next((err, doc) => {
 						if (err) {
-							cb(err);
+							throw new Error(err.errmsg || err);
 						} else if (doc) { // Found an item - run the callback over it
 							if (this.settings.decorate) doc = new this.settings.monoxide.monoxideDocument({
 								$collection: this.settings.collection,
@@ -230,7 +230,7 @@ var iteratorObject = function(options) {
 				var runner = ()=> {
 					this.settings.cursor.next((err, doc) => {
 						if (err) {
-							cb(err);
+							throw new Error(err.errmsg || err);
 						} else if (doc) { // Found an item - run the callback over it
 							if (this.settings.decorate) doc = new this.settings.monoxide.monoxideDocument({
 								$collection: this.settings.collection,
