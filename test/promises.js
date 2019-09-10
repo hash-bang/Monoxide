@@ -8,6 +8,13 @@ describe('monoxide.queryBuilder (promises)', function() {
 	before(done => monoxide.use('promises', done));
 	after(testSetup.teardown);
 
+	it('should return a true promise class', function() {
+		var req = monoxide.models.users.count();
+		expect(req).to.have.property('then');
+		expect(req.then).to.be.a('function');
+		expect(req).to.be.an.instanceOf(Promise);
+	});
+
 	it('should query the users model as a promise (via promise())', function(finish) {
 		monoxide.models.users
 			.find()

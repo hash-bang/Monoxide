@@ -1368,7 +1368,7 @@ function Monoxide() {
 			});
 		};
 
-		// Wrap all promise functions in a convnience wrapper
+		// Wrap all promise functions in a conveneince wrapper
 		['then', 'catch', 'finally'].forEach(f => {
 			qb[f] = function() {
 				var p = qb.promise();
@@ -1395,6 +1395,7 @@ function Monoxide() {
 
 		return qb;
 	};
+	util.inherits(o.queryBuilder, Promise); // Look like we're inheriting from Promise to keep dumb promise detection scripts happy
 	// }}}
 
 	// .monoxideModel([options]) - monoxide model instance {{{
