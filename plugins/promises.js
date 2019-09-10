@@ -40,7 +40,6 @@ module.exports = function(finish, o) {
 		});
 	});
 
-
 	// Promisify all document methods
 	o.on('documentCreate', doc => {
 		[
