@@ -1368,7 +1368,7 @@ function Monoxide() {
 			});
 		};
 
-		// Wrap all promise functions in a conveneince wrapper
+		// Wrap all promise functions in a convenience wrapper
 		['then', 'catch', 'finally'].forEach(f => {
 			qb[f] = function() {
 				var p = qb.promise();
@@ -2072,7 +2072,7 @@ function Monoxide() {
 							if (!o.utilities.isObjectID(oidLeaf)) {
 								if (_.has(oidLeaf, '_id')) { // Already populated?
 									_.set(outDoc, node.docPath, o.utilities.objectID(oidLeaf._id));
-								} else { // Convert to an OID
+								} else if (_.isString(oidLeaf)) { // Convert to an OID
 									_.set(outDoc, node.docPath, o.utilities.objectID(oidLeaf));
 								}
 							}
