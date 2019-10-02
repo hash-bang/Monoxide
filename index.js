@@ -2264,21 +2264,24 @@ function Monoxide() {
 				var segments = schemaPath.split('.');
 				segments.every(function(pathSegment, pathSegmentIndex) {
 					return examineStack.every(function(esDoc, esDocIndex) {
+						var segmentValue = _.get(esDoc, ['node', pathSegment]);
 						if (esDoc === false) { // Skip this subdoc
 							return true;
-						} else if (_.isUndefined(esDoc.node[pathSegment]) && pathSegmentIndex == segments.length -1) {
+						} else if (!esDoc.node) {
+							return true;
+						} else if (_.isUndefined(segmentValue) && pathSegmentIndex == segments.length -1) {
 							examineStack[esDocIndex] = {
 								node: esDoc.node[pathSegment],
 								docPath: esDoc.docPath + '.' + pathSegment,
 								schemaPath: esDoc.schemaPath + '.' + pathSegment,
 							};
 							return true;
-						} else if (_.isUndefined(esDoc.node[pathSegment])) {
+						} else if (_.isUndefined(segmentValue)) {
 							// If we are trying to recurse into a path segment AND we are not at the leaf of the path (as undefined leaves are ok) - raise an error
 							if (strict) throw new Error('Cannot traverse into path: "' + (esDoc.docPath + '.' + pathSegment).substr(1) + '" for doc ' + doc.$collection + '#' + doc._id);
 							examineStack[esDocIndex] = false;
 							return false;
-						} else if (_.isArray(esDoc.node[pathSegment])) { // Found an array - remove this doc and append each document we need to examine at the next stage
+						} else if (_.isArray(segmentValue)) { // Found an array - remove this doc and append each document we need to examine at the next stage
 							esDoc.node[pathSegment].forEach(function(d,i) {
 								// Do this in a forEach to break appart the weird DocumentArray structure we get back from Mongoose
 								examineStack.push({
@@ -2359,16 +2362,23 @@ function Monoxide() {
 
 		// Apply schema
 		if (doc.$applySchema) {
-			_.forEach(model.$mongooseModel.schema.paths, function(pathSpec, path) {
-				var docValue = _.get(doc, path, undefined);
-				if (_.isUndefined(docValue)) {
-					if (pathSpec.defaultValue) { // Item is blank but SHOULD have a default
-						_.set(doc, path, _.isFunction(pathSpec.defaultValue) ? pathSpec.defaultValue() : pathSpec.defaultValue);
-					} else {
-						_.set(doc, path, undefined);
+			var applyDefaults = function(spec, doc) {
+				_.forEach(spec, function(pathSpec, path) {
+					var docValue = _.get(doc, path);
+					if (pathSpec.instance == 'Array' && _.has(pathSpec, 'options.type') && docValue) { // Collection sub-structure
+						docValue.forEach(subDoc => applyDefaults(pathSpec.options.type[0], subDoc));
+					} else if (_.isUndefined(docValue)) { // Scalar
+						if (pathSpec.defaultValue) { // Item is blank but SHOULD have a default
+							_.set(doc, path, _.isFunction(pathSpec.defaultValue) ? pathSpec.defaultValue() : pathSpec.defaultValue);
+						} else if (pathSpec.default) { // Mongoose spec default
+							_.set(doc, path, _.isFunction(pathSpec.default) ? pathSpec.default() : pathSpec.default);
+						} else {
+							_.set(doc, path, undefined);
+						}
 					}
-				}
-			});
+				});
+			};
+			applyDefaults(model.$mongooseModel.schema.paths, doc);
 		}
 
 		// Sanitize data to remove all ObjectID crap
