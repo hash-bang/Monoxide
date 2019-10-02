@@ -1841,6 +1841,31 @@ function Monoxide() {
 		};
 
 
+		/**
+		* Ensure various indexes exist on startup
+		* @param {string|array|Object} indexes Either a single named field index, an array of indexes to form a combined field or a complex field definition where each value should be `1 || -1`
+		* @param {function} [cb] Optional callback
+		* @returns {MonoxideModel} Chainable monoxide model
+		*/
+		mm.index = function(indexes, cb) {
+			if (_.isArray(indexes)) {
+				indexes = _(indexes)
+					.mapKeys(v => v)
+					.mapValues(v => 1)
+					.value();
+			} else if (_.isString(indexes)) {
+				indexes = {[indexes]: 1};
+			} else if (_.isPlainObject(indexes)) {
+				// Do no mutation
+			} else {
+				throw new Error('Invalid index definition');
+			}
+
+			mm.$mongooseModel.ensureIndexes(indexes, cb);
+
+			return mm;
+		};
+
 
 		/**
 		* Retrieve the list of actual on-the-database indexes

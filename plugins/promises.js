@@ -26,6 +26,7 @@ module.exports = function(finish, o) {
 			'distinct',
 			'getIndexes',
 			'getSchemaIndexes',
+			'index',
 			'remove',
 			'update',
 			'findOneByID',
