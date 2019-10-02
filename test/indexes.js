@@ -20,7 +20,7 @@ describe('monoxide indexes', function() {
 		monoxide.models.users.getIndexes(function(err, res) {
 			if (err) return finish(err);
 			expect(res).to.be.an('array');
-			expect(res).to.have.length(1);
+			expect(res).to.have.length(2);
 			expect(res[0]).to.have.property('name', '_id_');
 			expect(res[0]).to.have.property('ns');
 			expect(res[0].ns).to.match(/\.users$/);
@@ -32,9 +32,22 @@ describe('monoxide indexes', function() {
 		monoxide.models.users.getSchemaIndexes(function(err, res) {
 			if (err) return finish(err);
 			expect(res).to.be.an('array');
-			expect(res).to.have.length(1);
+			expect(res).to.have.length(2);
 			expect(res[0]).to.have.property('name', '_id_');
 			finish();
+		});
+	});
+
+	it('should create multi-field indexes', function(finish) {
+		this.timeout(10 * 1000);
+
+		monoxide.models.widgets.index(['status', 'color'], function(err) {
+			if (err) return finish(err);
+
+			monoxide.models.widgets.checkIndexes([{key: {status: 1, color: 1}}], function(err, res) {
+				if (err) return finish(err);
+				finish();
+			});
 		});
 	});
 
@@ -50,7 +63,7 @@ describe('monoxide indexes', function() {
 			expect(res[0]).to.have.property('status', 'ok');
 
 			expect(res[1]).to.have.property('name', 'role');
-			expect(res[1]).to.have.property('status', 'missing');
+			expect(res[1]).to.have.property('status', 'ok');
 
 			finish();
 		});
