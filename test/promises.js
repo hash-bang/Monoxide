@@ -8,6 +8,15 @@ describe('monoxide.queryBuilder (promises)', function() {
 	before(done => monoxide.use('promises', done));
 	after(testSetup.teardown);
 
+	var users;
+	before('should find a list of users', function() {
+		return monoxide.models.users
+			.find()
+			.then(res => users = res)
+			.then(()=> expect(users).to.be.an('array'))
+			.then(()=> expect(users).to.have.length.above(1))
+	});
+
 	it('should return a true promise class', function() {
 		var req = monoxide.models.users.count();
 		expect(req).to.have.property('then');
@@ -71,6 +80,30 @@ describe('monoxide.queryBuilder (promises)', function() {
 				return saver;
 			})
 			.then(()=> finish())
+			.catch(()=> expect.fail())
+	});
+
+	it('should find one user by ID', function(finish) {
+		monoxide.models.users
+			.findOneByID(users[0]._id)
+			.then(user => {
+				expect(user).to.be.an('object');
+				expect(user).to.have.property('_id', users[0]._id);
+				finish();
+			})
+			.catch(()=> expect.fail())
+	});
+
+	it('should find one user by ID with filtering', function(finish) {
+		monoxide.models.users
+			.findOneByID(users[0]._id)
+			.select('name')
+			.then(user => {
+				expect(user).to.be.an('object');
+				expect(user).to.have.property('_id', users[0]._id);
+				expect(Object.keys(user).sort()).to.be.deep.equal(['_id', 'name']);
+				finish();
+			})
 			.catch(()=> expect.fail())
 	});
 
