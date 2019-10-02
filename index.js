@@ -2806,6 +2806,18 @@ function Monoxide() {
 	};
 	// }}}
 
+
+	// .utilities.mkOID() {{{
+	/**
+	* Construct a new, randomized ObjectID as a string
+	* @returns {string} A new ObjectID string
+	*/
+	o.utilities.mkOID = function() {
+		return (new mongoose.Types.ObjectId()).toString();
+	};
+	// }}}
+
+
 	// .utilities.isObjectID(string) {{{
 	/**
 	* Return if the input is a valid MongoDB-Core compatible ObjectID object
