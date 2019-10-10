@@ -524,32 +524,20 @@ function Monoxide() {
 			// }}}
 			// Peform the update {{{
 			.then('newRec', function(next) {
-				var patch = _.omit(q, this.metaFields);
-				if (_.isEmpty(patch)) {
-					if (q.$errBlankUpdate) return next('Nothing to update');
-					if (q.$refetch) {
-						return o.internal.get({$collection: q.$collection, $id: q.$id}, next);
-					} else {
-						return next(null, {});
-					}
-				}
-
-				_.forEach(o.models[q.$collection].$oids, function(fkType, schemaPath) {
-					if (!_.has(patch, schemaPath)) return; // Not patching this field anyway
-
+				_.forEach(o.utilities.extractFKs(o.models[q.$collection].$mongooseModel.schema), function(fkType, schemaPath) {
 					switch(fkType.type) {
 						case 'objectId': // Convert the field to an OID if it isn't already
-							if (_.has(q, schemaPath)) {
-								var newVal = _.get(q, schemaPath);
-								if (!o.utilities.isObjectID(newVal))
-									_.set(patch, schemaPath, o.utilities.objectID(newVal));
-							}
+							o.utilities.mapSchemaPath(q, schemaPath, function(endpointValue, endpointPath) {
+								return o.utilities.isObjectID(endpointValue)
+									? endpointValue // Already an OID
+									: o.utilities.objectID(endpointValue);
+							});
 							break;
 						case 'objectIdArray': // Convert each item to an OID if it isn't already
 							if (_.has(q, schemaPath)) {
 								var gotOIDs = _.get(q, schemaPath);
 								if (_.isArray(gotOIDs)) {
-									_.set(patch, schemaPath, gotOIDs.map(function(i, idx) {
+									_.set(q, schemaPath, gotOIDs.map(function(i, idx) {
 										return (!o.utilities.isObjectID(newVal))
 											? o.utilities.objectID(i)
 											: i;
@@ -561,6 +549,18 @@ function Monoxide() {
 							break;
 					}
 				});
+
+
+				var patch = _.omit(q, this.metaFields);
+				if (_.isEmpty(patch)) {
+					if (q.$errBlankUpdate) return next('Nothing to update');
+					if (q.$refetch) {
+						return o.internal.get({$collection: q.$collection, $id: q.$id}, next);
+					} else {
+						return next(null, {});
+					}
+				}
+
 
 				try {
 					var updateQuery = { _id: o.utilities.objectID(q.$id) };
@@ -2091,16 +2091,11 @@ function Monoxide() {
 				doc.getOIDs().forEach(function(node) {
 					switch (node.fkType) {
 						case 'objectId':
-							var oidLeaf = _.get(doc, node.docPath);
-							if (_.isUndefined(oidLeaf)) return; // Ignore undefined
-
-							if (!o.utilities.isObjectID(oidLeaf)) {
-								if (_.has(oidLeaf, '_id')) { // Already populated?
-									_.set(outDoc, node.docPath, o.utilities.objectID(oidLeaf._id));
-								} else if (_.isString(oidLeaf)) { // Convert to an OID
-									_.set(outDoc, node.docPath, o.utilities.objectID(oidLeaf));
-								}
-							}
+							o.utilities.mapSchemaPath(doc, node.schemaPath, function(endpointValue, endpointPath) {
+								return o.utilities.isObjectID(endpointValue)
+									? endpointValue // Already an OID
+									: o.utilities.objectID(endpointValue);
+							});
 							break;
 						case 'objectIdArray':
 							var oidLeaf = _.get(doc, node.schemaPath);
@@ -2806,7 +2801,6 @@ function Monoxide() {
 	};
 	// }}}
 
-
 	// .utilities.mkOID() {{{
 	/**
 	* Construct a new, randomized ObjectID as a string
@@ -2816,7 +2810,6 @@ function Monoxide() {
 		return (new mongoose.Types.ObjectId()).toString();
 	};
 	// }}}
-
 
 	// .utilities.isObjectID(string) {{{
 	/**
@@ -3009,6 +3002,34 @@ function Monoxide() {
 		cursor.next(cursorReady);
 	};
 	// }}}
+
+	// .utilities.mapSchemaPath(schemaPath, cb) {{{
+	/**
+	* Scan down a schema path and remap all endpoint values
+	* This function is really intended to remap string endpoints into OIDs
+	*
+	* @name monoxide.utilities.mapSchemaPath
+	*
+	* @param {Cursor} schemaPath A short schema path which will be scanned
+	* @param {function} cb The callback to call as (value, path) the return being used as the new path value
+	*/
+	o.utilities.mapSchemaPath = function(doc, schemaPath, cb) {
+		var pathTraverse = function(target, nextChunks, thisPath) {
+			// FIXME: DEBUGGING: console.log('->', thisPath.join('.'), 'as', nextChunks[0]);
+			if (target[nextChunks[0]] && _.isPlainObject(target[nextChunks[0]])) { // Next node exists as an object - traverse into it as an object
+				pathTraverse(target[nextChunks[0]], nextChunks.slice(1), thisPath.concat([nextChunks[0]]));
+			} else if (target[nextChunks[0]] && _.isArray(target[nextChunks[0]])) { // Next node exists an an array - travrse into all children
+				target[nextChunks[0]].forEach(function(child, childIndex) {
+					pathTraverse(child, nextChunks.slice(1), thisPath.concat([nextChunks[0], childIndex]));
+				});
+			} else if (nextChunks.length == 1) { // Last node - run callback
+				target[nextChunks[0]] = cb(target[nextChunks[0]], thisPath.concat([nextChunks[0]]));
+			}
+		}
+
+		if (!schemaPath) return;
+		pathTraverse(doc, _.isArray(schemaPath) ? schemaPath : schemaPath.split('.'), []);
+	};
 	// }}}
 
 	// Create internals mapping {{{
