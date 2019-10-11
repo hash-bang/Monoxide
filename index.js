@@ -768,36 +768,6 @@ function Monoxide() {
 				}
 			})
 			// }}}
-			// Coherse all OIDs (or arrays of OIDs) into their correct internal type {{{
-			.then(function(next) {
-				_.forEach(o.models[q.$collection].$oids, function(fkType, schemaPath) {
-					switch(fkType.type) {
-						case 'objectId': // Convert the field to an OID if it isn't already
-							if (_.has(q, schemaPath)) {
-								var newVal = _.get(q, schemaPath);
-								if (!o.utilities.isObjectID(newVal))
-									_.set(q, schemaPath, o.utilities.objectID(newVal));
-							}
-							break;
-						case 'objectIdArray': // Convert each item to an OID if it isn't already
-							if (_.has(q, schemaPath)) {
-								var gotOIDs = _.get(q, schemaPath);
-								if (_.isArray(gotOIDs)) {
-									_.set(q, schemaPath, gotOIDs.map(function(i, idx) {
-										return (!o.utilities.isObjectID(newVal))
-											? o.utilities.objectID(i)
-											: i;
-									}));
-								} else {
-									throw new Error('Expected ' + schemaPath + ' to contain an array of OIDs but got ' + (typeof gotOIDs));
-								}
-							}
-							break;
-					}
-				});
-				next();
-			})
-			// }}}
 			// Add version information if $version==true {{{
 			.then(function(next) {
 				if (!q.$version) return next();
@@ -825,11 +795,15 @@ function Monoxide() {
 			// Refetch record {{{
 			.then('newRec', function(next) {
 				if (!q.$refetch) return next(null, null);
+				var refetchId = this.rawResponse.insertedId.toString();
 				o.internal.query({
 					$collection: q.$collection,
-					$id: this.rawResponse.insertedId.toString(),
+					$id: refetchId,
 				}, function(err, res) {
-					if (err == 'Not found') return next('Document creation failed');
+					if (err == 'Not found') {
+						debug('Failed to refetch created document', refetchId, 'from', q.$collection);
+						return next('Document creation failed');
+					}
 					next(err, res);
 				});
 			})
