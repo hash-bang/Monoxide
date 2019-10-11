@@ -184,7 +184,7 @@ module.exports = function(finish, o) {
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
-	* @param {string} [settings.queryRemaps] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
+	* @param {string} [settings.queryRemaps] Object of keys that should be translated from the incoming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
 	* @param {string} [settings.queryAllowed=Object] Optional specification on what types of values should be permitted for query fields (keys can be: 'scalar', 'scalarCSV', 'array')
 	* @param {array|string|regexp} [settings.omitFields] Run all results though monoxideDocument.omit() before returning to remove the stated fields
 	* @param {function} [settings.map] Run the document though this map function before returning
@@ -196,7 +196,7 @@ module.exports = function(finish, o) {
 	*/
 	o.express.get = argy('[string] [object]', function MonoxideExpressGet(model, options) {
 		var settings = _.defaults({}, options, {
-			queryRemaps: { // Remap incomming values on left to keys on right
+			queryRemaps: { // Remap incoming values on left to keys on right
 				populate: '$populate',
 				select: '$select',
 			},
@@ -253,7 +253,7 @@ module.exports = function(finish, o) {
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
-	* @param {string} [settings.queryRemaps=Object] Object of keys that should be translated from the incomming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
+	* @param {string} [settings.queryRemaps=Object] Object of keys that should be translated from the incoming req.query into their Monoxide equivelents (e.g. `{populate: '$populate'`})
 	* @param {string} [settings.queryAllowed=Object] Optional specification on what types of values should be permitted for query fields (keys can be: 'scalar', 'scalarCSV', 'array')
 	* @param {boolean} [settings.shorthandArrays=true] Remap simple arrays (e.g. `key=val1&key=val2` into `key:{$in:[val1,val2]}`) automatically
 	* @param {array|string|regexp} [settings.omitFields] Run all results though monoxideDocument.omit() before returning to remove the stated fields
@@ -267,12 +267,13 @@ module.exports = function(finish, o) {
 	o.express.query = argy('[string] [object]', function MonoxideExpressQuery(model, options) {
 		var settings = _.defaults({}, options, {
 			shorthandArrays: true,
-			queryRemaps: { // Remap incomming values on left to keys on right
+			queryRemaps: { // Remap incoming values on left to keys on right
 				'limit': '$limit',
 				'populate': '$populate',
 				'select': '$select',
 				'skip': '$skip',
 				'sort': '$sort',
+				'q': '$text',
 			},
 			queryAllowed: { // Fields and their allowed contents (post remap)
 				'$limit': {number: true},
@@ -280,6 +281,7 @@ module.exports = function(finish, o) {
 				'$select': {scalar: true, scalarCSV: true, array: true},
 				'$skip': {number: true},
 				'$sort': {scalar: true},
+				'$text': {scalar: true, format: v => ({$search: v})},
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 			omitFields: [/^_(?!id|_v)/], // Omit all fields prefixed with '_' that are not '_id' or '__v'
@@ -347,6 +349,12 @@ module.exports = function(finish, o) {
 	o.express.count = argy('[string] [object]', function MonoxideExpressCount(model, options) {
 		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
+			queryRemaps: { // Remap incoming values on left to keys on right
+				'q': '$text',
+			},
+			queryAllowed: { // Fields and their allowed contents (post remap)
+				'$text': {scalar: true, format: v => ({$search: v})},
+			},
 		});
 		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.count(). Specify as a string or {collection: String}');
@@ -525,7 +533,7 @@ module.exports = function(finish, o) {
 		var settings = _.defaults({}, options, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
-			queryRemaps: { // Remap incomming values on left to keys on right
+			queryRemaps: { // Remap incoming values on left to keys on right
 				'collectionEnums': '$collectionEnums',
 				'prototype': '$prototype',
 			},

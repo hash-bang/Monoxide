@@ -2938,7 +2938,7 @@ function Monoxide() {
 
 	// .utilities.rewriteQuery(query, settings) {{{
 	/**
-	* Returns a rewritten version of an incomming query that obeys various rules
+	* Returns a rewritten version of an incoming query that obeys various rules
 	* This usually accepts req.query as a parameter and a complex settings object as a secondary
 	* This function is used internally by middleware functions to clean up the incomming query
 	*
@@ -2959,18 +2959,18 @@ function Monoxide() {
 				if (settings.queryAllowed && settings.queryAllowed[key]) {
 					var allowed = settings.queryAllowed[key];
 					if (!_.isString(val) && !allowed.scalar) {
-						return null;
+						val = null;
 					} else if (allowed.boolean) {
-						return (val == 'true' || val == '1');
+						val = (val == 'true' || val == '1');
 					} else if (_.isString(val) && allowed.scalarCSV) {
-						return val.split(/\s*,\s*/);
+						val = val.split(/\s*,\s*/);
 					} else if (_.isArray(val) && allowed.array) {
-						return val;
+						val = val;
 					} else if (_.isString(val) && allowed.number) {
-						return parseInt(val);
-					} else {
-						return val;
+						val = parseInt(val);
 					}
+
+					if (settings.queryAllowed[key].format) val = settings.queryAllowed[key].format(val);
 				}
 				return val;
 			})
