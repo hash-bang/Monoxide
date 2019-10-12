@@ -2067,14 +2067,14 @@ function Monoxide() {
 				doc.getOIDs().forEach(function(node) {
 					switch (node.fkType) {
 						case 'objectId':
-							o.utilities.mapSchemaPath(doc, node.schemaPath, function(endpointValue, endpointPath) {
+							o.utilities.mapSchemaPath(outDoc, node.schemaPath, function(endpointValue, endpointPath) {
 								return o.utilities.isObjectID(endpointValue)
 									? endpointValue // Already an OID
 									: o.utilities.objectID(endpointValue);
 							});
 							break;
 						case 'objectIdArray':
-							var oidLeaf = _.get(doc, node.schemaPath);
+							var oidLeaf = _.get(outDoc, node.schemaPath);
 							_.set(outDoc, node.schemaPath, oidLeaf.map(function(leaf) {
 								return o.utilities.isObjectID(leaf) ? leaf : o.utilities.objectID(leaf);
 							}));
