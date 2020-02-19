@@ -1745,25 +1745,36 @@ function Monoxide() {
 		* Run a third party plugin against a model
 		* This function is really just a shorthand way to pass a Monoxide model into a function
 		* @param {function|string|array} plugins The plugin(s) to run. Each function is run as (model, callback), strings are assumed to be file paths to JS files if they contain at least one '/' or `.` otherwise they are loaded from the `plugins` directory
+		* @param {Object} [options] Options to pass when setting up the plugin, applies if there is only one function plugin listed
 		* @return {monoxide.monoxideModel} The chainable monoxideModel
+		*
+		* @example Add multiple plugins to a model
+		*   db.widgets.use(plugin1, 'plugin2', ['plugin3'])
+		*
+		* @example Add a single plugin with parameters
+		*   db.widgets.use(middleware.handler, {option1: 'value1'})
 		*/
 		mm.use = function(plugins, callback) {
 			if (!plugins) return callback(); // Do nothing if given falsy
 
-			async()
-				.forEach(_.castArray(plugins), function(next, plugin) {
-					if (_.isString(plugin)) {
-						var pluginModule = /[\/\.]/.test(plugin) // Contains at least one slash or dot?
-							? require(plugin)
-							: require(__dirname + '/plugins/' + plugin)
-						pluginModule.call(mm, mm, next);
-					} else if (_.isFunction(plugin)) {
-						plugin.call(mm, mm, next);
-					} else {
-						next('Unsupported plugin format');
-					}
-				})
-				.end(callback);
+			if (_.isObject(callback)) {
+				plugins.call(mm, mm, callback);
+			} else {
+				async()
+					.forEach(_.castArray(plugins), function(next, plugin) {
+						if (_.isString(plugin)) {
+							var pluginModule = /[\/\.]/.test(plugin) // Contains at least one slash or dot?
+								? require(plugin)
+								: require(__dirname + '/plugins/' + plugin)
+							pluginModule.call(mm, mm, next);
+						} else if (_.isFunction(plugin)) {
+							plugin.call(mm, mm, next);
+						} else {
+							next('Unsupported plugin format');
+						}
+					})
+					.end(callback);
+			}
 
 			return mm;
 		};
