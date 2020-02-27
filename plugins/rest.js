@@ -10,6 +10,7 @@ module.exports = function(finish, o) {
 		count: true,
 		get: true,
 		query: true,
+		search: true,
 		create: false,
 		save: false,
 		delete: false,
@@ -22,13 +23,13 @@ module.exports = function(finish, o) {
 	* NOTE: This function will first look for a res.sendError(code, text) function and use that if it finds one. Otherwise it will default to res.status(code).send(text).end()
 	* @param {Object} res The response object
 	* @param {number} code A valida HTTP return code
-	* @param {*} [err] Optional error text to report
+	* @param {*} [err] Optional error text / error object to report
 	*/
 	o.express.sendError = function(res, code, err) {
 		if (res.sendError) {
 			res.sendError(code, err);
 		} else {
-			res.status(code).send(err);
+			res.sendStatus(code);
 		}
 	};
 
@@ -76,6 +77,7 @@ module.exports = function(finish, o) {
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.count=true] Allow GET + Count functionality
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.get=true] Allow single record retrieval by its ID via the GET method. If this is disabled an ID MUST be specified for any GET to be successful within req.params
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.query=true] Allow record querying via the GET method
+	* @param {boolean|monoxide.express.middlewareCallback} [settings.search=true] Allow record fuzzy searching via the GET method (disabled if `model.search()` method not present)
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.create=false] Allow the creation of records via the POST method
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.save=false] Allow saving of records via the POST method
 	* @param {boolean|monoxide.express.middlewareCallback} [settings.delete=false] Allow deleting of records via the DELETE method
@@ -105,8 +107,16 @@ module.exports = function(finish, o) {
 				settings.$data = settings.data(req, res);
 			}
 
+			// Search {{{
+			if (settings.search && req.method == 'GET' && req.query.q && !_.isBoolean(settings.search) && (!req.params.id || req.params.id == 'count')) {
+				o.utilities.runMiddleware(req, res, settings.search, function() {
+					o.express.search(settings)(req, res, next);
+				}, settings);
+			} else if (settings.search && req.method == 'GET' && req.query.q && (!req.params.id || req.params.id == 'count')) {
+				o.express.search(settings)(req, res, next);
+			// }}}
 			// Count {{{
-			if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && !_.isBoolean(settings.count)) {
+			} else if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && !_.isBoolean(settings.count)) {
 				o.utilities.runMiddleware(req, res, settings.count, function() {
 					o.express.count(settings)(req, res, next);
 				}, settings);
@@ -326,6 +336,44 @@ module.exports = function(finish, o) {
 					res.send(rows);
 				}
 			});
+		};
+	});
+	// }}}
+
+	// .express.search(settings) {{{
+	/**
+	* Return an Express middleware binding for multiple record retrieval operations with fuzzy search
+	* Unless you have specific routing requirements its better to use monoxide.express.middleware() as a generic router
+	*
+	* @name monoxide.express.query
+	*
+	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
+	* @param {Object} [settings] Middleware settings
+	* @param {string} [settings.collection] The model name to bind to
+	* @returns {function} callback(req, res, next) Express compatible middleware function
+	*
+	* @example
+	* // Bind an express method to serve widgets
+	* app.get('/api/widgets?q=something', monoxide.express.search('widgets'));
+	*/
+	o.express.search = argy('[string] [object]', function MonoxideExpressQuery(model, options) {
+		var settings = _.defaults({}, options, {
+			collection: undefined,
+		});
+		if (model) settings.collection = model;
+		if (!settings.collection) throw new Error('No collection specified for monoxide.express.query(). Specify as a string or {collection: String}');
+		if (!o.models[settings.collection].search) throw new Error('Attempted to search collection "${settings.collection}" but no search() method is present on the model');
+
+		return function(req, res, next) {
+			o.models[settings.collection].search(req.query.q, {
+				filter: _.omit(req.query, ['limit', 'q', 'select', 'sort', 'skip']), // Remove search query + meta fields from output
+				limit: req.query.limit,
+				skip: req.query.skip,
+				select: req.query.select,
+				count: req.params.id && req.params.id == 'count',
+			})
+				.then(docs => res.send(docs))
+				.catch(e => o.express.sendError(res, 400, e))
 		};
 	});
 	// }}}
