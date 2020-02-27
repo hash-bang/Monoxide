@@ -1846,7 +1846,7 @@ function Monoxide() {
 				throw new Error('Invalid index definition');
 			}
 
-			mm.$mongoModel.ensureIndex(indexes)
+			mm.$mongoModel.createIndex(indexes)
 				.then(function() { cb && cb() })
 				.catch(e => { if (cb) return cb(e); throw new Error(e) })
 
