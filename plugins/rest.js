@@ -372,7 +372,11 @@ module.exports = function(finish, o) {
 				select: req.query.select,
 				count: req.params.id && req.params.id == 'count',
 			})
-				.then(docs => res.send(docs))
+				.then(docs => res.send(
+					req.params.id && req.params.id == 'count' // Count mode? Wrap in a dummy object to match usual ReST output when counting
+					? {count: docs}
+					: docs
+				))
 				.catch(e => o.express.sendError(res, 400, e))
 		};
 	});
