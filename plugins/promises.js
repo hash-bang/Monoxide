@@ -26,6 +26,7 @@ module.exports = function(finish, o) {
 			'distinct',
 			'getIndexes',
 			'getSchemaIndexes',
+			'meta',
 			'remove',
 			'update',
 		].forEach(method => m[method] = promisify(m[method]));
