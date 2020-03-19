@@ -458,6 +458,7 @@ function Monoxide() {
 	* @param {boolean} [q.$errBlankUpdate=false] Raise an error if no fields are updated
 	* @param {boolean} [q.$returnUpdated=true] If true returns the updated document, if false it returns the document that was replaced
 	* @param {boolean} [q.$version=true] Increment the `__v` property when updating
+	* @param {boolean} [q.$ignoreUndefOids] Refuse to delete OID linkages unless their value is `null` (i.e. ignore `undefined` OIDs), this is useful when only using a selection of fields but still want to update the changes
 	* @param {...*} [q.field] Any other field (not beginning with '$') is treated as data to save
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
@@ -481,6 +482,7 @@ function Monoxide() {
 			$errBlankUpdate: false,
 			$returnUpdated: true,
 			$version: true,
+			$ignoreUndefOids: true,
 		});
 
 		async()
@@ -494,6 +496,7 @@ function Monoxide() {
 				'$errBlankUpdate',
 				'$version',
 				'$returnUpdated',
+				'$ignoreUndefOids',
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -524,10 +527,12 @@ function Monoxide() {
 			// }}}
 			// Peform the update {{{
 			.then('newRec', function(next) {
+				var metaFields = this.metaFields;
 				_.forEach(o.utilities.extractFKs(o.models[q.$collection].$mongooseModel.schema), function(fkType, schemaPath) {
 					switch(fkType.type) {
 						case 'objectId': // Convert the field to an OID if it isn't already
 							o.utilities.mapSchemaPath(q, schemaPath, function(endpointValue, endpointPath) {
+								if (q.$ignoreUndefOids && endpointValue === undefined) return metaFields.push(schemaPath); // Append to omit fields bundle so it gets removed before patch
 								return o.utilities.isObjectID(endpointValue)
 									? endpointValue // Already an OID
 									: o.utilities.objectID(endpointValue);
