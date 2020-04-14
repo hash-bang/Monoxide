@@ -532,7 +532,7 @@ function Monoxide() {
 					switch(fkType.type) {
 						case 'objectId': // Convert the field to an OID if it isn't already
 							o.utilities.mapSchemaPath(q, schemaPath, function(endpointValue, endpointPath) {
-								if (q.$ignoreUndefOids && endpointValue === undefined) return metaFields.push(schemaPath); // Append to omit fields bundle so it gets removed before patch
+								if (q.$ignoreUndefOids && endpointValue === undefined) return metaFields.push(endpointPath.join('.')); // Append to omit fields bundle so it gets removed before patch
 								return o.utilities.isObjectID(endpointValue)
 									? endpointValue // Already an OID
 									: o.utilities.objectID(endpointValue);
