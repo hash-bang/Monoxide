@@ -1,8 +1,11 @@
 {
   "name": "monoxide",
-  "version": "0.0.142",
+  "version": "0.0.144",
   "description": "A less poisonous way to work with Mongo",
   "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha test"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/hash-bang/Monoxide.git"
