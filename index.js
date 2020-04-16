@@ -3008,14 +3008,14 @@ function Monoxide() {
 	o.utilities.mapSchemaPath = function(doc, schemaPath, cb) {
 		var pathTraverse = function(target, nextChunks, thisPath) {
 			// FIXME: DEBUGGING: console.log('->', thisPath.join('.'), 'as', nextChunks[0]);
-			if (target[nextChunks[0]] && _.isPlainObject(target[nextChunks[0]])) { // Next node exists as an object - traverse into it as an object
+			if (nextChunks.length == 1) { // Last node - run callback
+				target[nextChunks[0]] = cb(target[nextChunks[0]], thisPath.concat([nextChunks[0]]));
+			} else if (target[nextChunks[0]] && _.isPlainObject(target[nextChunks[0]])) { // Next node exists as an object - traverse into it as an object
 				pathTraverse(target[nextChunks[0]], nextChunks.slice(1), thisPath.concat([nextChunks[0]]));
 			} else if (target[nextChunks[0]] && _.isArray(target[nextChunks[0]])) { // Next node exists an an array - travrse into all children
 				target[nextChunks[0]].forEach(function(child, childIndex) {
 					pathTraverse(child, nextChunks.slice(1), thisPath.concat([nextChunks[0], childIndex]));
 				});
-			} else if (nextChunks.length == 1) { // Last node - run callback
-				target[nextChunks[0]] = cb(target[nextChunks[0]], thisPath.concat([nextChunks[0]]));
 			}
 		}
 

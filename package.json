@@ -1,6 +1,6 @@
 {
   "name": "monoxide",
-  "version": "0.0.144",
+  "version": "0.0.146",
   "description": "A less poisonous way to work with Mongo",
   "main": "index.js",
   "scripts": {
@@ -42,6 +42,7 @@
     "mocha": "^5.2.0",
     "mocha-logger": "^1.0.6",
     "mongoose-scenario": "^2.1.3",
+    "sinon": "^9.0.2",
     "superagent": "^3.8.3"
   }
 }

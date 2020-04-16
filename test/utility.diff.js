@@ -3,7 +3,7 @@ var expect = require('chai').expect;
 var monoxide = require('..');
 var testSetup = require('./setup');
 
-describe('monoxide.utility.diff()', function() {
+describe('monoxide.utilities.diff()', function() {
 	before(testSetup.init);
 	after(testSetup.teardown);
 	
