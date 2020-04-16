@@ -49,7 +49,6 @@ describe('monoxide.utilities.mapSchemaPath()', function() {
 		var keys = monoxide.utilities.extractFKs(monoxide.models.users.$mongooseModel.schema);
 
 		monoxide.utilities.mapSchemaPath(keys, 'favourite', function(endpointValue, endpointPath) {
-			console.log('endpointValue', endpointValue, endpointPath);
 			expect(endpointValue).to.be.an('object');
 			expect(endpointValue).to.have.property('type').to.equal('objectId');
 			expect(endpointPath).to.be.an('array').that.does.include('favourite');
