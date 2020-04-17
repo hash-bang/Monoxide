@@ -1,7 +1,6 @@
 var _ = require('lodash');
 var expect = require('chai').expect;
 var mlog = require('mocha-logger');
-var sinon = require('sinon');
 var monoxide = require('..');
 var testSetup = require('./setup');
 
