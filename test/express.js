@@ -504,6 +504,7 @@ describe('monoxide.express.*', function() {
 				expect(res.body).to.have.property('$prototype');
 				expect(res.body.$prototype).to.be.deep.equal({
 					status: 'active',
+					featured: false,
 					color: 'blue',
 				});
 
