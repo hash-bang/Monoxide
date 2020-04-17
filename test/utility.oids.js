@@ -54,5 +54,26 @@ describe('monoxide.utilities.mapSchemaPath()', function() {
 			expect(endpointPath).to.be.an('array').that.does.include('favourite');
 			expect(endpointPath).to.have.length(1);
 		});
+
+		monoxide.utilities.mapSchemaPath(keys, 'items', function(endpointValue, endpointPath) {
+			expect(endpointValue).to.be.an('object');
+			expect(endpointValue).to.have.property('type').to.equal('objectIdArray');
+			expect(endpointPath).to.be.an('array').that.does.include('items');
+			expect(endpointPath).to.have.length(1);
+		});
+
+		monoxide.utilities.mapSchemaPath(keys, 'mostPurchased.item', function(endpointValue, endpointPath) {
+			expect(endpointValue).to.be.undefined;
+			expect(endpointPath).to.be.an('array').that.does.include('mostPurchased');
+			expect(endpointPath).to.be.an('array').that.does.include('item');
+			expect(endpointPath).to.have.length(2);
+		});
+
+		monoxide.utilities.mapSchemaPath(keys, 'mostPurchased._id', function(endpointValue, endpointPath) {
+			expect(endpointValue).to.be.undefined;
+			expect(endpointPath).to.be.an('array').that.does.include('mostPurchased');
+			expect(endpointPath).to.be.an('array').that.does.include('_id');
+			expect(endpointPath).to.have.length(2);
+		});
 	});
 });
