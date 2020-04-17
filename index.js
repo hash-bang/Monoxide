@@ -2787,6 +2787,8 @@ function Monoxide() {
 	* @return {Object} A MongoDB-Core compatible ObjectID object instance
 	*/
 	o.utilities.objectID = function(str) {
+		if (o.utilities.isObjectID(str)) return str;
+		if (str === null) return null;
 		if (!str) return undefined;
 		if (_.isObject(str) && str._id) return new mongoose.Types.ObjectId(str._id); // Is a sub-document - extract its _id and use that
 		return new mongoose.Types.ObjectId(str);

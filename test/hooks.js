@@ -58,7 +58,8 @@ describe('monoxide.* (hooks)', function() {
 				expect(doc).to.have.property('isModified'); // Check for a random Monoxide function
 				expect(doc.isModified).to.be.a('function');
 
-				expect(q._id).to.equal(users[0]._id);
+				// FIXME: Did _id change from string to ObjectId?
+				expect(q._id.toString()).to.equal(users[0]._id);
 				expect(doc._id).to.equal(users[0]._id);
 				firedHooks.postSaveHook++;
 				next();
