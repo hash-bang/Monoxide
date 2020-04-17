@@ -153,10 +153,10 @@ describe('monoxide.query() using $populate', function() {
 		});
 	});
 
-	it('should support null / undefined values in population', function(finish) {
+	it('should support saving null values', function(finish) {
 		monoxide.models.users.findOne({name: 'Jane Quark'}, function(err, user) {
 			expect(err).to.be.not.ok;
-			user.favourite = undefined;
+			user.favourite = null;
 			user.items = [];
 			user.mostPurchased = [];
 			user.save(function(err, newUser) {
