@@ -533,9 +533,7 @@ function Monoxide() {
 						case 'objectId': // Convert the field to an OID if it isn't already
 							o.utilities.mapSchemaPath(q, schemaPath, function(endpointValue, endpointPath) {
 								if (q.$ignoreUndefOids && endpointValue === undefined) return metaFields.push(endpointPath.join('.')); // Append to omit fields bundle so it gets removed before patch
-								return o.utilities.isObjectID(endpointValue)
-									? endpointValue // Already an OID
-									: o.utilities.objectID(endpointValue);
+								return o.utilities.objectID(endpointValue);
 							});
 							break;
 						case 'objectIdArray': // Convert each item to an OID if it isn't already
@@ -543,9 +541,7 @@ function Monoxide() {
 								var gotOIDs = _.get(q, schemaPath);
 								if (_.isArray(gotOIDs)) {
 									_.set(q, schemaPath, gotOIDs.map(function(i, idx) {
-										return (!o.utilities.isObjectID(newVal))
-											? o.utilities.objectID(i)
-											: i;
+										return o.utilities.objectID(i);
 									}));
 								} else {
 									throw new Error('Expected ' + schemaPath + ' to contain an array of OIDs but got ' + (typeof gotOIDs));
@@ -2084,15 +2080,13 @@ function Monoxide() {
 					switch (node.fkType) {
 						case 'objectId':
 							o.utilities.mapSchemaPath(outDoc, node.schemaPath, function(endpointValue, endpointPath) {
-								return o.utilities.isObjectID(endpointValue)
-									? endpointValue // Already an OID
-									: o.utilities.objectID(endpointValue);
+								return o.utilities.objectID(endpointValue);
 							});
 							break;
 						case 'objectIdArray':
 							var oidLeaf = _.get(outDoc, node.schemaPath);
 							_.set(outDoc, node.schemaPath, oidLeaf.map(function(leaf) {
-								return o.utilities.isObjectID(leaf) ? leaf : o.utilities.objectID(leaf);
+								return o.utilities.objectID(leaf);
 							}));
 							break;
 						default:
