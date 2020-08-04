@@ -36,6 +36,7 @@ function Monoxide() {
 		mongoose.connect(uri, _.assign({
 			promiseLibrary: global.Promise,
 			useNewUrlParser: true,
+			useUnifiedTopology: true,
 		}, options || {}), function(err) {
 			if (err) {
 				if (_.isFunction(callback)) callback(err);
