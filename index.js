@@ -2269,7 +2269,8 @@ function Monoxide() {
 								examineStack.push({
 									node: d,
 									docPath: esDoc.docPath + '.' + pathSegment + '.' + i,
-									schemaPath: esDoc.schemaPath + '.' + pathSegment,
+									// FIXME: Why was this previously without the index?
+									schemaPath: esDoc.schemaPath + '.' + pathSegment + '.' + i,
 								})
 							});
 							examineStack[esDocIndex] = false;
