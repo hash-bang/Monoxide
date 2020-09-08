@@ -362,7 +362,7 @@ module.exports = function(finish, o) {
 		});
 		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.query(). Specify as a string or {collection: String}');
-		if (!o.models[settings.collection].search) throw new Error('Attempted to search collection "${settings.collection}" but no search() method is present on the model');
+		if (!o.models[settings.collection].search) throw new Error('Attempted to search collection "'+settings.collection+'" but no search() method is present on the model');
 
 		return function(req, res, next) {
 			o.models[settings.collection].search(req.query.q, {
