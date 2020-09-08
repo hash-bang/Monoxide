@@ -369,6 +369,7 @@ module.exports = function(finish, o) {
 				filter: _.omit(req.query, ['limit', 'q', 'select', 'sort', 'skip']), // Remove search query + meta fields from output
 				limit: req.query.limit,
 				skip: req.query.skip,
+				sort: req.query.sort || '_score',
 				select: req.query.select,
 				count: req.params.id && req.params.id == 'count',
 			})
