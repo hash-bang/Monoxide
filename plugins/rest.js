@@ -404,6 +404,9 @@ module.exports = function(finish, o) {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 			queryRemaps: { // Remap incoming values on left to keys on right
 				'q': '$text',
+				'sort': '',
+				'limit': '',
+				'skip': '',
 			},
 			queryAllowed: { // Fields and their allowed contents (post remap)
 				'$text': {scalar: true, format: v => ({$search: v})},

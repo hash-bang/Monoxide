@@ -2942,6 +2942,10 @@ function Monoxide() {
 				if (_.has(settings.queryRemaps, key)) return settings.queryRemaps[key];
 				return key;
 			})
+			// Remove falsy keys, allowing item removal via queryRemaps
+			.pickBy(function(val, key) {
+				return key;
+			})
 			.mapValues(function(val, key) {
 				if (settings.queryAllowed && settings.queryAllowed[key]) {
 					var allowed = settings.queryAllowed[key];
