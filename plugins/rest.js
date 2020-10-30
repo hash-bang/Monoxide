@@ -407,6 +407,7 @@ module.exports = function(finish, o) {
 				'sort': '',
 				'limit': '',
 				'skip': '',
+				'select': '',
 			},
 			queryAllowed: { // Fields and their allowed contents (post remap)
 				'$text': {scalar: true, format: v => ({$search: v})},
