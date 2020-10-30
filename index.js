@@ -933,6 +933,7 @@ function Monoxide() {
 	* @param {boolean} [q.$filterPrivate=true] Ignore all private fields
 	* @param {boolean} [q.$prototype=false] Provide the $prototype meta object
 	* @param {boolean} [q.$indexes=false] Include whether a field is indexed
+	* @param {array} [q.$custom] String array of custom fields to also return
 	*
 	* @param {function} [callback(err,result)] Optional callback to call on completion or error
 	*
@@ -950,6 +951,7 @@ function Monoxide() {
 			$filterPrivate: true,
 			$prototype: false,
 			$indexes: false,
+			$custom: [],
 		});
 
 		async()
@@ -961,6 +963,7 @@ function Monoxide() {
 				'$collectionEnums', // Convert enums into a collection (with `id` + `title` fields per object)
 				'$prototype',
 				'$indexes',
+				'$custom',
 			])
 			// Sanity checks {{{
 			.then(function(next) {
@@ -1032,6 +1035,9 @@ function Monoxide() {
 						if (!_.isUndefined(path.defaultValue)) info.default = argy.isType(path.defaultValue, 'scalar') ? path.defaultValue : '[DYNAMIC]';
 
 						if (q.$indexes && path._index) info.index = true;
+						if (q.$custom && q.$custom.length > 0) q.$custom
+							.filter(customField => path.options[customField] !== undefined)
+							.forEach(customField => info[customField] = path.options[customField])
 
 						meta[id] = info;
 					});

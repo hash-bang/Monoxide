@@ -597,6 +597,7 @@ module.exports = function(finish, o) {
 				'$collectionEnums': {boolean: true},
 				'$prototype': {boolean: true},
 			},
+			customFields: [],
 		});
 		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.meta(). Specify as a string or {collection: String}');
@@ -606,6 +607,7 @@ module.exports = function(finish, o) {
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
 			q.$indexes = true;
+			q.$custom = settings.customFields;
 
 			if (req.params.id) q.$id = req.params.id;
 
