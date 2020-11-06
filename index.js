@@ -231,12 +231,17 @@ function Monoxide() {
 					} else if (!q.$countSkipAggregate && _.isEmpty(fields)) {
 						debug('calling aggregate');
 						q.$want = 'raw'; // Signal that we've already run the query here
+
+						// Check installed version of Mongo has aggregation.
+						if (!Object.prototype.hasOwnProperty.call(o.models[q.$collection], 'aggregate'))
+							return next('Mongo missing aggregate functionality');
+
 						o.models[q.$collection].aggregate([ {$collStats: {count: {}} } ], function(err, res) {
 							if (err) return next(err);
 							if (!_.has(res, '0.count')) return next('Illegal aggregation return');
 							next(null, res[0].count);
 						});
-					} else if (q.$count) {
+					} else {
 						debug('calling countDocuments %o', fields);
 						next(null, o.models[q.$collection].$mongooseModel.countDocuments(fields));
 					}
