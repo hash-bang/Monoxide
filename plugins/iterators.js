@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var async = require('async-chainable');
-
+//var debug = require('debug')('monoxide:interators');
 
 /**
 * Create an iterator object

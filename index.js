@@ -2,7 +2,7 @@ var _ = require('lodash')
 	.mixin(require('lodash-deep'));
 var argy = require('argy');
 var async = require('async-chainable');
-var debug = require('debug')('monoxide');
+var debug = require('debug')('monoxide:main');
 var deepDiff = require('deep-diff');
 var events = require('events');
 var mongoose = require('mongoose');
@@ -31,6 +31,7 @@ function Monoxide() {
 	* @return {monoxide} The Monoxide chainable object
 	*/
 	o.connect = argy('string [object] [function]', function(uri, options, callback) {
+		debug('connect to %s with options %o', uri, options);
 		mongoose.set('useFindAndModify', false);
 		mongoose.set('useCreateIndex', true);
 		mongoose.connect(uri, _.assign({
@@ -39,8 +40,10 @@ function Monoxide() {
 			useUnifiedTopology: true,
 		}, options || {}), function(err) {
 			if (err) {
+				debug('connect error %s', err);
 				if (_.isFunction(callback)) callback(err);
 			} else {
+				debug('connect success');
 				o.connection = mongoose.connection;
 				if (_.isFunction(callback)) callback();
 			}
@@ -56,6 +59,7 @@ function Monoxide() {
 	* @return {monoxide} The Monoxide chainable object
 	*/
 	o.disconnect = function(callback) {
+		debug('disconnect');
 		mongoose.disconnect(callback);
 
 		return o;
@@ -95,6 +99,7 @@ function Monoxide() {
 	* });
 	*/
 	o.get = argy('[object|string|number] [string|number|object] function', function(q, id, callback) {
+		debug('get %o', q);
 		argy(arguments)
 			.ifForm('object function', function(aQ, aCallback) {
 				q = aQ;
@@ -163,6 +168,7 @@ function Monoxide() {
 	* });
 	*/
 	o.query = argy('[string|object] function', function MonoxideQuery(q, callback) {
+		debug('query %o', q);
 		if (argy.isType(q, 'string')) q = {$collection: q};
 
 		_.defaults(q || {}, {
@@ -185,6 +191,7 @@ function Monoxide() {
 				if (!q || _.isEmpty(q)) return next('No query given for get operation');
 				if (!q.$collection) return next('$collection must be specified for get operation');
 				if (!o.models[q.$collection]) return next('Model not initalized: "' + q.$collection + '"');
+				//debug('sanity checks passed %o', q);
 				next();
 			})
 			// }}}
@@ -214,8 +221,8 @@ function Monoxide() {
 						.value();
 				}
 
-				//console.log('FIELDS', fields);
-				//console.log('POSTPOPFIELDS', o.filterPostPopulate);
+				//debug('fields %o %o', q, fields);
+				//debug('filterPostPopulate %o %o', q, o.filterPostPopulate);
 
 				if (q.$count) {
 					if (q.$countExact) {
@@ -300,11 +307,13 @@ function Monoxide() {
 			// }}}
 			// Fire hooks {{{
 			.then(function(next) {
+				//debug('fire hooks %o', q);
 				o.models[q.$collection].fire('query', next, q);
 			})
 			// }}}
 			// Execute and capture return {{{
 			.then('result', function(next) {
+				debug('executing query %o', q);
 				switch (q.$want) {
 					case 'array':
 						this.query.exec(function(err, res) {
@@ -340,6 +349,7 @@ function Monoxide() {
 			// }}}
 			// Convert Mongoose Documents into Monoxide Documents {{{
 			.then('result', function(next) {
+				debug('results %o %O', q, this.result);
 				// Not wanting an array of data? - pass though the result
 				if (q.$want != 'array') return next(null, this.result);
 
@@ -432,6 +442,7 @@ function Monoxide() {
 	* });
 	*/
 	o.count = argy('[string|object] function', function MonoxideCount(q, callback) {
+		debug('count %o', q);
 		if (argy.isType(q, 'string')) q = {$collection: q};
 
 		// Glue count functionality to query
@@ -477,6 +488,7 @@ function Monoxide() {
 	* });
 	*/
 	o.save = argy('object [function]', function(q, callback) {
+		debug('save %o', q);
 		_.defaults(q || {}, {
 			$refetch: true, // Fetch and return the record when updated (false returns null)
 			$errNoUpdate: false,
@@ -651,6 +663,7 @@ function Monoxide() {
 	* });
 	*/
 	o.update = argy('object|string [object] [function]', function MonoxideUpdate(q, qUpdate, callback) {
+		debug('update %o', q);
 		var o = this;
 		if (argy.isType(q, 'string')) q = {$collection: q};
 
@@ -736,6 +749,7 @@ function Monoxide() {
 	* });
 	*/
 	o.create = argy('object [function]', function MonoxideQuery(q, callback) {
+		debug('create %o', q);
 		_.defaults(q || {}, {
 			$refetch: true, // Fetch and return the record when created (false returns null)
 			$version: true,
@@ -845,6 +859,7 @@ function Monoxide() {
 	* @return {Object} This chainable object
 	*/
 	o.delete = o.remove = argy('object [function]', function MonoxideQuery(q, callback) {
+		debug('delete %o', q);
 		_.defaults(q || {}, {
 			$errNotFound: true, // During raise an error if $id is specified but not found to delete
 		});
@@ -946,6 +961,7 @@ function Monoxide() {
 	* });
 	*/
 	o.meta = argy('[object] function', function MonoxideMeta(q, callback) {
+		debug('meta %o', q);
 		_.defaults(q || {}, {
 			$arrayDefault: false,
 			$filterPrivate: true,
@@ -1100,6 +1116,7 @@ function Monoxide() {
 	* @example
 	*/
 	o.runCommand = argy('object [function]', function MonoxideRunCommand(cmd, callback) {
+		debug('runCommand %s', cmd);
 		o.connection.db.command(cmd, callback);
 		return o;
 	});

@@ -1,6 +1,7 @@
 /**
 * Plugin which transforms most Monoxide objects into promise returns
 */
+//var debug = require('debug')('monoxide:promises');
 var promisify = require('util').promisify;
 
 module.exports = function(finish, o) {
