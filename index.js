@@ -191,7 +191,7 @@ function Monoxide() {
 				if (!q || _.isEmpty(q)) return next('No query given for get operation');
 				if (!q.$collection) return next('$collection must be specified for get operation');
 				if (!o.models[q.$collection]) return next('Model not initalized: "' + q.$collection + '"');
-				//debug('sanity checks passed %o', q);
+				debug('sanity checks passed %o', q);
 				next();
 			})
 			// }}}
@@ -226,8 +226,10 @@ function Monoxide() {
 
 				if (q.$count) {
 					if (q.$countExact) {
+						debug('calling estimatedDocumentCount %o', fields);
 						next(null, o.models[q.$collection].$mongooseModel.estimatedDocumentCount(fields));
 					} else if (!q.$countSkipAggregate && _.isEmpty(fields)) {
+						debug('calling aggregate');
 						q.$want = 'raw'; // Signal that we've already run the query here
 						o.models[q.$collection].aggregate([ {$collStats: {count: {}} } ], function(err, res) {
 							if (err) return next(err);
@@ -235,11 +237,14 @@ function Monoxide() {
 							next(null, res[0].count);
 						});
 					} else if (q.$count) {
+						debug('calling countDocuments %o', fields);
 						next(null, o.models[q.$collection].$mongooseModel.countDocuments(fields));
 					}
 				} else if (q.$one) {
+					debug('calling findOne %o', fields);
 					next(null, o.models[q.$collection].$mongooseModel.findOne(fields));
 				} else {
+					debug('calling find %o', fields);
 					next(null, o.models[q.$collection].$mongooseModel.find(fields));
 				}
 			})
@@ -307,7 +312,7 @@ function Monoxide() {
 			// }}}
 			// Fire hooks {{{
 			.then(function(next) {
-				//debug('fire hooks %o', q);
+				debug('firing hooks %o', Object.keys(o.models[q.$collection].$hooks).indexOf('query') !== -1);
 				o.models[q.$collection].fire('query', next, q);
 			})
 			// }}}
@@ -401,7 +406,7 @@ function Monoxide() {
 			// End {{{
 			.end(function(err) {
 				if (err) {
-					debug('get() error', err);
+					debug('query error %s', err);
 					return callback(err);
 				} else if (q.$count) {
 					callback(null, this.result);
