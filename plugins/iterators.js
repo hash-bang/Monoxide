@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var async = require('async-chainable');
-
+//var debug = require('debug')('monoxide:interators');
 
 /**
 * Create an iterator object
@@ -192,12 +192,12 @@ var iteratorObject = function(options) {
 				async()
 					.set('iter', this)
 					.set('data', this.settings.data)
-					.forEach('data', function(next, doc) {
+					.forEach('data', function(next, doc, key) {
 						cb.call(doc, (err, res) => {
 							if (err) {
 								next(err);
 							} else if (!res) {
-								doc = undefined;
+								delete this.data[key];
 								next();
 							} else {
 								next();
@@ -206,7 +206,7 @@ var iteratorObject = function(options) {
 					})
 					.end(function(err) {
 						if (err) return done(err);
-						this.iter.settings.data = this.data.filter(doc => doc !== undefined);
+						this.iter.settings.data = this.data.filter(doc => doc);
 						done();
 					});
 				break;

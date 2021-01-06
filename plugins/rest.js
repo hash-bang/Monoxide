@@ -1,5 +1,6 @@
 var _  = require('lodash');
 var argy = require('argy');
+var debug = require('debug')('monoxide:rest');
 
 module.exports = function(finish, o) {
 	/**
@@ -109,70 +110,86 @@ module.exports = function(finish, o) {
 
 			// Search {{{
 			if (settings.search && req.method == 'GET' && req.query.q && !_.isBoolean(settings.search) && (!req.params.id || req.params.id == 'count')) {
+				debug('search middleware detected');
 				o.utilities.runMiddleware(req, res, settings.search, function() {
 					o.express.search(settings)(req, res, next);
 				}, settings);
 			} else if (settings.search && req.method == 'GET' && req.query.q && (!req.params.id || req.params.id == 'count')) {
+				debug('search detected');
 				o.express.search(settings)(req, res, next);
 			// }}}
 			// Count {{{
 			} else if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count' && !_.isBoolean(settings.count)) {
+				debug('count middleware detected');
 				o.utilities.runMiddleware(req, res, settings.count, function() {
 					o.express.count(settings)(req, res, next);
 				}, settings);
 			} else if (settings.count && req.method == 'GET' && req.params.id && req.params.id == 'count') {
+				debug('count detected');
 				o.express.count(settings)(req, res, next);
 			// }}}
 			// Meta {{{
 			} else if (settings.meta && req.method == 'GET' && req.params.id && req.params.id == 'meta' && !_.isBoolean(settings.meta)) {
+				debug('meta middleware detected');
 				o.utilities.runMiddleware(req, res, settings.meta, function() {
 					o.express.meta(settings)(req, res, next);
 				}, settings);
 			} else if (settings.meta && req.method == 'GET' && req.params.id && req.params.id == 'meta') {
+				debug('meta detected');
 				o.express.meta(settings)(req, res, next);
 			// }}}
 			// Get {{{
 			} else if (settings.get && req.method == 'GET' && req.params.id && !_.isBoolean(settings.get)) {
+				debug('get middleware detected');
 				req.monoxide.id = req.params.id;
 				o.utilities.runMiddleware(req, res, settings.get, function() {
 					o.express.get(settings)(req, res, next);
 				}, settings);
 			} else if (settings.get && req.method == 'GET' && req.params.id) {
+				debug('get detected');
 				o.express.get(settings)(req, res, next);
 			// }}}
 			// Query {{{
 			} else if (settings.query && req.method == 'GET' && !_.isBoolean(settings.query)) {
+				debug('query middleware detected');
 				o.utilities.runMiddleware(req, res, settings.query, function() {
 					o.express.query(settings)(req, res, next);
 				}, settings);
 			} else if (settings.query && req.method == 'GET') {
+				debug('query detected');
 				o.express.query(settings)(req, res, next);
 			// }}}
 			// Save {{{
 			} else if (settings.save && req.method == 'POST' && req.params.id && !_.isBoolean(settings.save)) {
+				debug('save middleware detected');
 				req.monoxide.id = req.params.id;
 				o.utilities.runMiddleware(req, res, settings.save, function() {
 					o.express.save(settings)(req, res, next);
 				}, settings);
 			} else if (settings.save && req.method == 'POST' && req.params.id) {
+				debug('save detected');
 				o.express.save(settings)(req, res, next);
 			// }}}
 			// Create {{{
 			} else if (settings.create && req.method == 'POST' && !_.isBoolean(settings.create)) {
+				debug('create middleware detected');
 				req.monoxide.id = req.params.id;
 				o.utilities.runMiddleware(req, res, settings.create, function() {
 					o.express.create(settings)(req, res, next);
 				}, settings);
 			} else if (settings.create && req.method == 'POST') {
+				debug('create detected');
 				o.express.create(settings)(req, res, next);
 			// }}}
 			// Delete {{{
 			} else if (settings.delete && req.method == 'DELETE' && !_.isBoolean(settings.delete)) {
+				debug('delete middleware detected');
 				req.monoxide.id = req.params.id;
 				o.utilities.runMiddleware(req, res, settings.delete, function() {
 					o.express.delete(settings)(req, res, next);
 				}, settings);
 			} else if (settings.delete && req.method == 'DELETE') {
+				debug('delete detected');
 				o.express.delete(settings)(req, res, next);
 			// }}}
 			// Unknown {{{
@@ -205,6 +222,7 @@ module.exports = function(finish, o) {
 	* app.get('/api/widgets/:id?', monoxide.express.get('widgets'));
 	*/
 	o.express.get = argy('[string] [object]', function MonoxideExpressGet(model, options) {
+		debug('get %s/%s', model, options.collection);
 		var settings = _.defaults({}, options, {
 			queryRemaps: { // Remap incoming values on left to keys on right
 				populate: '$populate',
@@ -275,6 +293,7 @@ module.exports = function(finish, o) {
 	* app.get('/api/widgets', monoxide.express.query('widgets'));
 	*/
 	o.express.query = argy('[string] [object]', function MonoxideExpressQuery(model, options) {
+		debug('query %s/%s', model, options.collection);
 		var settings = _.defaults({}, options, {
 			shorthandArrays: true,
 			queryRemaps: { // Remap incoming values on left to keys on right
@@ -357,6 +376,7 @@ module.exports = function(finish, o) {
 	* app.get('/api/widgets?q=something', monoxide.express.search('widgets'));
 	*/
 	o.express.search = argy('[string] [object]', function MonoxideExpressQuery(model, options) {
+		debug('search %s/%s', model, options.collection);
 		var settings = _.defaults({}, options, {
 			collection: undefined,
 		});
@@ -366,7 +386,8 @@ module.exports = function(finish, o) {
 
 		return function(req, res, next) {
 			o.models[settings.collection].search(req.query.q, {
-				filter: _.omit(req.query, ['limit', 'q', 'select', 'sort', 'skip']), // Remove search query + meta fields from output
+				filter: _.omit(req.query, ['populate', 'limit', 'q', 'select', 'sort', 'skip']), // Remove search query + meta fields from output
+				populate: req.query.populate,
 				limit: req.query.limit,
 				skip: req.query.skip,
 				sort: req.query.sort || '_score',
@@ -400,6 +421,7 @@ module.exports = function(finish, o) {
 	* app.get('/api/widgets/count', monoxide.express.get('widgets'));
 	*/
 	o.express.count = argy('[string] [object]', function MonoxideExpressCount(model, options) {
+		debug('count %s/%s', model, options.collection);
 		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 			queryRemaps: { // Remap incoming values on left to keys on right
@@ -407,6 +429,8 @@ module.exports = function(finish, o) {
 				'sort': '',
 				'limit': '',
 				'skip': '',
+				'select': '',
+				'populate': '',
 			},
 			queryAllowed: { // Fields and their allowed contents (post remap)
 				'$text': {scalar: true, format: v => ({$search: v})},
@@ -452,6 +476,7 @@ module.exports = function(finish, o) {
 	* app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 	*/
 	o.express.save = argy('[string] [object]', function MonoxideExpressSave(model, options) {
+		debug('save %s/%s', model, options.collection);
 		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
@@ -496,6 +521,7 @@ module.exports = function(finish, o) {
 	* app.post('/api/widgets', monoxide.express.create('widgets'));
 	*/
 	o.express.create = argy('[string] [object]', function MonoxideExpressCreate(model, options) {
+		debug('create %s/%s', model, options.collection);
 		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
@@ -541,6 +567,7 @@ module.exports = function(finish, o) {
 	* app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 	*/
 	o.express.delete = argy('[string] [object]', function MonoxideExpressDelete(model, options) {
+		debug('delete %s/%s', model, options.collection);
 		var settings = _.defaults({}, options, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
@@ -586,6 +613,7 @@ module.exports = function(finish, o) {
 	* app.delete('/api/widgets/meta', monoxide.express.meta('widgets'));
 	*/
 	o.express.meta = argy('[string] [object]', function MonoxideExpressMeta(model, options) {
+		debug('meta %s/%s', model, options.collection);
 		var settings = _.defaults({}, options, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself

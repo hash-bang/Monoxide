@@ -33,7 +33,7 @@ Key differences from Mongoose / MongoDB-Core:
 * **Pass private data using `$data`** - The `$data` object can be specified in any operation (query, save, delete etc.) and is ignored by Monoxide but still passed into hooks. This can be used as a method to pass data to lower-level functions such as logging operations (e.g. pass the currently logged in user to the lower level hooks)
 * **Meta polling** - Access database meta information using either the `meta()` method or the ReST adapter
 * **Version management** - Created documents correctly set the `__v` property and increment it on save
-* **DEBUG compatibility** - Setting the environment variable `DEBUG=monoxide` will output any errors raised by Monoxide to the console
+* **DEBUG compatibility** - Setting the environment variable `DEBUG=monoxide:*` will output internal processes of Monoxide to the console
 
 
 See the [ideas list](ideas.md) for future ideas.
