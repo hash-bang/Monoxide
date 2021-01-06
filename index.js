@@ -170,6 +170,7 @@ function Monoxide() {
 			$want: 'array',
 			$applySchema: true, // Apply the schema on retrieval - this slows ths record retrieval but means any alterations to the schema are applied to each retrieved record
 			$errNotFound: true, // During $id / $one operations raise an error if the record is not found
+			$countSkipAggregate: true, // No longer valid Mongo >4.2
 		});
 		if (!_.isEmpty(q.$select)) q.$applySchema = false; // Turn off schema application when using $select as we wont be grabbing the full object
 
