@@ -222,7 +222,7 @@ module.exports = function(finish, o) {
 	* app.get('/api/widgets/:id?', monoxide.express.get('widgets'));
 	*/
 	o.express.get = argy('[string] [object]', function MonoxideExpressGet(model, options) {
-		debug('get %s/%s', model, options.collection);
+		debug('get %s/%s', model, options && options.collection);
 		var settings = _.defaults({}, options, {
 			queryRemaps: { // Remap incoming values on left to keys on right
 				populate: '$populate',
@@ -293,7 +293,7 @@ module.exports = function(finish, o) {
 	* app.get('/api/widgets', monoxide.express.query('widgets'));
 	*/
 	o.express.query = argy('[string] [object]', function MonoxideExpressQuery(model, options) {
-		debug('query %s/%s', model, options.collection);
+		debug('query %s/%s', model, options && options.collection);
 		var settings = _.defaults({}, options, {
 			shorthandArrays: true,
 			queryRemaps: { // Remap incoming values on left to keys on right
@@ -376,7 +376,7 @@ module.exports = function(finish, o) {
 	* app.get('/api/widgets?q=something', monoxide.express.search('widgets'));
 	*/
 	o.express.search = argy('[string] [object]', function MonoxideExpressQuery(model, options) {
-		debug('search %s/%s', model, options.collection);
+		debug('search %s/%s', model, options && options.collection);
 		var settings = _.defaults({}, options, {
 			collection: undefined,
 		});
@@ -421,7 +421,7 @@ module.exports = function(finish, o) {
 	* app.get('/api/widgets/count', monoxide.express.get('widgets'));
 	*/
 	o.express.count = argy('[string] [object]', function MonoxideExpressCount(model, options) {
-		debug('count %s/%s', model, options.collection);
+		debug('count %s/%s', model, options && options.collection);
 		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 			queryRemaps: { // Remap incoming values on left to keys on right
@@ -476,7 +476,7 @@ module.exports = function(finish, o) {
 	* app.post('/api/widgets/:id', monoxide.express.save('widgets'));
 	*/
 	o.express.save = argy('[string] [object]', function MonoxideExpressSave(model, options) {
-		debug('save %s/%s', model, options.collection);
+		debug('save %s/%s', model, options && options.collection);
 		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
@@ -521,7 +521,7 @@ module.exports = function(finish, o) {
 	* app.post('/api/widgets', monoxide.express.create('widgets'));
 	*/
 	o.express.create = argy('[string] [object]', function MonoxideExpressCreate(model, options) {
-		debug('create %s/%s', model, options.collection);
+		debug('create %s/%s', model, options && options.collection);
 		var settings = _.defaults({}, options, {
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
 		});
@@ -567,7 +567,7 @@ module.exports = function(finish, o) {
 	* app.delete('/api/widgets/:id', monoxide.express.delete('widgets'));
 	*/
 	o.express.delete = argy('[string] [object]', function MonoxideExpressDelete(model, options) {
-		debug('delete %s/%s', model, options.collection);
+		debug('delete %s/%s', model, options && options.collection);
 		var settings = _.defaults({}, options, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
@@ -613,7 +613,7 @@ module.exports = function(finish, o) {
 	* app.delete('/api/widgets/meta', monoxide.express.meta('widgets'));
 	*/
 	o.express.meta = argy('[string] [object]', function MonoxideExpressMeta(model, options) {
-		debug('meta %s/%s', model, options.collection);
+		debug('meta %s/%s', model, options && options.collection);
 		var settings = _.defaults({}, options, {
 			collection: null, // The collection to operate on
 			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
