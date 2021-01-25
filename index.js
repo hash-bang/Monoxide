@@ -368,6 +368,7 @@ function Monoxide() {
 					next(null, undefined);
 				} else if (q.$one) {
 					if (q.$decorate) return next(null, this.result.toObject());
+					// FIXME: $decorate false would mean a monoxideDocument is never created but simply data returned immediately
 					next(null, new o.monoxideDocument({
 						$collection: q.$collection,
 						$applySchema: q.$applySchema,
@@ -379,6 +380,7 @@ function Monoxide() {
 				} else {
 					next(null, this.result.map(function(doc) {
 						if (q.$decorate) return doc.toObject();
+						// FIXME: $decorate false would mean a monoxideDocument is never created but simply data returned immediately
 						return new o.monoxideDocument({
 							$collection: q.$collection,
 							$applySchema: q.$applySchema,
@@ -575,8 +577,16 @@ function Monoxide() {
 					}
 				});
 
+				// Initalise object with getters/setters for virtual methods.
+				var proto = {};
+				_.extend(
+					proto, // INPUT: Basic prototype
+					o.models[q.$collection].$methods // Merge with model methods
+				);
+				var patch = Object.create(proto);
+				Object.defineProperties(patch, o.models[q.$collection].$virtuals);
+				Object.assign(patch, _.omit(q, this.metaFields));
 
-				var patch = _.omit(q, this.metaFields);
 				if (_.isEmpty(patch)) {
 					if (q.$errBlankUpdate) return next('Nothing to update');
 					if (q.$refetch) {
@@ -2110,7 +2120,6 @@ function Monoxide() {
 			toMongoObject: function() {
 				var doc = this;
 				var outDoc = doc.toObject(); // Rely on the toObject() syntax to strip out rubbish
-
 				doc.getOIDs().forEach(function(node) {
 					switch (node.fkType) {
 						case 'objectId':
@@ -2303,7 +2312,7 @@ function Monoxide() {
 								examineStack.push({
 									node: d,
 									docPath: esDoc.docPath + '.' + pathSegment + '.' + i,
-									schemaPath: esDoc.schemaPath + '.' + pathSegment + '.' + i,
+									schemaPath: esDoc.schemaPath + '.' + pathSegment,
 								})
 							});
 							examineStack[esDocIndex] = false;
