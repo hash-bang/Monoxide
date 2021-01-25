@@ -25,7 +25,7 @@
     "deep-diff": "^1.0.2",
     "lodash": "^4.17.19",
     "lodash-deep": "^2.0.0",
-    "mongoose": "^5.9.27",
+    "mongoose": "^5.11.13",
     "traverse": "^0.6.6"
   },
   "devDependencies": {
