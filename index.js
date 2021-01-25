@@ -2303,7 +2303,7 @@ function Monoxide() {
 								examineStack.push({
 									node: d,
 									docPath: esDoc.docPath + '.' + pathSegment + '.' + i,
-									schemaPath: esDoc.schemaPath + '.' + pathSegment,
+									schemaPath: esDoc.schemaPath + '.' + pathSegment + '.' + i,
 								})
 							});
 							examineStack[esDocIndex] = false;
