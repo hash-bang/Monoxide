@@ -230,7 +230,12 @@ module.exports = function(finish, o) {
 			},
 			queryAllowed: { // Fields and their allowed contents (post remap)
 				'$populate': {scalar: true, scalarCSV: true, array: true},
-				'$select': {scalar: true, scalarCSV: true, array: true},
+				'$select': {scalar: true, scalarCSV: true, array: true,
+					// Mapping "1" to boolean see issue #14
+					format: f => {
+						if (!_.isObject(f)) return f;
+						return _(f).mapValues(v => (v == 'true' || v == '1')).value();
+					}},
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 			omitFields: [/^_(?!id|_v)/], // Omit all fields prefixed with '_' that are not '_id' or '__v'
@@ -245,6 +250,7 @@ module.exports = function(finish, o) {
 			q.$collection = settings.collection;
 			q.$data = settings.$data;
 			q.$id = req.params.id;
+			//debug('get', req.query, q);
 
 			o.get(q, function(err, doc) {
 				// Apply omitFields {{{
@@ -307,7 +313,13 @@ module.exports = function(finish, o) {
 			queryAllowed: { // Fields and their allowed contents (post remap)
 				'$limit': {number: true},
 				'$populate': {scalar: true, scalarCSV: true, array: true},
-				'$select': {scalar: true, scalarCSV: true, array: true},
+				'$select': {scalar: true, scalarCSV: true, array: true,
+					// Mapping "1" to boolean see issue #14
+					format: f => {
+						if (!_.isObject(f)) return f;
+						return _(f).mapValues(v => (v == 'true' || v == '1')).value();
+					}},
+				},
 				'$skip': {number: true},
 				'$sort': {scalar: true},
 				'$text': {scalar: true, format: v => ({$search: v})},
