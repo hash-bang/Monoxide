@@ -29,7 +29,9 @@ module.exports = {
 
 	// teardown {{{
 	teardown: function(finish) {
+		this.timeout(30 * 1000);
 		var self = module.exports;
+
 		if (!allowTeardown) {
 			mlog.error('Skipping teardown');
 			mlog.log('To examine use `mongo ' + mongoURI.replace(/^.+\/(.*)?/, '$1') + '`');
@@ -252,8 +254,8 @@ module.exports = {
 			connection: monoxide.connection,
 			nuke: true,
 		}, function(err, data) {
-			expect(err).to.be.not.ok;
-			finish();
+			// This callback fires multiple times, only when err === null are we complete.
+			if (!err) finish();
 		});
 	},
 	// }}}
@@ -287,7 +289,7 @@ module.exports = {
 
 	// teardownConnection {{{
 	teardownConnection: function(finish) {
-		monoxide.connection.close(finish);
+		monoxide.connection.close(false, finish);
 	},
 	// }}}
 
@@ -303,7 +305,8 @@ module.exports = {
 				next();
 			})
 			.then(function(next) {
-				monoxide.connection.db.dropDatabase(next);
+				monoxide.connection.dropDatabase()
+					.finally(next);
 			})
 			.end(finish);
 	},
