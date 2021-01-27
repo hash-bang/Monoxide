@@ -234,7 +234,7 @@ module.exports = function(finish, o) {
 					// Mapping "1" to boolean see issue #14
 					format: f => {
 						if (!_.isObject(f)) return f;
-						return _(f).mapValues(v => (v == 'true' || v == '1')).value();
+						return _(f).mapValues(v => (v == 'true' || v == '1') ? true : v).value();
 					}},
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
@@ -317,7 +317,7 @@ module.exports = function(finish, o) {
 					// Mapping "1" to boolean see issue #14
 					format: f => {
 						if (!_.isObject(f)) return f;
-						return _(f).mapValues(v => (v == 'true' || v == '1')).value();
+						return _(f).mapValues(v => (v == 'true' || v == '1') ? true : v).value();
 					}},
 				},
 				'$skip': {number: true},
