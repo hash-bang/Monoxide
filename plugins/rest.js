@@ -235,7 +235,8 @@ module.exports = function(finish, o) {
 					format: f => {
 						if (!_.isObject(f)) return f;
 						return _(f).mapValues(v => (v == 'true' || v == '1') ? true : v).value();
-					}},
+					}
+				},
 			},
 			passThrough: false, // If true this module will behave as middleware gluing req.document as the return, if false it will handle the resturn values via `res` itself
 			omitFields: [/^_(?!id|_v)/], // Omit all fields prefixed with '_' that are not '_id' or '__v'
@@ -318,7 +319,7 @@ module.exports = function(finish, o) {
 					format: f => {
 						if (!_.isObject(f)) return f;
 						return _(f).mapValues(v => (v == 'true' || v == '1') ? true : v).value();
-					}},
+					}
 				},
 				'$skip': {number: true},
 				'$sort': {scalar: true},
