@@ -29,7 +29,7 @@ describe('monoxide.query() using $select', function() {
 	});
 
 	// See issue #14
-	it('should select deeply nested with boolean', function(finish) {
+	it('should select object fields with "boolean" as string', function(finish) {
 		monoxide.query({
 			$collection: 'users',
 			$sort: 'created',
@@ -41,10 +41,8 @@ describe('monoxide.query() using $select', function() {
 			expect(err).to.be.not.ok;
 			expect(data).to.be.an('array');
 			data.forEach(function(d) {
-				console.log('d', d);
 				expect(d).to.have.property('mostPurchased');
 				d.mostPurchased.forEach(function(i) {
-					console.log('i', i);
 					expect(i).to.have.property('number');
 					expect(i).to.have.property('item');
 					//expect(i).to.not.have.property('0');
@@ -131,6 +129,31 @@ describe('monoxide.query() using $select', function() {
 					expect(mp).to.have.property('number');
 					expect(mp).to.not.have.property('item');
 				});
+			});
+			finish();
+		});
+	});
+
+	it('should omit object fields with "boolean" as string', function(finish) {
+		monoxide.query({
+			$collection: 'users',
+			$sort: 'created',
+			$select: {
+				// String to mimick input from ReST querystring
+				mostPurchased: '0'
+			},
+		}, function(err, data) {
+			expect(err).to.be.not.ok;
+			expect(data).to.be.an('array');
+			data.forEach(function(d) {
+				expect(d).to.have.property('_id');
+				expect(d).to.have.property('name');
+				expect(d).to.have.property('role');
+				expect(d).to.have.property('favourite');
+				expect(d).to.have.property('items');
+				expect(d).to.have.property('_password');
+
+				expect(d).to.not.have.property('mostPurchased');
 			});
 			finish();
 		});
