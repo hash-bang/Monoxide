@@ -280,8 +280,20 @@ function Monoxide() {
 						q.$select.forEach(function(s) {
 							query.select(s);
 						});
-					} else if (_.isString(q.$select) || _.isObject(q.$select)) {
+					} else if (_.isString(q.$select)) {
 						this.query.select(q.$select);
+					} else if (_.isObject(q.$select)) {
+						this.query.select(
+							_(q.$select)
+								.mapValues(v => {
+									// Allowing for conversion of string values
+									if (v == 'true' || v == '1') return true;
+									// While we're here support "-1" for convenience
+									if (v == 'false' || v == '0' || v == '-1') return false;
+									return v;
+								})
+								.value()
+						);
 					} else {
 						throw new Error('Invalid select type: ' + (typeof q.$select));
 					}
