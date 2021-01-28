@@ -28,7 +28,34 @@ describe('monoxide.query() using $select', function() {
 		});
 	});
 
+	// See issue #14
+	it('should select deeply nested with boolean', function(finish) {
+		monoxide.query({
+			$collection: 'users',
+			$sort: 'created',
+			$select: {
+				// String to mimick input from ReST querystring
+				mostPurchased: '1'
+			},
+		}, function(err, data) {
+			expect(err).to.be.not.ok;
+			expect(data).to.be.an('array');
+			data.forEach(function(d) {
+				console.log('d', d);
+				expect(d).to.have.property('mostPurchased');
+				d.mostPurchased.forEach(function(i) {
+					console.log('i', i);
+					expect(i).to.have.property('number');
+					expect(i).to.have.property('item');
+					//expect(i).to.not.have.property('0');
+				})
+			});
+			finish();
+		});
+	});
+
 	it('should omit certain fields', function(finish) {
+		this.timeout(5 * 1000);
 		monoxide.query({
 			$collection: 'widgets',
 			$sort: 'created',
