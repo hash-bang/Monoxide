@@ -27,7 +27,7 @@ module.exports = function(finish, o) {
 	* @param {*} [err] Optional error text / error object to report
 	*/
 	o.express.sendError = function(res, code, err) {
-		if (res.sendError) {
+		if (res.sendError && err) {
 			res.sendError(code, err);
 		} else {
 			res.sendStatus(code);
