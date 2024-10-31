@@ -835,7 +835,13 @@ function Monoxide() {
 				o.models[q.$collection].fire('create', next, this.createDoc);
 			})
 			.then('rawResponse', function(next) {
-				o.models[q.$collection].$mongoModel.insertOne(this.createDoc.toMongoObject(), next);
+				try {
+					var mongoDoc = this.createDoc.toMongoObject();
+				} catch(e) {
+					return next(e);
+				}
+
+				o.models[q.$collection].$mongoModel.insertOne(mongoDoc, next);
 			})
 			.then(function(next) {
 				o.models[q.$collection].fire('postCreate', next, q, this.createDoc);
@@ -860,7 +866,7 @@ function Monoxide() {
 			// End {{{
 			.end(function(err) {
 				if (err) {
-					debug('create() error', err);
+					debug('create() error', err, _.isFunction(callback));
 					if (_.isFunction(callback)) callback(err);
 				} else {
 					if (_.isFunction(callback)) callback(null, this.newRec);
@@ -2042,13 +2048,18 @@ function Monoxide() {
 			*/
 			save: argy('[object] [function]', function(data, callback) {
 				var doc = this;
-				var mongoDoc = doc.toMongoObject();
 				var patch = {
 					$collection: doc.$collection,
 					$id: doc._id,
 					$errNoUpdate: true, // Throw an error if we fail to update (i.e. record removed before save)
 					$returnUpdated: true,
 				};
+
+				try {
+					var mongoDoc = doc.toMongoObject();
+				} catch(e) {
+					return callback(e);
+				}
 
 				if (data && data.$ignoreModified) { // Only save incomming data
 					delete data.$ignoreModified;
@@ -2136,13 +2147,21 @@ function Monoxide() {
 					switch (node.fkType) {
 						case 'objectId':
 							o.utilities.mapSchemaPath(outDoc, node.schemaPath, function(endpointValue, endpointPath) {
-								return o.utilities.objectID(endpointValue);
+								try {
+									return o.utilities.objectID(endpointValue);
+								} catch(e) {
+									throw new Error(`Document path "${node.schemaPath}" contains an invalid ObjectId`);
+								}
 							});
 							break;
 						case 'objectIdArray':
 							var oidLeaf = _.get(outDoc, node.schemaPath);
 							_.set(outDoc, node.schemaPath, oidLeaf.map(function(leaf) {
-								return o.utilities.objectID(leaf);
+								try {
+									return o.utilities.objectID(leaf);
+								} catch(e) {
+									throw new Error(`Document path "${node.schemaPath}" contains an invalid ObjectId`);
+								}
 							}));
 							break;
 						default:
@@ -2841,6 +2860,7 @@ function Monoxide() {
 		if (str === null) return null;
 		if (!str) return undefined;
 		if (_.isObject(str) && str._id) return new mongoose.Types.ObjectId(str._id); // Is a sub-document - extract its _id and use that
+		if (_.isObject(str)) return undefined; // Object does not contain an "_id" key
 		return new mongoose.Types.ObjectId(str);
 	};
 	// }}}

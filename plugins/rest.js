@@ -28,8 +28,10 @@ module.exports = function(finish, o) {
 	*/
 	o.express.sendError = function(res, code, err) {
 		if (res.sendError && err) {
+			debug('sendError', code, err);
 			res.sendError(code, err);
 		} else {
+			debug('sendStatus', code);
 			res.sendStatus(code);
 		}
 	};
@@ -262,7 +264,7 @@ module.exports = function(finish, o) {
 					next(err, doc);
 				} else if (err) { // Act as endpoint and there was an error
 					if (err == 'Not found') return o.express.sendError(res, 404);
-					o.express.sendError(res, 400);
+					o.express.sendError(res, 400, err);
 				} else { // Act as endpoint and result is ok
 					res.send(doc);
 				}
@@ -495,6 +497,7 @@ module.exports = function(finish, o) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
+					if (err.toString().includes('invalid ObjectId')) return o.express.sendError(res, 400, err.toString());
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows);
@@ -541,6 +544,7 @@ module.exports = function(finish, o) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
+					if (err.toString().includes('invalid ObjectId')) return o.express.sendError(res, 400, err.toString());
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows);
@@ -587,6 +591,7 @@ module.exports = function(finish, o) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
+					if (err.toString().includes('invalid ObjectId')) return o.express.sendError(res, 400, err.toString());
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows);
