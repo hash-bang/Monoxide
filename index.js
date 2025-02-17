@@ -597,7 +597,13 @@ function Monoxide() {
 				);
 				var patch = Object.create(proto);
 				Object.defineProperties(patch, o.models[q.$collection].$virtuals);
-				Object.assign(patch, _.omit(q, this.metaFields));
+				Object.assign(patch, _.omit(
+					q,
+					this.metaFields.concat(
+						Object.keys(o.models[q.$collection].$virtuals)
+							.filter(k => !argy.isType(o.models[q.$collection].$virtuals[k]?.set, 'function')) // Omit virtuals which have no setter
+					)
+				));
 
 				if (_.isEmpty(patch)) {
 					if (q.$errBlankUpdate) return next('Nothing to update');
