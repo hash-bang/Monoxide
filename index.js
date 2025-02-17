@@ -1689,6 +1689,8 @@ function Monoxide() {
 			var q = {};
 			if (argy.isType(getCallback, 'function')) q.get = getCallback;
 			if (argy.isType(setCallback, 'function')) q.set = setCallback;
+			q.enumerable = true; // NOTE: NodeJS will not display property without this
+			debug('virtual', mm.$collection, name, q);
 
 			mm.$virtuals[name] = q;
 			return mm;
