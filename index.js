@@ -622,7 +622,11 @@ function Monoxide() {
 				}
 
 				var updatePayload = {$set: patch};
-				var updateOptions = { returnOriginal: !q.$returnUpdated };
+				var updateOptions = {
+					returnOriginal: !q.$returnUpdated,
+					runValidators: true,
+					context: 'query',
+				};
 				var updateCallback = function(err, res) {
 					if (q.$version && err && o.settings.versionIncErr.test(err.toString())) { // Error while setting `__v`
 						// Remove __v as an increment operator + retry the operation
@@ -647,7 +651,7 @@ function Monoxide() {
 				}
 
 				// Actually perform the action
-				o.models[q.$collection].$mongoModel.findOneAndUpdate(
+				o.models[q.$collection].$mongooseModel.findOneAndUpdate(
 					updateQuery, // What we are writing to
 					updatePayload, // What we are saving
 					updateOptions, // Options passed to Mongo
@@ -847,7 +851,7 @@ function Monoxide() {
 					return next(e);
 				}
 
-				o.models[q.$collection].$mongoModel.insertOne(mongoDoc, next);
+				o.models[q.$collection].$mongooseModel.insertOne(mongoDoc, next);
 			})
 			.then(function(next) {
 				o.models[q.$collection].fire('postCreate', next, q, this.createDoc);
@@ -955,7 +959,7 @@ function Monoxide() {
 					// Check that the hook returns ok
 					o.models[q.$collection].fire('delete', function(err) {
 						// Now actually delete the item
-						o.models[q.$collection].$mongoModel.deleteOne({_id: o.utilities.objectID(q.$id)}, function(err, res) {
+						o.models[q.$collection].$mongooseModel.deleteOne({_id: o.utilities.objectID(q.$id)}, function(err, res) {
 							if (err) return next(err);
 							if (q.$errNotFound && !res.result.ok) return next('Not found');
 							// Delete was sucessful - call event then move next

@@ -471,6 +471,8 @@ module.exports = function(finish, o) {
 	* @param {string} [model] The model name to bind to (this can also be specified as settings.collection)
 	* @param {Object} [settings] Middleware settings
 	* @param {string} [settings.collection] The model name to bind to
+	* @param {Boolean} [settings.passThrough=false] Behave as middleware or send a response
+	* @param {Array} [settings.publicErrors=["invalid ObjectId","ValidationError"]] List of error strings which will be returned with response
 	* @returns {function} callback(req, res, next) Express compatible middleware function
 	*
 	* @example
@@ -480,7 +482,11 @@ module.exports = function(finish, o) {
 	o.express.save = argy('[string] [object]', function MonoxideExpressSave(model, options) {
 		debug('save %s/%s', model, options && options.collection);
 		var settings = _.defaults({}, options, {
-			passThrough: false, // If true this module will behave as middleware, if false it will handle the resturn values via `res` itself
+			passThrough: false, // If true this module will behave as middleware, if false it will handle the return values via `res` itself
+			publicErrors: [
+				'invalid ObjectId',
+				'ValidationError',
+			],
 		});
 		if (model) settings.collection = model;
 		if (!settings.collection) throw new Error('No collection specified for monoxide.express.save(). Specify as a string or {collection: String}');
@@ -497,7 +503,8 @@ module.exports = function(finish, o) {
 				if (settings.passThrough) { // Act as middleware
 					next(err, rows);
 				} else if (err) { // Act as endpoint and there was an error
-					if (err.toString().includes('invalid ObjectId')) return o.express.sendError(res, 400, err.toString());
+					if (settings.publicErrors.some(d => err.toString().includes(d)))
+						return o.express.sendError(res, 400, err.toString());
 					o.express.sendError(res, 400);
 				} else { // Act as endpoint and result is ok
 					res.send(rows);
