@@ -749,6 +749,7 @@ function Monoxide() {
 			// }}}
 			// Peform the update {{{
 			.then('rawResponse', function(next) {
+				// TODO: Run validation
 				o.models[q.$collection].$mongooseModel.updateMany(_.omit(q, this.metaFields), _.omit(qUpdate, this.metaFields), {multi: true}, next);
 			})
 			// }}}
@@ -853,7 +854,7 @@ function Monoxide() {
 					return next(e);
 				}
 
-				o.models[q.$collection].$mongooseModel.insertOne(mongoDoc, next);
+				o.models[q.$collection].$mongooseModel.create(mongoDoc, next);
 			})
 			.then(function(next) {
 				o.models[q.$collection].fire('postCreate', next, q, this.createDoc);
@@ -862,7 +863,7 @@ function Monoxide() {
 			// Refetch record {{{
 			.then('newRec', function(next) {
 				if (!q.$refetch) return next(null, null);
-				var refetchId = this.rawResponse.insertedId.toString();
+				var refetchId = this.rawResponse._id.toString();
 				o.internal.query({
 					$collection: q.$collection,
 					$id: refetchId,
