@@ -626,8 +626,10 @@ function Monoxide() {
 					returnOriginal: !q.$returnUpdated,
 					runValidators: true,
 					context: 'query',
+					rawResult: true, // returns the raw result from the MongoDB driver
 				};
 				var updateCallback = function(err, res) {
+					debug('updateCallback', err, res);
 					if (q.$version && err && o.settings.versionIncErr.test(err.toString())) { // Error while setting `__v`
 						// Remove __v as an increment operator + retry the operation
 						// It would be good if $inc could assume `0` when null, but Mongo doesn't support that
