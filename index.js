@@ -964,7 +964,7 @@ function Monoxide() {
 						// Now actually delete the item
 						o.models[q.$collection].$mongooseModel.deleteOne({_id: o.utilities.objectID(q.$id)}, function(err, res) {
 							if (err) return next(err);
-							if (q.$errNotFound && !res.result.ok) return next('Not found');
+							if (q.$errNotFound && !res.ok) return next('Not found');
 							// Delete was sucessful - call event then move next
 							o.models[q.$collection].fire('postDelete', next, {_id: q.$id});
 						});
