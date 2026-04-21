@@ -1908,10 +1908,11 @@ function Monoxide() {
 		/**
 		* Ensure various indexes exist on startup
 		* @param {string|array|Object} indexes Either a single named field index, an array of indexes to form a combined field or a complex field definition where each value should be `1 || -1`
+		* @param {Object} [options] Options for "createIndex"
 		* @param {function} [cb] Optional callback
 		* @returns {MonoxideModel} Chainable monoxide model
 		*/
-		mm.index = function(indexes, cb) {
+		mm.index = function(indexes, options, cb) {
 			if (_.isArray(indexes)) {
 				indexes = _(indexes)
 					.mapKeys(v => v)
@@ -1925,9 +1926,37 @@ function Monoxide() {
 				throw new Error('Invalid index definition');
 			}
 
-			mm.$mongoModel.createIndex(indexes)
+			if (_.isFunction(options)) {
+				cb = options;
+				options = {};
+			}
+
+			const attemptCreate = () => {
+				return mm.$mongoModel.createIndex(indexes, options).catch(e => {
+					if (e.codeName === 'IndexOptionsConflict') {
+						const isTextIndex = Object.entries(indexes).every(d => d[1] === 'text');
+						if (isTextIndex) {
+							mm.getIndexes().then(existing => {
+								// const match = existing.find(d => d?.key?._fts === 'text');
+								const match = existing.find(d => Object.values(d.key).includes('text'));
+								console.log('match', match);
+								if (!match) return;
+								mm.$mongoModel.dropIndex(match.name).then(() => attemptCreate());
+							});
+						} else {
+							mm.$mongoModel.dropIndex(indexes).then(() => attemptCreate());
+						}
+					} else {
+						throw e;
+					}
+				});
+			}
+
+			attemptCreate()
 				.then(function() { cb && cb() })
-				.catch(e => { if (cb) return cb(e); throw new Error(e) })
+				.catch(e => {
+					if (cb) return cb(e); throw new Error(e);
+				});
 
 			return mm;
 		};
